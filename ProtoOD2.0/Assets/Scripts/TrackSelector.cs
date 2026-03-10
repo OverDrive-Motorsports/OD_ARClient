@@ -1,22 +1,49 @@
 using UnityEngine;
-using TMPro; // Si TMP_Dropdown
+using TMPro;
+using UnityEngine.UI; // Pour Button
 
 public class DropdownToggle : MonoBehaviour
 {
-    [SerializeField] private TMP_Dropdown dropdown; // Assigne ton dropdown
-    [SerializeField] private GameObject SilverStone;    // Assigne ton objet 3D
-    [SerializeField] private GameObject Monza;    // Assigne ton objet 3D
+    [SerializeField] private TMP_Dropdown dropdown;
+    [SerializeField] private GameObject SilverStone;
+    [SerializeField] private GameObject Monza;
+    [SerializeField] private Button boutonToggle; // Assigne ton bouton ici
+
+    private GameObject[] pistes = new GameObject[2]; // Array pour scaler facilement
 
     void Start()
     {
         if (dropdown == null) dropdown = GetComponent<TMP_Dropdown>();
         dropdown.onValueChanged.AddListener(OnOptionChange);
+
+        if (boutonToggle != null)
+            boutonToggle.onClick.AddListener(ToggleSelectedPiste);
+
+        // Initialise array et cache tout au start
+        pistes[0] = Monza;      // Index 0 -> Monza
+        pistes[1] = SilverStone; // Index 1 -> SilverStone (adapte selon tes options dropdown)
+        HideAllPistes();
     }
 
     public void OnOptionChange(int index)
     {
-        SilverStone.SetActive(index == 0); // Ex: visible si première option (index 0)
-        Monza.SetActive(index == 1); // Ex: visible si deuxième option (index 1)
-        // Ou: if (index == 0) objet3D.SetActive(true); else objet3D.SetActive(false);
+        HideAllPistes();
+        if (index < pistes.Length) pistes[index].SetActive(true);
+    }
+
+    public void ToggleSelectedPiste()
+    {
+        int index = dropdown.value;
+        if (index < pistes.Length)
+        {
+            bool etatActuel = pistes[index].activeSelf;
+            pistes[index].SetActive(!etatActuel); // Toggle inverse l'état
+        }
+    }
+
+    void HideAllPistes()
+    {
+        foreach (GameObject piste in pistes)
+            piste.SetActive(false);
     }
 }
