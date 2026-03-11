@@ -19,9 +19,9 @@ public class DropdownToggle : MonoBehaviour
         if (boutonToggle != null)
             boutonToggle.onClick.AddListener(ToggleSelectedPiste);
 
-        // Initialise array et cache tout au start
-        pistes[0] = Monza;      // Index 0 -> Monza
-        pistes[1] = SilverStone; // Index 1 -> SilverStone (adapte selon tes options dropdown)
+        // Initialise le tableau de pistes et désactive toutes les pistes au démarrage
+        pistes[0] = Monza;      // Index 0 : Monza
+        pistes[1] = SilverStone; // Index 1 : SilverStone (correspond à l'ordre des options du dropdown)
         HideAllPistes();
     }
 
