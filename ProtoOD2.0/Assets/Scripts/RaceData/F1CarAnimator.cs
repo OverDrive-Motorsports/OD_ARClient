@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System;
 
-// Les classes pour lire le JSON
 [Serializable]
 public class LocationData
 {
@@ -35,6 +34,9 @@ public class F1CarAnimator : MonoBehaviour
     private Vector3 currentTarget;
     private bool hasTarget = false;
     private string lastFetchTime;
+    private Vector3 startPos;
+    private float lerpTime = 0f;
+    public float pointTravelTime = 0.25f;
 
     void Start()
     {
@@ -75,8 +77,6 @@ public class F1CarAnimator : MonoBehaviour
         {
             foreach (var loc in response.data)
             {
-                // Axe Z de l'API = altitude. Donc X, Y deviennent X, Z.
-                // On met Y à 0 par défaut, on le modifiera dans Update()
                 Vector3 targetPos = new Vector3(loc.x * scaleFactor, 0f, loc.y * scaleFactor);
                 positionBuffer.Enqueue(targetPos);
             }
@@ -85,51 +85,51 @@ public class F1CarAnimator : MonoBehaviour
 
     void Update()
     {
-        // 1. Prendre la prochaine cible si on a fini la précédente
+        // 1. Si on n'a pas de cible en cours, on en prend une nouvelle
         if (!hasTarget && positionBuffer.Count > 0)
         {
+            startPos = transform.localPosition;
             currentTarget = positionBuffer.Dequeue();
-            
-            // On force la cible à avoir la même hauteur locale
-            currentTarget.y = transform.localPosition.y;
-            
+
+            // verrouille la hauteur
+            currentTarget.y = startPos.y;
+
+            lerpTime = 0f;
             hasTarget = true;
         }
 
-        // 2. Animer la voiture vers la cible
         if (hasTarget)
         {
-            float step = animationSpeed * Time.deltaTime;
-            
-            // Déplacement (On avance normalement vers la cible)
-            transform.localPosition = Vector3.MoveTowards(transform.localPosition, currentTarget, step);
+            // 2. On fait avancer t de 0 -> 1 sur pointTravelTime secondes
+            lerpTime += Time.deltaTime / pointTravelTime;
+            float t = Mathf.Clamp01(lerpTime);
 
-            // Calcul de direction locale
-            Vector3 localDirection = currentTarget - transform.localPosition;
-            localDirection.y = 0f; // On s'assure qu'on regarde à plat
+            // 3. Interpolation de position (courbe lissée si tu veux avec SmoothStep)
+            Vector3 newPos = Vector3.Lerp(startPos, currentTarget, Mathf.SmoothStep(0f, 1f, t));
+            transform.localPosition = newPos;
 
-            if (localDirection != Vector3.zero)
+            // 4. Rotation douce vers la direction de déplacement (à plat)
+            Vector3 dir = currentTarget - startPos;
+            dir.y = 0f;
+
+            if (dir != Vector3.zero)
             {
-                // Orienter la voiture vers sa direction de déplacement (plan XZ)
-                Quaternion targetRotation = Quaternion.LookRotation(localDirection);
-
-                // Conserver l'inclinaison actuelle (X et Z) pour éviter de pencher
+                Quaternion targetRot = Quaternion.LookRotation(dir);
                 Vector3 currentEuler = transform.localEulerAngles;
-                Vector3 targetEuler = targetRotation.eulerAngles;
+                Vector3 targetEuler = targetRot.eulerAngles;
 
-                Quaternion finalRotation = Quaternion.Euler(currentEuler.x, targetEuler.y, currentEuler.z);
-
-                // Rotation fluide vers l'orientation cible
-                transform.localRotation = Quaternion.Slerp(transform.localRotation, finalRotation, Time.deltaTime * 10f);
+                Quaternion finalRot = Quaternion.Euler(currentEuler.x, targetEuler.y, currentEuler.z);
+                transform.localRotation = Quaternion.Slerp(transform.localRotation, finalRot, Time.deltaTime * 10f);
             }
 
-            // On est arrivé au point ?
-            if (Vector3.Distance(transform.localPosition, currentTarget) < 0.1f)
+            // 5. Quand t atteint 1, on passe au point suivant
+            if (t >= 1f)
             {
                 hasTarget = false;
             }
         }
     }
+
 
     string CalculateNextTime(string current, float addSeconds)
     {

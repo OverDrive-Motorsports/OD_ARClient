@@ -1,5 +1,35 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.Networking;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+
+[Serializable]
+public class DriverApiEntry
+{
+    public string broadcast_name;
+    public string country_code;
+    public int driver_number;
+    public string first_name;
+    public string full_name;
+    public string headshot_url;
+    public string last_name;
+    public int meeting_key;
+    public string name_acronym;
+    public int session_key;
+    public string team_colour;
+    public string team_name;
+}
+
+[Serializable]
+public class DriversApiResponse
+{
+    public int count;
+    public List<DriverApiEntry> data;
+    public string dataset;
+    // metadata ignoré
+}
 
 public class DriverUIController : MonoBehaviour
 {
@@ -12,22 +42,52 @@ public class DriverUIController : MonoBehaviour
     public TMP_Dropdown driverDropdown;
 
     [Header("Image")]
-    public DriverImageLoader imageLoader;   // Chargé de télécharger et d'afficher la photo du pilote
+    public DriverImageLoader imageLoader;
 
-    private RootDriverData allData;
+    [Header("API")]
+    public string apiUrl = "http://172.20.10.5:8080/api/v1/race/drivers";
+
+    private DriversApiResponse allData;
 
     void Start()
     {
-        LoadJson();
-        SetupDropdown();
-        OnDriverSelected(0);
-        driverDropdown.onValueChanged.AddListener(OnDriverSelected);
+        StartCoroutine(LoadDriversFromApi());
     }
 
-    void LoadJson()
+    IEnumerator LoadDriversFromApi()
     {
-        TextAsset jsonFile = Resources.Load<TextAsset>("Data/Driver_Datas");
-        allData = JsonUtility.FromJson<RootDriverData>(jsonFile.text);
+        Debug.Log("[DriverUI] Call " + apiUrl);
+
+        using (UnityWebRequest request = UnityWebRequest.Get(apiUrl))
+        {
+            yield return request.SendWebRequest();
+
+            Debug.Log("[DriverUI] result = " + request.result + " code = " + request.responseCode);
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError("[DriverUI] Erreur API drivers: " + request.error);
+                yield break;
+            }
+
+            string json = request.downloadHandler.text;
+            Debug.Log("[DriverUI] raw json = " + json.Substring(0, Mathf.Min(200, json.Length)) + "...");
+
+            // Désérialisation
+            allData = JsonUtility.FromJson<DriversApiResponse>(json);
+
+            if (allData == null || allData.data == null || allData.data.Count == 0)
+            {
+                Debug.LogError("[DriverUI] Pas de données drivers reçues ou parse raté.");
+                yield break;
+            }
+
+            Debug.Log("[DriverUI] drivers count = " + allData.count);
+
+            SetupDropdown();
+            OnDriverSelected(0);
+            driverDropdown.onValueChanged.AddListener(OnDriverSelected);
+        }
     }
 
     void SetupDropdown()
@@ -36,7 +96,7 @@ public class DriverUIController : MonoBehaviour
 
         foreach (var entry in allData.data)
         {
-            string optionLabel = entry.driver.full_name;
+            string optionLabel = entry.full_name;
             driverDropdown.options.Add(new TMP_Dropdown.OptionData(optionLabel));
         }
 
@@ -45,12 +105,15 @@ public class DriverUIController : MonoBehaviour
 
     void OnDriverSelected(int index)
     {
-        DriverEntry entry = allData.data[index];
+        if (allData == null || allData.data == null || allData.data.Count == 0)
+            return;
 
-        string fullName = entry.driver.full_name;
-        string team = entry.driver.team_name;
-        int number = entry.driver.driver_number;
-        string headshotUrl = entry.driver.headshot_url;  // URL de la photo du pilote fournie par les données
+        DriverApiEntry entry = allData.data[index];
+
+        string fullName = entry.full_name;
+        string team = entry.team_name;
+        int number = entry.driver_number;
+        string headshotUrl = entry.headshot_url;
 
         nameText.text = fullName;
         teamNameText.text = team;
@@ -60,5 +123,35 @@ public class DriverUIController : MonoBehaviour
         {
             imageLoader.SetHeadshot(headshotUrl);
         }
+    }
+
+    public void NextDriver()
+    {
+        if (allData == null || allData.data == null || allData.data.Count == 0)
+            return;
+
+        int index = driverDropdown.value;
+        index++;
+
+        if (index >= allData.data.Count)
+            index = 0;
+
+        driverDropdown.value = index;
+        OnDriverSelected(index);
+    }
+
+    public void PreviousDriver()
+    {
+        if (allData == null || allData.data == null || allData.data.Count == 0)
+            return;
+
+        int index = driverDropdown.value;
+        index--;
+
+        if (index < 0)
+            index = allData.data.Count - 1;
+
+        driverDropdown.value = index;
+        OnDriverSelected(index);
     }
 }
