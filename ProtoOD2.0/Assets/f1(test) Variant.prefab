@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &3448477267909856242
+--- !u!1001 &5341812767661915761
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -8,91 +8,72 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: -8679921383154817045, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0.887
+    - target: {fileID: 2529362848514832035, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
+      propertyPath: m_Name
+      value: f1(test) Variant
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
+    - target: {fileID: 2905326094435200025, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.97897
+      objectReference: {fileID: 0}
+    - target: {fileID: 2905326094435200025, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
       propertyPath: m_LocalPosition.y
       value: -1
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
+    - target: {fileID: 2905326094435200025, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.37764
+      value: 3.51702
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
+    - target: {fileID: 2905326094435200025, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
       propertyPath: m_LocalRotation.w
       value: 0.7071067
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
+    - target: {fileID: 2905326094435200025, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0.7071069
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
+    - target: {fileID: 2905326094435200025, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
       propertyPath: m_LocalRotation.y
       value: -0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
+    - target: {fileID: 2905326094435200025, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
       propertyPath: m_LocalRotation.z
       value: -0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
+    - target: {fileID: 2905326094435200025, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
+    - target: {fileID: 2905326094435200025, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -8679921383154817045, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
+    - target: {fileID: 2905326094435200025, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
-      propertyPath: m_Name
-      value: f1(scripted)
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
+    - targetCorrespondingSourceObject: {fileID: 2529362848514832035, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 510425826203842212}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1816505215367368679}
-  m_SourcePrefab: {fileID: 100100000, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
---- !u!1 &2529362848514832035 stripped
+      addedObject: {fileID: 2311063529576029842}
+  m_SourcePrefab: {fileID: 100100000, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
+--- !u!1 &7582923180770691282 stripped
 GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 638616f2c89567044aabbb1613834d7e, type: 3}
-  m_PrefabInstance: {fileID: 3448477267909856242}
+  m_CorrespondingSourceObject: {fileID: 2529362848514832035, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
+  m_PrefabInstance: {fileID: 5341812767661915761}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &510425826203842212
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2529362848514832035}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9a124ab2a4d91f4e94da28aaf76e54e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::F1CarAnimator
-  baseApiUrl: 
-  driverNumber: 0
-  scaleFactor: 0.01
-  animationSpeed: 50
---- !u!96 &1816505215367368679
+--- !u!96 &2311063529576029842
 TrailRenderer:
   serializedVersion: 4
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2529362848514832035}
-  m_Enabled: 0
+  m_GameObject: {fileID: 7582923180770691282}
+  m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -142,8 +123,8 @@ TrailRenderer:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
-        time: 0
-        value: 0.5341778
+        time: 0.022548676
+        value: 0.521019
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -155,7 +136,7 @@ TrailRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 0, b: 0, a: 1}
+      key0: {r: 0, g: 0.19084406, b: 1, a: 1}
       key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}

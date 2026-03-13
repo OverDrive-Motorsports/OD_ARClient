@@ -20,11 +20,11 @@ public class LapResponseWrapper
 
 public class F1CarAnimator : MonoBehaviour
 {
-    [Header("Paramètres")]
+    [Header("Parameters")]
     public string baseApiUrl;
     public int driverNumber;
-    public float scaleFactor = 0.01f;
-    public float animationSpeed = 50f;
+    public float scaleFactor = 1f;
+    public float animationSpeed = 5f;
 
     private int currentLap = 1;
     private bool isFetchingLap = false;
@@ -39,6 +39,7 @@ public class F1CarAnimator : MonoBehaviour
         currentLap = 1;
         raceFinished = false;
         positionBuffer.Clear();
+        Debug.Log($"[Car {driverNumber}] Starting race");
         StartCoroutine(FetchLap(currentLap));
     }
 
@@ -94,7 +95,7 @@ public class F1CarAnimator : MonoBehaviour
                 positionBuffer.Enqueue(pos);
             }
 
-            Debug.Log($"[Car {driverNumber}] Lap {lapNumber} loaded with {response.data.Length} points");
+            Debug.Log($"[Car {driverNumber}] Lap {lapNumber} loaded with {response.data.Length} points, buffer now {positionBuffer.Count}");
         }
 
         isFetchingLap = false;
@@ -107,6 +108,7 @@ public class F1CarAnimator : MonoBehaviour
             currentTarget = positionBuffer.Dequeue();
             currentTarget.y = transform.localPosition.y;
             hasTarget = true;
+            Debug.Log($"[Car {driverNumber}] Moving to {currentTarget}, buffer left {positionBuffer.Count}");
         }
 
         if (hasTarget)
@@ -129,9 +131,16 @@ public class F1CarAnimator : MonoBehaviour
             }
         }
 
-        if (!raceFinished && !isFetchingLap && !hasTarget && positionBuffer.Count == 0)
+        if (!raceFinished && !isFetchingLap && positionBuffer.Count < 200)
         {
             currentLap++;
+            if (currentLap > 60)
+            {
+                Debug.Log($"[Car {driverNumber}] Arrêt après 60 tours");
+                raceFinished = true;
+                return;
+            }
+            Debug.Log($"[Car {driverNumber}] Préchargement du tour {currentLap}");
             StartCoroutine(FetchLap(currentLap));
         }
     }

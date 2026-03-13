@@ -1308,7 +1308,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9561e3b60a0d83a4db26c6cc0b44d535, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::F1RaceManager
-  sessionApiUrl: http://172.20.10.5:8080/api/v1/sessions/657f962f-56c3-47b9-864d-0439db162870
+  driversUrl: http://192.168.1.65:8080/api/v1/race/drivers
+  sessionApiUrl: http://192.168.1.65:8080/api/v1/sessions/9472
   carPrefab: {fileID: 2529362848514832035, guid: 68bf7b92424e89343b2ae68d5a7ae3a8, type: 3}
   trackAnchor: {fileID: 555315118}
 --- !u!4 &357810577
@@ -1975,7 +1976,7 @@ Transform:
   m_GameObject: {fileID: 555315117}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 94.9}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3227,7 +3228,7 @@ Transform:
   m_GameObject: {fileID: 860661014}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 1, y: -1, z: 2.61}
+  m_LocalPosition: {x: 1, y: -1, z: 1.789}
   m_LocalScale: {x: 0.12, y: 0.12, z: 0.12}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -4182,27 +4183,27 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.09
+      value: 0.027
       objectReference: {fileID: 0}
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.09
+      value: 0.027
       objectReference: {fileID: 0}
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.09
+      value: 0.027
       objectReference: {fileID: 0}
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 36
+      value: -4.94
       objectReference: {fileID: 0}
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -4.9
+      value: 9.51
       objectReference: {fileID: 0}
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 115.2
+      value: 6.1
       objectReference: {fileID: 0}
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -4210,15 +4211,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0.65651464
       objectReference: {fileID: 0}
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: 0.75431335
       objectReference: {fileID: 0}
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: 0.00000008940697
       objectReference: {fileID: 0}
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -4230,7 +4231,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
+      value: -82.069
       objectReference: {fileID: 0}
     - target: {fileID: 1157062484632614698, guid: c8ba168bd0ee0e74a9408f50ce628f7a, type: 3}
       propertyPath: m_ConstrainProportionsScale
@@ -8069,6 +8070,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 0
+  m_RequiresOpaqueTextureOption: 0
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
 --- !u!114 &1872457881
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8081,6 +8113,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 0
+  m_RequiresOpaqueTextureOption: 0
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
 --- !u!114 &1872457882
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8093,6 +8156,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 0
+  m_RequiresOpaqueTextureOption: 0
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
+  m_Version: 2
 --- !u!1 &1900930594
 GameObject:
   m_ObjectHideFlags: 0

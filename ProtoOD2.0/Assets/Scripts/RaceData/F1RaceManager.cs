@@ -1,65 +1,21 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
-using System;
-
-[Serializable]
-public class RaceDriverInfo
-{
-    public int driver_number;
-    public string team_colour; 
-}
-
-[Serializable]
-public class DriversListResponse
-{
-    public List<RaceDriverInfo> data;
-}
 
 public class F1RaceManager : MonoBehaviour
 {
-    [Header("API (Liste des Pilotes)")]
-    // URL pour obtenir les 20 pilotes de la course stockée actuellement (Bahreïn)
-    public string driversUrl = "http://192.168.1.65:8080/api/v1/race/drivers";
-    
-    [Header("API (Pour les Voitures)")]
-    // L'URL de base de la session de Bahreïn pour les voitures
-    public string sessionApiUrl = "http://192.168.1.65:8080/api/v1/sessions/9472";
+    [Header("API")]
+    public string sessionApiUrl = "http://172.20.10.5:8080/api/v1/sessions/657f962f-56c3-47b9-864d-0439db162870";
     
     [Header("Spawning")]
     public GameObject carPrefab;
     public Transform trackAnchor;
 
+    private const int RUSSELL_NUMBER = 63;
+
     void Start()
     {
-        StartCoroutine(FetchDriversAndSpawnCars());
-    }
-
-    IEnumerator FetchDriversAndSpawnCars()
-    {
-        using (UnityWebRequest request = UnityWebRequest.Get(driversUrl))
-        {
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                string json = request.downloadHandler.text;
-                DriversListResponse response = JsonUtility.FromJson<DriversListResponse>(json);
-
-                if (response != null && response.data != null)
-                {
-                    foreach (var driver in response.data)
-                    {
-                        SpawnCarForDriver(driver.driver_number);
-                    }
-                }
-            }
-            else
-            {
-                Debug.LogError("Erreur chargement pilotes : " + request.error);
-            }
-        }
+        SpawnCarForDriver(RUSSELL_NUMBER);
     }
 
     void SpawnCarForDriver(int driverNum)
@@ -68,14 +24,16 @@ public class F1RaceManager : MonoBehaviour
         newCar.name = "F1_Car_" + driverNum;
 
         F1CarAnimator animator = newCar.GetComponent<F1CarAnimator>();
-        
+
         if (animator != null)
         {
-            // On donne à la voiture son numéro ET l'URL exacte de la session
             animator.driverNumber = driverNum;
-            animator.baseApiUrl = sessionApiUrl; 
-            
-            animator.StartRace(); 
+            animator.baseApiUrl = sessionApiUrl;
+            animator.StartRace();
+        }
+        else
+        {
+            Debug.LogError("F1CarAnimator manquant sur le prefab de voiture !");
         }
     }
 }
