@@ -129,3 +129,10 @@ local.properties
 # /[Ll]ibrary/ShaderCache/
 # /[Ll]ibrary/SourceAssetDB-lock
 # /[Ll]ibrary/Artifacts/
+# Auto-generated scenes by play mode tests
+/[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# XR / MR spécifique
+Library/
+Packages/
+UserSettings/
