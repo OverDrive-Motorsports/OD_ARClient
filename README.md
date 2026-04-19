@@ -73,7 +73,34 @@ Project developed by the **OverDrive Team – Epitech Paris (2026)**.
 
 ## Installation & Usage
 
-The project is currently under development. No public version is available at this time.
+### Prerequisites
+- Unity Editor
+- Unity Hub to manage Unity versions
+- Meta Quest Build Support (including Meta SDKs)
+- Oculus XR Plugin support for Meta Quest
+
+### Clone the repository
+```bash
+git clone https://github.com/OverDrive-Motorsports/OD_ARClient.git
+cd OD_ARClient/Overdrive
+```
+
+### Open the project
+1. Launch Unity Hub.
+2. Click **Add** or **Open**.
+3. Select the `Overdrive` folder.
+4. Open the project with Unity **6000.3.9f1**.
+
+### Build for Meta Quest
+1. In Unity, open `File > Build Settings`.
+2. Select **Meta Quest** as the target platform.
+3. Click **Switch Platform** if needed.
+4. Make sure the XR plugin and Quest/Oculus settings are configured.
+5. Click **Build** or **Build and Run** to generate the APK.
+
+### Notes
+- The project is in development and some scenes or features may still change.
+- If you work on a branch, use clear commit messages and push your changes to GitHub once tested.
 
 <br>
 
