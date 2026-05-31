@@ -2,34 +2,47 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Positions the Overdrive menu in front of the user at app startup
-/// and fades it in smoothly.
+/// Positions the Overdrive menu in front of the user at eye level on startup.
+/// Auto-detects the OVR CenterEyeAnchor if not assigned manually.
 /// </summary>
 public class AppLauncher : MonoBehaviour
 {
     [Header("References")]
-    [Tooltip("The OverdriveMenuCanvas GameObject")]
+    [Tooltip("The OverdriveMenuCanvas (assign in Inspector or auto-found)")]
     public Canvas menuCanvas;
 
-    [Tooltip("The OVR CenterEyeAnchor transform (head camera)")]
+    [Tooltip("The OVR CenterEyeAnchor transform – auto-detected if left empty")]
     public Transform centerEyeAnchor;
 
     [Header("Placement")]
     [Tooltip("Distance from the user's head in metres")]
     public float spawnDistance = 1.5f;
 
-    [Tooltip("Vertical offset from eye height (negative = slightly below)")]
-    public float verticalOffset = -0.1f;
+    [Tooltip("Vertical offset from eye height (0 = exact eye level)")]
+    public float verticalOffset = 0f;
 
     [Header("Fade-in")]
-    public float fadeInDuration = 0.6f;
-    public float delayBeforeFade = 0.3f;
+    public float fadeInDuration  = 0.6f;
+    public float delayBeforeFade = 0.5f;
 
     private CanvasGroup _canvasGroup;
 
+    // ── Awake: hide menu & grab references ───────────────────────────────────
     private void Awake()
     {
-        // Hide the menu until we're ready
+        // Auto-find canvas if not assigned
+        if (menuCanvas == null)
+        {
+            var go = GameObject.Find("OverdriveMenuCanvas");
+            if (go != null) menuCanvas = go.GetComponent<Canvas>();
+        }
+
+        if (menuCanvas == null)
+        {
+            Debug.LogError("[AppLauncher] No menuCanvas found!");
+            return;
+        }
+
         _canvasGroup = menuCanvas.GetComponent<CanvasGroup>();
         if (_canvasGroup == null)
             _canvasGroup = menuCanvas.gameObject.AddComponent<CanvasGroup>();
@@ -38,39 +51,103 @@ public class AppLauncher : MonoBehaviour
         menuCanvas.gameObject.SetActive(true);
     }
 
+    // ── Start: wait for tracking then place & fade ────────────────────────────
     private IEnumerator Start()
     {
-        // Wait one frame so OVR tracking is initialised
-        yield return null;
-        yield return new WaitForSeconds(delayBeforeFade);
+        // Auto-find CenterEyeAnchor if not assigned
+        if (centerEyeAnchor == null)
+            centerEyeAnchor = FindCenterEyeAnchor();
+
+        // Wait until we have a valid head position (OVR tracking init)
+        yield return WaitForTracking();
 
         PlaceMenuInFrontOfUser();
-
         yield return FadeIn();
     }
 
-    /// <summary>
-    /// Snaps the menu to 1.5 m in front of the user, facing them.
-    /// </summary>
+    // ── Placement ─────────────────────────────────────────────────────────────
     public void PlaceMenuInFrontOfUser()
     {
-        if (centerEyeAnchor == null || menuCanvas == null) return;
+        Transform head = GetHeadTransform();
+        if (head == null || menuCanvas == null) return;
 
-        // Forward direction, flattened on the XZ plane so the menu stays upright
-        Vector3 forward = centerEyeAnchor.forward;
+        // Flatten forward on XZ so the menu stays perfectly upright
+        Vector3 forward = head.forward;
         forward.y = 0f;
         if (forward.sqrMagnitude < 0.001f) forward = Vector3.forward;
         forward.Normalize();
 
-        Vector3 eyePos = centerEyeAnchor.position;
-        Vector3 targetPos = eyePos
-            + forward * spawnDistance
-            + Vector3.up * verticalOffset;
+        Vector3 spawnPos = head.position
+                         + forward  * spawnDistance
+                         + Vector3.up * verticalOffset;
 
-        menuCanvas.transform.position = targetPos;
-
-        // Rotate the menu to face the user
+        menuCanvas.transform.position = spawnPos;
         menuCanvas.transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
+    }
+
+    // ── Toggle (e.g. wrist button) ────────────────────────────────────────────
+    public void ToggleMenu()
+    {
+        if (menuCanvas == null) return;
+
+        bool visible = menuCanvas.gameObject.activeSelf && _canvasGroup.alpha > 0.5f;
+        if (visible)
+            StartCoroutine(FadeOut());
+        else
+        {
+            PlaceMenuInFrontOfUser();
+            StartCoroutine(FadeIn());
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Waits until the head camera has moved away from the world origin,
+    /// meaning OVR tracking has kicked in. Times out after 3 s.
+    /// </summary>
+    private IEnumerator WaitForTracking()
+    {
+        float timeout = 3f;
+        float elapsed = 0f;
+
+        Transform head = GetHeadTransform();
+
+        // Poll until the head is off the floor or we time out
+        while (elapsed < timeout)
+        {
+            head = GetHeadTransform();
+            if (head != null && head.position.y > 0.1f)
+                break; // tracking is live and head is above floor
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // Extra safety margin
+        yield return new WaitForSeconds(delayBeforeFade);
+    }
+
+    private Transform GetHeadTransform()
+    {
+        if (centerEyeAnchor != null) return centerEyeAnchor;
+
+        // Fallback: main camera
+        if (Camera.main != null) return Camera.main.transform;
+
+        return null;
+    }
+
+    private Transform FindCenterEyeAnchor()
+    {
+        // Try OVRCameraRig first
+        var rig = FindFirstObjectByType<OVRCameraRig>();
+        if (rig != null) return rig.centerEyeAnchor;
+
+        // Fallback to main camera
+        if (Camera.main != null) return Camera.main.transform;
+
+        return null;
     }
 
     private IEnumerator FadeIn()
@@ -83,21 +160,6 @@ public class AppLauncher : MonoBehaviour
             yield return null;
         }
         _canvasGroup.alpha = 1f;
-    }
-
-    /// <summary>
-    /// Call this to hide and re-show the menu (e.g. from a wrist button).
-    /// </summary>
-    public void ToggleMenu()
-    {
-        bool isVisible = menuCanvas.gameObject.activeSelf && _canvasGroup.alpha > 0.5f;
-        if (isVisible)
-            StartCoroutine(FadeOut());
-        else
-        {
-            PlaceMenuInFrontOfUser();
-            StartCoroutine(FadeIn());
-        }
     }
 
     private IEnumerator FadeOut()
