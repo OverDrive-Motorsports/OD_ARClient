@@ -80,6 +80,10 @@ public class OverdriveMainMenu : MonoBehaviour
         for (int i = 0; i < _panels.Length; i++)
             if (_panels[i] != null)
                 _panels[i].SetActive(i == index);
+
+        // Category selector only makes sense on the Races tab
+        if (categoryLabel != null)
+            categoryLabel.gameObject.SetActive(index == 0);
     }
 
     // ── Category ──────────────────────────────────────────────────────────────
