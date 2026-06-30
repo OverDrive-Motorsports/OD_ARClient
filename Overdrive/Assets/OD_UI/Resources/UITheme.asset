@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2cc7415f79714d6a854446da346e7ab, type: 3}
+  m_Name: UITheme
+  m_EditorClassIdentifier: Assembly-CSharp::UITheme
+  panelBackground: {r: 0.110, g: 0.110, b: 0.125, a: 0.78}
+  panelBackgroundAlt: {r: 0.141, g: 0.141, b: 0.165, a: 0.85}
+  surfaceColor: {r: 0.173, g: 0.173, b: 0.204, a: 0.90}
+  subtleColor: {r: 0.078, g: 0.078, b: 0.094, a: 0.50}
+  textPrimary: {r: 0.949, g: 0.949, b: 0.969, a: 1}
+  textSecondary: {r: 0.557, g: 0.557, b: 0.576, a: 1}
+  textTertiary: {r: 0.282, g: 0.282, b: 0.290, a: 1}
+  accentGold: {r: 0.788, g: 0.659, b: 0.298, a: 1}
+  blueColor: {r: 0.039, g: 0.518, b: 1, a: 1}
+  dangerColor: {r: 0.91, g: 0, b: 0.176, a: 1}
+  successColor: {r: 0.196, g: 0.843, b: 0.294, a: 1}
+  borderColor: {r: 1, g: 1, b: 1, a: 0.10}
+  goldBorderColorA: {r: 0.788, g: 0.659, b: 0.298, a: 0.60}
+  goldBorderColorB: {r: 0.788, g: 0.659, b: 0.298, a: 0.08}
+  cornerRadius: 24
+  borderWidth: 1.5
+  goldBorderWidth: 1.5
+  panelBlurAmount: 54
+  h1Size: 36
+  h2Size: 28
+  bodySize: 22
+  captionSize: 18
+  useOrbitronForDisplay: 0
+  displayFontName: Orbitron
