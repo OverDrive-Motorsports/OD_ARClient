@@ -69,8 +69,20 @@ public class OverdriveMainMenu : MonoBehaviour
 
             bool active = (i == index);
 
+            // The Button tint MULTIPLIES the graphic colour, so the graphic must
+            // stay white and all states live in the ColorBlock — otherwise a
+            // transparent base makes hover invisible.
             var img = _navButtons[i].GetComponent<Image>();
-            if (img) img.color = active ? activeNavColor : inactiveNavColor;
+            if (img) img.color = Color.white;
+
+            var cb = _navButtons[i].colors;
+            cb.normalColor      = active ? activeNavColor : Color.clear;
+            cb.highlightedColor = new Color(0.30f, 0.26f, 0.21f, 1f);
+            cb.pressedColor     = new Color(0.38f, 0.32f, 0.24f, 1f);
+            cb.selectedColor    = cb.normalColor;
+            cb.colorMultiplier  = 1f;
+            cb.fadeDuration     = 0.1f;
+            _navButtons[i].colors = cb;
 
             var lbl = _navButtons[i].transform.Find("Label")
                                     ?.GetComponent<TextMeshProUGUI>();
@@ -97,10 +109,11 @@ public class OverdriveMainMenu : MonoBehaviour
     private void AutoFindReferences()
     {
         // Nav buttons
-        racesButton    = racesButton    ?? FindButton("Body/Sidebar/Nav_Races");
-        rankingsButton = rankingsButton ?? FindButton("Body/Sidebar/Nav_Rankings");
-        profileButton  = profileButton  ?? FindButton("Body/Sidebar/Nav_Profile");
-        settingsButton = settingsButton ?? FindButton("Body/Sidebar/Nav_Settings");
+        // Explicit null checks — never ?? with Unity objects (fake-null)
+        if (racesButton    == null) racesButton    = FindButton("Body/Sidebar/Nav_Races");
+        if (rankingsButton == null) rankingsButton = FindButton("Body/Sidebar/Nav_Rankings");
+        if (profileButton  == null) profileButton  = FindButton("Body/Sidebar/Nav_Profile");
+        if (settingsButton == null) settingsButton = FindButton("Body/Sidebar/Nav_Settings");
 
         // Category label
         var catT = FindChildTransform("Body/ContentArea/CategoryLabel");
@@ -134,9 +147,10 @@ public class OverdriveMainMenu : MonoBehaviour
 
     private Transform FindChildTransform(string path)
     {
-        return transform.parent != null
-            ? transform.parent.Find(path) ?? transform.Find(path)
-            : transform.Find(path);
+        Transform t = null;
+        if (transform.parent != null) t = transform.parent.Find(path);
+        if (t == null) t = transform.Find(path);
+        return t;
     }
 
     private GameObject GetOrCreatePanel(string label)

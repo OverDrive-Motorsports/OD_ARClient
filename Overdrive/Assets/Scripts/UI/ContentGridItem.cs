@@ -40,9 +40,14 @@ public class ContentGridItem : MonoBehaviour,
 
     private void OnClick()
     {
-        string title = _data != null ? _data.title : gameObject.name;
+        string title = titleLabel != null ? titleLabel.text
+                     : (_data != null ? _data.title : gameObject.name);
         Debug.Log($"[Overdrive] Opening: {title}");
-        // TODO: open detail panel / load race stream
+
+        if (VideoPlayerController.Instance != null)
+            VideoPlayerController.Instance.Open(title);
+        else
+            Debug.LogWarning("[Overdrive] No VideoPlayerController in scene.");
     }
 
     public void OnPointerEnter(PointerEventData _)
