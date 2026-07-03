@@ -130,8 +130,9 @@ public static class OverdriveMenuBuilder
         RectTransform vpRT = viewport.AddComponent<RectTransform>();
         vpRT.anchorMin = Vector2.zero; vpRT.anchorMax = Vector2.one;
         vpRT.offsetMin = Vector2.zero; vpRT.offsetMax = Vector2.zero;
-        viewport.AddComponent<Mask>().showMaskGraphic = false;
-        viewport.AddComponent<Image>().color = Color.clear;
+        // RectMask2D: clips without a graphic. NEVER use Mask + transparent
+        // Image — its mesh gets culled and ALL masked children vanish.
+        viewport.AddComponent<RectMask2D>();
         sr.viewport = vpRT;
 
         // Content (grid)

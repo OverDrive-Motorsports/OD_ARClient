@@ -83,8 +83,9 @@ public class WindowHandle : MonoBehaviour
             pillWidth     * inv * 0.5f,
             pillThickness * inv * 0.5f);
 
-        _pillMat = new Material(Shader.Find("Universal Render Pipeline/Unlit")
-                             ?? Shader.Find("Unlit/Color"));
+        var shader = Shader.Find("Universal Render Pipeline/Unlit");
+        if (shader == null) shader = Shader.Find("Unlit/Color");
+        _pillMat = new Material(shader);
         _pillMat.color = idleColor;
         go.GetComponent<Renderer>().material = _pillMat;
         _pill = go.transform;
@@ -159,6 +160,7 @@ public class WindowHandle : MonoBehaviour
             if (_proxHand == null || !_proxHand.IsTracked) { EndGrab(); return; }
             Vector3 tip = IndexTip(_proxHand);
             transform.position = _proxStartCanvas + (tip - _proxStartFinger);
+            FaceUser();
             return;
         }
 
@@ -168,6 +170,23 @@ public class WindowHandle : MonoBehaviour
         if (d.sqrMagnitude < 0.001f) { d = _grabRay.transform.forward; o = _grabRay.transform.position; }
         Vector3 hitPoint = o + d.normalized * _grabDist;
         transform.position = hitPoint + _grabOffset;
+        FaceUser();
+    }
+
+    /// <summary>
+    /// Meta-style billboard: while dragged, the window continuously yaws
+    /// to face the user (stays upright, no pitch/roll).
+    /// </summary>
+    private void FaceUser()
+    {
+        var cam = Camera.main;
+        if (cam == null) return;
+
+        Vector3 away = transform.position - cam.transform.position;
+        away.y = 0f;
+        if (away.sqrMagnitude < 0.0025f) return; // too close, keep rotation
+
+        transform.rotation = Quaternion.LookRotation(away.normalized, Vector3.up);
     }
 
     private void EndGrab()

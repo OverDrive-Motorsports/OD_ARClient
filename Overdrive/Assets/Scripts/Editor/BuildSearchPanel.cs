@@ -149,8 +149,8 @@ public static class BuildSearchPanel
 
         var vp = NewGO("Viewport", scroll.transform);
         Stretch(vp);
-        vp.AddComponent<Image>().color = new Color(0, 0, 0, 0);
-        vp.AddComponent<Mask>().showMaskGraphic = false;
+        // RectMask2D: never Mask + transparent Image (mesh culled → children hidden)
+        vp.AddComponent<RectMask2D>();
         sr.viewport = vp.GetComponent<RectTransform>();
 
         var content = NewGO("Content", vp.transform);

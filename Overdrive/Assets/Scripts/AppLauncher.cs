@@ -38,8 +38,9 @@ public class AppLauncher : MonoBehaviour
         // Required for correct VR depth rendering of world-space UI
         menuCanvas.worldCamera = Camera.main;
 
-        _cg = menuCanvas.GetComponent<CanvasGroup>()
-           ?? menuCanvas.gameObject.AddComponent<CanvasGroup>();
+        // NOTE: never use ?? with Unity objects (fake-null) — explicit check
+        _cg = menuCanvas.GetComponent<CanvasGroup>();
+        if (_cg == null) _cg = menuCanvas.gameObject.AddComponent<CanvasGroup>();
 
         _cg.alpha = 0f;
         menuCanvas.gameObject.SetActive(true);
