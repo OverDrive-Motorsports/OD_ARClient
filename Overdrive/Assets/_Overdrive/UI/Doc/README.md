@@ -27,8 +27,22 @@ place) merged with the visual scripts that used to live in `Scripts/UI/`
 (`RoundedImage`, `ContentGridItem`, `ContentGridView`, `RaceStandingCard`),
 which are genuinely display components and had no better home.
 
-`Prefabs/Screens/OverdriveMenuPanel.prefab` groups full-screen prefabs (as
-opposed to reusable Atoms/Molecules/Organisms components).
+`Prefabs/Screens/` groups full-screen prefabs (as opposed to reusable
+Atoms/Molecules/Organisms components): `OverdriveMenuPanel`, `HomeNavScreen`
+(persistent bottom nav + home mini-window), `ChampionshipPage` (an empty
+skeleton — see below).
+
+`Molecules/ODWeatherWidget.cs` and `Molecules/ODMapWidget.cs` are dedicated
+"big" widgets for weather and circuit location — the map widget is a
+placeholder for now (just shows "Carte" + the location), meant to be swapped
+for a real interactive map later.
+
+`Molecules/ODStandingsWidget.cs` is a generic standings card with a built-in
+Pilotes/Écuries toggle. It has no dedicated prefab: it's built entirely at
+runtime (`ODStandingsWidget.Create(...)`) by
+[ChampionshipPageController](../../Logic/Doc/README.md), one instance per
+category found in whatever `ChampionshipData.standings` list it's given —
+it has no idea which championship it's rendering.
 
 ## Allowed dependencies
 

@@ -12,8 +12,8 @@ using UnityEngine;
 
 /// <summary>
 /// Compile-time constants and static lists that populate every OD_UI component
-/// with plausible motorsport data. Intended for Editor use (ODShowcaseBuilder) and
-/// runtime prototyping. Contains no MonoBehaviour, no serialized state.
+/// with plausible motorsport data. Intended for Editor tooling and runtime
+/// prototyping. Contains no MonoBehaviour, no serialized state.
 /// </summary>
 public static class ODMockData
 {

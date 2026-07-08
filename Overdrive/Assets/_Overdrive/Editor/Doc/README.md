@@ -7,9 +7,13 @@ panel generation...). Not part of the application's runtime.
 ## Current state
 
 Merge of the former `Scripts/Editor/` (panel generators: profile, ranking,
-search, video player, main menu) and `OD_UI/Editor/ODUIBuilder.cs`.
-`ODShowcaseBuilder.cs` (formerly in `OD_UI/Dev/`) was also brought here since
-it's a demo-scene building tool, not a runtime component.
+search, video player, main menu) and `OD_UI/Editor/ODUIBuilder.cs`. Also
+includes:
+- `HomeNavBuilder.cs` — assembles the persistent bottom nav bar and floating
+  home mini-window screen out of the `ODNavBar`/`ODCard` organisms.
+- `ChampionshipPageBuilder.cs` — assembles the championship page's 3 status
+  panels (Live/RaceWeekend/Idle) out of `ODCard`/`ODDataTable`/`ODButton` plus
+  the `ODWeatherWidget`/`ODMapWidget` molecules.
 
 ## Allowed dependencies
 
