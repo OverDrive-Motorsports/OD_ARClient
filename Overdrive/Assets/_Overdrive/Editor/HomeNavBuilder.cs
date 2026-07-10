@@ -28,6 +28,9 @@ public static class HomeNavBuilder
     const string NavBarPrefabPath        = "Assets/_Overdrive/UI/Prefabs/Organisms/ODNavBar.prefab";
     const string CardPrefabPath          = "Assets/_Overdrive/UI/Prefabs/Organisms/ODCard.prefab";
     const string GhostButtonPrefabPath   = "Assets/_Overdrive/UI/Prefabs/Molecules/ODButton_Ghost.prefab";
+    const string DangerButtonPrefabPath  = "Assets/_Overdrive/UI/Prefabs/Molecules/ODButton_Danger.prefab";
+    const string MenuOverlayPrefabPath   = "Assets/_Overdrive/UI/Prefabs/Organisms/ODMenuOverlay.prefab";
+    const string PopupPrefabPath         = "Assets/_Overdrive/UI/Prefabs/Organisms/ODPopup.prefab";
     const string SaveDir                 = "Assets/_Overdrive/UI/Prefabs/Screens";
     const string SavePath                = SaveDir + "/HomeNavScreen.prefab";
 
@@ -45,12 +48,16 @@ public static class HomeNavBuilder
     [MenuItem("Overdrive/Build Home Nav Screen")]
     public static void Build()
     {
-        var navBarAsset = AssetDatabase.LoadAssetAtPath<GameObject>(NavBarPrefabPath);
-        var cardAsset   = AssetDatabase.LoadAssetAtPath<GameObject>(CardPrefabPath);
-        var ghostAsset  = AssetDatabase.LoadAssetAtPath<GameObject>(GhostButtonPrefabPath);
-        if (navBarAsset == null || cardAsset == null || ghostAsset == null)
+        var navBarAsset     = AssetDatabase.LoadAssetAtPath<GameObject>(NavBarPrefabPath);
+        var cardAsset       = AssetDatabase.LoadAssetAtPath<GameObject>(CardPrefabPath);
+        var ghostAsset      = AssetDatabase.LoadAssetAtPath<GameObject>(GhostButtonPrefabPath);
+        var dangerAsset     = AssetDatabase.LoadAssetAtPath<GameObject>(DangerButtonPrefabPath);
+        var menuOverlayAsset = AssetDatabase.LoadAssetAtPath<GameObject>(MenuOverlayPrefabPath);
+        var popupAsset      = AssetDatabase.LoadAssetAtPath<GameObject>(PopupPrefabPath);
+        if (navBarAsset == null || cardAsset == null || ghostAsset == null ||
+            dangerAsset == null || menuOverlayAsset == null || popupAsset == null)
         {
-            Debug.LogError("[HomeNavBuilder] ODNavBar/ODCard/ODButton_Ghost prefab not found — run 'Overdrive > Build OD_UI Organisms' first.");
+            Debug.LogError("[HomeNavBuilder] A required prefab (ODNavBar/ODCard/ODButton_Ghost/ODButton_Danger/ODMenuOverlay/ODPopup) was not found — run 'Overdrive > Build OD_UI Prefabs' then 'Build OD_UI Organisms' first.");
             return;
         }
 
@@ -106,11 +113,33 @@ public static class HomeNavBuilder
         GameObject championshipButtons = BuildChampionshipButtons(card.contentArea, ghostAsset);
         championshipButtons.SetActive(false);
 
+        // ── Profile area (account + Réglages) — only visible on the "Profil"
+        // tab; ProfileSectionController builds both views and switches
+        // between them via the top-right ODMenuOverlay. ───────────────────────
+        GameObject profileArea = BuildProfileArea(card.contentArea, menuOverlayAsset,
+            out RectTransform profileContent, out RectTransform settingsContent, out ODMenuOverlay profileMenuOverlay);
+        profileArea.SetActive(false);
+
+        // ODPopup must sit directly under the canvas (not inside the scrollable
+        // card content) so its full-screen overlay actually covers everything.
+        GameObject popupGO = (GameObject)PrefabUtility.InstantiatePrefab(popupAsset, canvasGO.transform);
+        ODPopup popup = popupGO.GetComponent<ODPopup>();
+
+        ProfileSectionController profileController = canvasGO.AddComponent<ProfileSectionController>();
+        profileController.menuOverlay       = profileMenuOverlay;
+        profileController.profileContent    = profileContent;
+        profileController.settingsContent   = settingsContent;
+        profileController.popup             = popup;
+        profileController.ghostButtonPrefab  = ghostAsset;
+        profileController.dangerButtonPrefab = dangerAsset;
+        profileController.menuOverlayPrefab  = menuOverlayAsset;
+
         // ── Controller: syncs card title with selected tab, wires championship buttons ──
         HomeNavController controller = canvasGO.AddComponent<HomeNavController>();
         controller.navBar              = navBar;
         controller.homeCard            = card;
         controller.championshipButtons = championshipButtons;
+        controller.profileArea         = profileArea;
 
         // ── WindowHandle — attached to the shared root so the nav bar and the
         // home card always move together as a single group. This component is
@@ -154,6 +183,73 @@ public static class HomeNavBuilder
         }
 
         return row;
+    }
+
+    /// <summary>
+    /// Builds the "Profil" tab's whole area: a header row with the
+    /// ODMenuOverlay pushed to the top-right, and 2 empty content containers
+    /// (ProfileContent / SettingsContent) that ProfileSectionController fills
+    /// and switches between at runtime.
+    /// </summary>
+    static GameObject BuildProfileArea(RectTransform contentArea, GameObject menuOverlayAsset,
+        out RectTransform profileContent, out RectTransform settingsContent, out ODMenuOverlay menuOverlay)
+    {
+        GameObject area = new GameObject("ProfileArea", typeof(RectTransform));
+        area.transform.SetParent(contentArea, false);
+        VerticalLayoutGroup areaVlg = area.AddComponent<VerticalLayoutGroup>();
+        areaVlg.spacing                = 16f;
+        areaVlg.childAlignment         = TextAnchor.UpperLeft;
+        areaVlg.childControlWidth      = true;
+        areaVlg.childControlHeight     = false;
+        areaVlg.childForceExpandWidth  = true;
+        areaVlg.childForceExpandHeight = false;
+        area.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        area.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
+
+        // Header row — menu overlay pushed to the right via MiddleRight alignment
+        GameObject header = new GameObject("Header", typeof(RectTransform));
+        header.transform.SetParent(area.transform, false);
+        HorizontalLayoutGroup headerHlg = header.AddComponent<HorizontalLayoutGroup>();
+        headerHlg.childAlignment     = TextAnchor.MiddleRight;
+        headerHlg.childControlWidth  = false;
+        headerHlg.childControlHeight = true;
+        header.AddComponent<LayoutElement>().preferredHeight = 48f;
+        header.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, 48f);
+
+        GameObject menuOverlayGO = (GameObject)PrefabUtility.InstantiatePrefab(menuOverlayAsset, header.transform);
+        menuOverlayGO.GetComponent<RectTransform>().sizeDelta = new Vector2(150f, 44f);
+        menuOverlay = menuOverlayGO.GetComponent<ODMenuOverlay>();
+
+        // ProfileContent — visible by default (ProfileSectionController.ShowProfile() at Start())
+        GameObject profileGO = new GameObject("ProfileContent", typeof(RectTransform));
+        profileGO.transform.SetParent(area.transform, false);
+        VerticalLayoutGroup profileVlg = profileGO.AddComponent<VerticalLayoutGroup>();
+        profileVlg.spacing                = 12f;
+        profileVlg.childAlignment         = TextAnchor.UpperLeft;
+        profileVlg.childControlWidth      = true;
+        profileVlg.childControlHeight     = false;
+        profileVlg.childForceExpandWidth  = true;
+        profileVlg.childForceExpandHeight = false;
+        profileGO.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        profileContent = profileGO.GetComponent<RectTransform>();
+        profileContent.sizeDelta = Vector2.zero;
+
+        // SettingsContent — same structure, hidden by default
+        GameObject settingsGO = new GameObject("SettingsContent", typeof(RectTransform));
+        settingsGO.transform.SetParent(area.transform, false);
+        VerticalLayoutGroup settingsVlg = settingsGO.AddComponent<VerticalLayoutGroup>();
+        settingsVlg.spacing                = 12f;
+        settingsVlg.childAlignment         = TextAnchor.UpperLeft;
+        settingsVlg.childControlWidth      = true;
+        settingsVlg.childControlHeight     = false;
+        settingsVlg.childForceExpandWidth  = true;
+        settingsVlg.childForceExpandHeight = false;
+        settingsGO.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        settingsContent = settingsGO.GetComponent<RectTransform>();
+        settingsContent.sizeDelta = Vector2.zero;
+        settingsGO.SetActive(false);
+
+        return area;
     }
 
     /// <summary>

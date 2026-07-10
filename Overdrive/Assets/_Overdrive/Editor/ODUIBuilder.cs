@@ -55,7 +55,7 @@ public static class ODUIBuilder
         EditorUtility.DisplayDialog("OD_UI Builder", "Atoms + Molecules created in Assets/_Overdrive/UI/Prefabs/", "OK");
     }
 
-    /// <summary>Creates or refreshes ODCard, ODModal, and ODNavBar prefabs in Assets/_Overdrive/UI/Prefabs/Organisms/.</summary>
+    /// <summary>Creates or refreshes ODCard, ODModal, ODNavBar, ODPopup, and ODMenuOverlay prefabs in Assets/_Overdrive/UI/Prefabs/Organisms/.</summary>
     [MenuItem("Overdrive/Build OD_UI Organisms")]
     public static void BuildOrganisms()
     {
@@ -424,6 +424,8 @@ public static class ODUIBuilder
         BuildODCard();
         BuildODModal();
         BuildODNavBar();
+        BuildODPopup();
+        BuildODMenuOverlay();
     }
 
     static void BuildODCard()
@@ -791,6 +793,246 @@ public static class ODUIBuilder
         navItem.icon      = ic;
         navItem.label     = lbl;
         navItem.itemLabel = labelText;
+    }
+
+    // ── ODPopup ──────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Reusable confirmation/edit popup: an ODModal wired to an ODPopup that
+    /// exposes ShowConfirm()/ShowForm() at runtime. Wires cross-references to
+    /// the button and input-field prefabs so ODPopup can compose its content
+    /// area without needing to know their asset paths at runtime.
+    /// </summary>
+    static void BuildODPopup()
+    {
+        // ── Root — same shape as BuildODModal (Overlay + Card) ────────────────
+        GameObject root  = new GameObject("ODPopup", typeof(RectTransform));
+        ODModal modal    = root.AddComponent<ODModal>();
+        ODPopup popup    = root.AddComponent<ODPopup>();
+        RectTransform rootRT = root.GetComponent<RectTransform>();
+        rootRT.anchorMin = Vector2.zero;
+        rootRT.anchorMax = Vector2.one;
+        rootRT.offsetMin = Vector2.zero;
+        rootRT.offsetMax = Vector2.zero;
+
+        GameObject overlayGO = new GameObject("Overlay");
+        overlayGO.transform.SetParent(root.transform, false);
+        Image overlayImg = overlayGO.AddComponent<Image>();
+        overlayImg.color = new Color(0f, 0f, 0f, 0.45f);
+        overlayImg.raycastTarget = true;
+        RectTransform overlayRT = overlayGO.GetComponent<RectTransform>();
+        overlayRT.anchorMin = Vector2.zero;
+        overlayRT.anchorMax = Vector2.one;
+        overlayRT.offsetMin = Vector2.zero;
+        overlayRT.offsetMax = Vector2.zero;
+
+        GameObject cardGO = new GameObject("Card", typeof(RectTransform));
+        cardGO.transform.SetParent(root.transform, false);
+        ODCard card = cardGO.AddComponent<ODCard>();
+        cardGO.AddComponent<ODBlurBackground>();
+        cardGO.AddComponent<CanvasGroup>();
+        RectTransform cardRT = cardGO.GetComponent<RectTransform>();
+        cardRT.anchorMin        = new Vector2(0.5f, 0.5f);
+        cardRT.anchorMax        = new Vector2(0.5f, 0.5f);
+        cardRT.pivot             = new Vector2(0.5f, 0.5f);
+        cardRT.sizeDelta         = new Vector2(460f, 0f);
+        cardRT.anchoredPosition  = Vector2.zero;
+
+        GameObject bgGO   = new GameObject("Background");
+        bgGO.transform.SetParent(cardGO.transform, false);
+        RoundedImage bgImg = bgGO.AddComponent<RoundedImage>();
+        bgImg.color         = SurfaceColor;
+        bgImg.cornerRadius  = 24f;
+        bgImg.raycastTarget = true;
+        ODBackground bg     = bgGO.AddComponent<ODBackground>();
+        bg.backgroundStyle  = ODBackground.Style.Modal;
+        RectTransform bgRT  = bgGO.GetComponent<RectTransform>();
+        bgRT.anchorMin = Vector2.zero;
+        bgRT.anchorMax = Vector2.one;
+        bgRT.offsetMin = Vector2.zero;
+        bgRT.offsetMax = Vector2.zero;
+
+        GameObject header = new GameObject("Header");
+        header.transform.SetParent(cardGO.transform, false);
+        HorizontalLayoutGroup headerHlg = GetOrAdd<HorizontalLayoutGroup>(header);
+        headerHlg.padding                = new RectOffset(20, 16, 16, 0);
+        headerHlg.spacing                = 8f;
+        headerHlg.childAlignment         = TextAnchor.MiddleLeft;
+        headerHlg.childForceExpandWidth  = true;
+        headerHlg.childForceExpandHeight = false;
+        header.AddComponent<LayoutElement>().preferredHeight = 56f;
+
+        GameObject titleGO = new GameObject("Title");
+        titleGO.transform.SetParent(header.transform, false);
+        TextMeshProUGUI titleTmp = titleGO.AddComponent<TextMeshProUGUI>();
+        titleTmp.text      = "Popup Title";
+        titleTmp.fontSize  = 28f;
+        titleTmp.color     = TextPrimary;
+        titleTmp.alignment = TextAlignmentOptions.MidlineLeft;
+        ODLabel titleLbl   = titleGO.AddComponent<ODLabel>();
+        titleLbl.textStyle = ODLabel.TextStyle.H2;
+        LayoutElement titleLE = titleGO.AddComponent<LayoutElement>();
+        titleLE.flexibleWidth = 1f;
+        titleGO.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, 40f);
+
+        GameObject divGO = new GameObject("Divider");
+        divGO.transform.SetParent(cardGO.transform, false);
+        Image divImg = divGO.AddComponent<Image>();
+        divImg.color = BorderColor;
+        divImg.raycastTarget = false;
+        divGO.AddComponent<ODDivider>();
+        divGO.AddComponent<LayoutElement>().preferredHeight = 1f;
+
+        GameObject content = new GameObject("Content");
+        content.transform.SetParent(cardGO.transform, false);
+        VerticalLayoutGroup contentVlg = GetOrAdd<VerticalLayoutGroup>(content);
+        contentVlg.padding                = new RectOffset(20, 20, 16, 20);
+        contentVlg.spacing                = 12f;
+        contentVlg.childAlignment         = TextAnchor.UpperLeft;
+        contentVlg.childControlWidth      = true;
+        contentVlg.childForceExpandWidth  = true;
+        contentVlg.childForceExpandHeight = false;
+        ContentSizeFitter contentCsf = GetOrAdd<ContentSizeFitter>(content);
+        contentCsf.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
+        contentCsf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        RectTransform contentRT = content.GetComponent<RectTransform>();
+        contentRT.sizeDelta = Vector2.zero;
+
+        // Root VLG so Header→Divider→Content stack and the card grows with its content
+        VerticalLayoutGroup rootVlg = cardGO.AddComponent<VerticalLayoutGroup>();
+        rootVlg.childForceExpandWidth  = true;
+        rootVlg.childForceExpandHeight = false;
+        rootVlg.childControlWidth      = true;
+        rootVlg.childControlHeight     = false;
+        cardGO.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        bgGO.AddComponent<LayoutElement>().ignoreLayout = true;
+
+        card.titleLabel  = titleLbl;
+        card.divider     = divGO;
+        card.contentArea = contentRT;
+
+        modal.overlay = overlayImg;
+        modal.card    = card;
+
+        popup.modal               = modal;
+        popup.ghostButtonPrefab   = AssetDatabase.LoadAssetAtPath<GameObject>(MolPath + "ODButton_Ghost.prefab");
+        popup.primaryButtonPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(MolPath + "ODButton_Primary.prefab");
+        popup.dangerButtonPrefab  = AssetDatabase.LoadAssetAtPath<GameObject>(MolPath + "ODButton_Danger.prefab");
+        popup.inputFieldPrefab    = AssetDatabase.LoadAssetAtPath<GameObject>(MolPath + "ODInputField.prefab");
+
+        if (popup.ghostButtonPrefab == null || popup.primaryButtonPrefab == null ||
+            popup.dangerButtonPrefab == null || popup.inputFieldPrefab == null)
+        {
+            Debug.LogError("[ODUIBuilder] ODPopup could not find one of its button/input-field prefabs — " +
+                            "run 'Overdrive > Build OD_UI Prefabs' first, then re-run 'Build OD_UI Organisms'.");
+        }
+
+        Save(root, OrgPath + "ODPopup.prefab");
+        Object.DestroyImmediate(root);
+    }
+
+    // ── ODMenuOverlay ────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Reusable dropdown: pill trigger ("Label ⌄") that reveals a floating
+    /// item list below it. Only the shell is baked here — SetItems() builds
+    /// the actual rows at runtime.
+    /// </summary>
+    static void BuildODMenuOverlay()
+    {
+        GameObject root = new GameObject("ODMenuOverlay", typeof(RectTransform));
+        ODMenuOverlay menu = root.AddComponent<ODMenuOverlay>();
+        RectTransform rootRT = root.GetComponent<RectTransform>();
+        rootRT.sizeDelta = new Vector2(170f, 48f);
+
+        // ── Trigger pill ─────────────────────────────────────────────────────
+        GameObject triggerGO = new GameObject("Trigger", typeof(RectTransform));
+        triggerGO.transform.SetParent(root.transform, false);
+        RectTransform triggerRT = triggerGO.GetComponent<RectTransform>();
+        triggerRT.anchorMin = Vector2.zero;
+        triggerRT.anchorMax = Vector2.one;
+        triggerRT.offsetMin = Vector2.zero;
+        triggerRT.offsetMax = Vector2.zero;
+
+        RoundedImage triggerImg = triggerGO.AddComponent<RoundedImage>();
+        triggerImg.color        = PanelBg;
+        triggerImg.cornerRadius = 24f;
+        ODBackground triggerBg  = triggerGO.AddComponent<ODBackground>();
+        triggerBg.backgroundStyle = ODBackground.Style.Card;
+        Button triggerBtn = triggerGO.AddComponent<Button>();
+        triggerBtn.targetGraphic = triggerImg;
+
+        HorizontalLayoutGroup triggerHlg = triggerGO.AddComponent<HorizontalLayoutGroup>();
+        triggerHlg.padding                = new RectOffset(20, 16, 0, 0);
+        triggerHlg.spacing                = 8f;
+        triggerHlg.childAlignment         = TextAnchor.MiddleCenter;
+        triggerHlg.childControlWidth      = false;
+        triggerHlg.childControlHeight     = true;
+        triggerHlg.childForceExpandWidth  = true;
+        triggerHlg.childForceExpandHeight = true;
+
+        GameObject triggerLabelGO = new GameObject("Label", typeof(RectTransform));
+        triggerLabelGO.transform.SetParent(triggerGO.transform, false);
+        TextMeshProUGUI triggerTmp = triggerLabelGO.AddComponent<TextMeshProUGUI>();
+        triggerTmp.text      = "Menu";
+        triggerTmp.fontSize  = 20f;
+        triggerTmp.fontStyle = FontStyles.Bold;
+        triggerTmp.color     = TextPrimary;
+        triggerTmp.alignment = TextAlignmentOptions.MidlineLeft;
+        ODLabel triggerLbl = triggerLabelGO.AddComponent<ODLabel>();
+        triggerLbl.textStyle = ODLabel.TextStyle.Body;
+        triggerLabelGO.AddComponent<LayoutElement>().flexibleWidth = 1f;
+
+        GameObject chevronGO = new GameObject("Chevron", typeof(RectTransform));
+        chevronGO.transform.SetParent(triggerGO.transform, false);
+        TextMeshProUGUI chevronTmp = chevronGO.AddComponent<TextMeshProUGUI>();
+        chevronTmp.text      = "⌄";
+        chevronTmp.fontSize  = 22f;
+        chevronTmp.color     = TextSecondary;
+        chevronTmp.alignment = TextAlignmentOptions.Center;
+        ODLabel chevronLbl = chevronGO.AddComponent<ODLabel>();
+        chevronLbl.textStyle = ODLabel.TextStyle.Body;
+        chevronGO.AddComponent<LayoutElement>().preferredWidth = 20f;
+
+        // ── Overlay panel (hidden by default, extends downward from the trigger's bottom) ──
+        GameObject overlayGO = new GameObject("OverlayPanel", typeof(RectTransform));
+        overlayGO.transform.SetParent(root.transform, false);
+        RectTransform overlayRT = overlayGO.GetComponent<RectTransform>();
+        overlayRT.anchorMin        = new Vector2(0f, 0f);
+        overlayRT.anchorMax        = new Vector2(1f, 0f);
+        overlayRT.pivot            = new Vector2(0.5f, 1f);
+        overlayRT.anchoredPosition = new Vector2(0f, -8f);
+        overlayRT.sizeDelta        = new Vector2(60f, 0f); // +60 widens it past the trigger's own width
+
+        VerticalLayoutGroup overlayVlg = overlayGO.AddComponent<VerticalLayoutGroup>();
+        overlayVlg.padding                = new RectOffset(6, 6, 6, 6);
+        overlayVlg.spacing                = 2f;
+        overlayVlg.childAlignment         = TextAnchor.UpperLeft;
+        overlayVlg.childControlWidth      = true;
+        overlayVlg.childForceExpandWidth  = true;
+        overlayVlg.childControlHeight     = false;
+        overlayVlg.childForceExpandHeight = false;
+        overlayGO.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        GameObject overlayBgGO = new GameObject("Background", typeof(RectTransform));
+        overlayBgGO.transform.SetParent(overlayGO.transform, false);
+        RectTransform overlayBgRT = overlayBgGO.GetComponent<RectTransform>();
+        overlayBgRT.anchorMin = Vector2.zero;
+        overlayBgRT.anchorMax = Vector2.one;
+        overlayBgRT.offsetMin = Vector2.zero;
+        overlayBgRT.offsetMax = Vector2.zero;
+        overlayBgGO.AddComponent<RoundedImage>().cornerRadius = 20f;
+        ODBackground overlayBg = overlayBgGO.AddComponent<ODBackground>();
+        overlayBg.backgroundStyle = ODBackground.Style.Alt;
+        overlayBgGO.AddComponent<LayoutElement>().ignoreLayout = true;
+
+        menu.triggerButton  = triggerBtn;
+        menu.triggerLabel   = triggerLbl;
+        menu.overlayPanel   = overlayGO;
+        menu.itemsContainer = overlayGO.transform;
+
+        Save(root, OrgPath + "ODMenuOverlay.prefab");
+        Object.DestroyImmediate(root);
     }
 
     // ── Level 3 ──────────────────────────────────────────────────────────────────
