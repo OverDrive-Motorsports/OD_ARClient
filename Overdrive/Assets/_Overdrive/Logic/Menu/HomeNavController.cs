@@ -9,6 +9,7 @@
  ##
  */
 
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -28,6 +29,11 @@ public class HomeNavController : MonoBehaviour
     public GameObject championshipButtons;
     public GameObject profileArea;
 
+    private CanvasGroup _championshipGroup;
+    private CanvasGroup _profileGroup;
+    private Coroutine   _championshipRoutine;
+    private Coroutine   _profileRoutine;
+
     private void Awake()
     {
         // A World Space canvas needs its worldCamera set for the
@@ -35,6 +41,15 @@ public class HomeNavController : MonoBehaviour
         // Never bake a scene camera reference into the prefab itself.
         Canvas canvas = GetComponent<Canvas>();
         if (canvas != null) canvas.worldCamera = Camera.main;
+
+        if (championshipButtons != null) _championshipGroup = GetOrAddCanvasGroup(championshipButtons);
+        if (profileArea != null)         _profileGroup      = GetOrAddCanvasGroup(profileArea);
+    }
+
+    private static CanvasGroup GetOrAddCanvasGroup(GameObject go)
+    {
+        CanvasGroup cg = go.GetComponent<CanvasGroup>();
+        return cg != null ? cg : go.AddComponent<CanvasGroup>();
     }
 
     private void Start()
@@ -56,11 +71,33 @@ public class HomeNavController : MonoBehaviour
         if (index < 0 || index >= navBar.items.Count) return;
         homeCard.SetTitle(navBar.items[index].label);
 
-        if (championshipButtons != null)
-            championshipButtons.SetActive(index == ChampionshipsTabIndex);
+        SetSectionVisible(championshipButtons, _championshipGroup, ref _championshipRoutine, index == ChampionshipsTabIndex);
+        SetSectionVisible(profileArea, _profileGroup, ref _profileRoutine, index == ProfileTabIndex);
+    }
 
-        if (profileArea != null)
-            profileArea.SetActive(index == ProfileTabIndex);
+    /// <summary>Cross-fades a tab section in/out instead of an instant SetActive cut. No-op if already in the requested state.</summary>
+    private void SetSectionVisible(GameObject section, CanvasGroup group, ref Coroutine routine, bool visible)
+    {
+        if (section == null) return;
+        if (section.activeSelf == visible) return;
+
+        if (routine != null) StopCoroutine(routine);
+
+        if (visible)
+        {
+            section.SetActive(true);
+            routine = StartCoroutine(UITransitions.FadeScaleIn(group, section.transform));
+        }
+        else
+        {
+            routine = StartCoroutine(HideSection(section, group));
+        }
+    }
+
+    private IEnumerator HideSection(GameObject section, CanvasGroup group)
+    {
+        yield return UITransitions.FadeScaleOut(group, section.transform);
+        section.SetActive(false);
     }
 
     private void WireChampionshipButtons()

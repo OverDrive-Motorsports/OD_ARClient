@@ -3,7 +3,7 @@
  ## OverDrive 2026
  ## All Technical rights reserved
  ##
- ## ChampionshipPageBuilder - Assembles the championship page's EMPTY skeleton:
+ ## ChampionshipPageScreenBuilder - Assembles the championship page's EMPTY skeleton:
  ## an ODCard with 5 named section containers and a persistent Replay footer.
  ## ChampionshipPageController fills the sections at runtime, entirely from
  ## whichever ChampionshipData is passed to Open() — this builder has no
@@ -16,11 +16,15 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
+/// BUILD ORDER — Tier 02 (Screens). Requires: 01_ODUIBuilder must have already
+/// produced ODCard, ODButton_Ghost and ODDataTable ("Overdrive &gt; Build OD_UI Base"
+/// first) — Build() logs an error and aborts otherwise.
+///
 /// Builds "ChampionshipPage". WindowHandle (never modified by this builder)
 /// is attached to the root so the page is draggable, like every other
 /// floating window.
 /// </summary>
-public static class ChampionshipPageBuilder
+public static class ChampionshipPageScreenBuilder
 {
     const string CardPrefabPath        = "Assets/_Overdrive/UI/Prefabs/Organisms/ODCard.prefab";
     const string GhostButtonPrefabPath = "Assets/_Overdrive/UI/Prefabs/Molecules/ODButton_Ghost.prefab";
@@ -28,7 +32,6 @@ public static class ChampionshipPageBuilder
     const string SaveDir  = "Assets/_Overdrive/UI/Prefabs/Screens";
     const string SavePath = SaveDir + "/ChampionshipPage.prefab";
 
-    [MenuItem("Overdrive/Build Championship Page")]
     public static void Build()
     {
         var cardAsset   = AssetDatabase.LoadAssetAtPath<GameObject>(CardPrefabPath);
@@ -36,7 +39,7 @@ public static class ChampionshipPageBuilder
         var tableAsset  = AssetDatabase.LoadAssetAtPath<GameObject>(DataTablePrefabPath);
         if (cardAsset == null || ghostAsset == null || tableAsset == null)
         {
-            Debug.LogError("[ChampionshipPageBuilder] ODCard/ODButton_Ghost/ODDataTable prefabs not found — run 'Overdrive > Build OD_UI Prefabs' and 'Build OD_UI Organisms' first.");
+            Debug.LogError("[ChampionshipPageScreenBuilder] ODCard/ODButton_Ghost/ODDataTable prefabs not found — run 'Overdrive > Build OD_UI Base' first.");
             return;
         }
 
@@ -104,7 +107,7 @@ public static class ChampionshipPageBuilder
         // ── Save ─────────────────────────────────────────────────────────────
         System.IO.Directory.CreateDirectory(SaveDir);
         PrefabUtility.SaveAsPrefabAsset(canvasGO, SavePath);
-        Debug.Log($"[ChampionshipPageBuilder] Championship page saved to {SavePath}");
+        Debug.Log($"[ChampionshipPageScreenBuilder] Championship page saved to {SavePath}");
 
         Selection.activeGameObject = canvasGO;
     }
@@ -132,7 +135,7 @@ public static class ChampionshipPageBuilder
         return rt;
     }
 
-    /// <summary>Same ODCard title-wrapping fix as HomeNavBuilder — see its comment for why.</summary>
+    /// <summary>Same ODCard title-wrapping fix as HomeNavScreenBuilder — see its comment for why.</summary>
     static void FixTitleOrientation(GameObject cardGO)
     {
         Transform header = cardGO.transform.Find("Header");

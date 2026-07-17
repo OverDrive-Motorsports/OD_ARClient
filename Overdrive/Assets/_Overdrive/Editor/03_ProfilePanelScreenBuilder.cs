@@ -4,25 +4,51 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
+/// BUILD ORDER — Tier 03 (Screen sub-builder). Requires: 02_MainMenuScreenBuilder
+/// must have already saved "OverdriveMenuCanvas/OverdriveMenuPanel/Body/ContentArea"
+/// in the scene — this class finds that path by name and aborts with an error if
+/// it's missing.
+///
 /// Builds the "ProfilePanel" inside ContentArea with EXPLICIT fixed positions
 /// (no layout groups for the main structure), so it can never collapse to
 /// zero height. Dark + gold, rounded cards, Apple/visionOS look.
 /// OverdriveMainMenu auto-detects it by name when the Profile nav is selected.
 /// </summary>
-public static class BuildProfilePanel
+public static class ProfilePanelScreenBuilder
 {
-    // ── palette ──────────────────────────────────────────────────────────────
-    static readonly Color Card     = new Color(0.20f, 0.18f, 0.15f, 1f);
-    static readonly Color CardSoft = new Color(0.24f, 0.21f, 0.17f, 1f);
-    static readonly Color Track    = new Color(0.30f, 0.27f, 0.22f, 1f);
-    static readonly Color Gold     = new Color(0.85f, 0.70f, 0.20f, 1f);
-    static readonly Color Txt      = new Color(0.92f, 0.90f, 0.86f, 1f);
-    static readonly Color Sub      = new Color(0.62f, 0.60f, 0.56f, 1f);
+    // ── palette — pulled from UITheme.Instance by PullTheme() ──────────────────
+    static Color Card;
+    static Color CardSoft;
+    static Color Track;
+    static Color Gold;
+    static Color Txt;
+    static Color Sub;
 
-    static readonly Color Ferrari  = new Color(0.90f, 0.05f, 0.05f, 1f);
-    static readonly Color RedBull  = new Color(0.10f, 0.22f, 0.60f, 1f);
-    static readonly Color Merc     = new Color(0.00f, 0.82f, 0.74f, 1f);
-    static readonly Color McLaren  = new Color(1.00f, 0.50f, 0.00f, 1f);
+    static Color Ferrari;
+    static Color RedBull;
+    static Color Merc;
+    static Color McLaren;
+
+    static void PullTheme()
+    {
+        UITheme theme = UITheme.Instance;
+        UITheme fallback = ScriptableObject.CreateInstance<UITheme>();
+        if (theme == null) theme = fallback;
+
+        Card     = theme.panelBackgroundAlt;
+        CardSoft = theme.surfaceColor;
+        Track    = Color.Lerp(Card, Color.white, 0.15f);
+        Gold     = theme.accentGold;
+        Txt      = theme.textPrimary;
+        Sub      = theme.textSecondary;
+
+        Ferrari  = theme.teamFerrari;
+        RedBull  = theme.teamRedBull;
+        Merc     = theme.teamMercedes;
+        McLaren  = theme.teamMcLaren;
+
+        Object.DestroyImmediate(fallback);
+    }
 
     const string CONTENT = "OverdriveMenuCanvas/OverdriveMenuPanel/Body/ContentArea";
 
@@ -34,9 +60,10 @@ public static class BuildProfilePanel
     const float HEADER_H = 168f;
     const float STATS_H  = 118f;
 
-    [MenuItem("Overdrive/Build Profile Panel")]
     public static void Build()
     {
+        PullTheme();
+
         var contentArea = GameObject.Find(CONTENT);
         if (contentArea == null) { Debug.LogError("[Profile] ContentArea not found"); return; }
 

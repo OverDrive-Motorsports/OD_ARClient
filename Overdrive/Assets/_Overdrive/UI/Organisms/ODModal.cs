@@ -83,47 +83,19 @@ public class ODModal : MonoBehaviour
     }
 
     // ── Animation ─────────────────────────────────────────────────────────────────
+    // Delegates to UITransitions so every reveal/dismiss in the app (page opens,
+    // dropdowns, tab switches) shares this same easing instead of duplicating it.
 
-    /// <summary>Ease-out cubic: fast start, gentle settle. Card enters from slightly below full size.</summary>
     private IEnumerator AnimateIn()
     {
-        const float duration = 0.20f;
-        float elapsed = 0f;
         Transform cardT = card != null ? card.transform : null;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            float t    = Mathf.Clamp01(elapsed / duration);
-            float ease = 1f - Mathf.Pow(1f - t, 3f); // ease-out cubic
-
-            if (_cardGroup != null) _cardGroup.alpha = ease;
-            if (cardT      != null) cardT.localScale = Vector3.one * Mathf.Lerp(0.92f, 1f, ease);
-            yield return null;
-        }
-
-        if (_cardGroup != null) _cardGroup.alpha = 1f;
-        if (cardT      != null) cardT.localScale = Vector3.one;
+        yield return UITransitions.FadeScaleIn(_cardGroup, cardT);
     }
 
-    /// <summary>Ease-in quad: slower start, fast exit. Shorter duration (0.15s) so dismiss feels snappy.</summary>
     private IEnumerator AnimateOut()
     {
-        const float duration = 0.15f;
-        float elapsed = 0f;
         Transform cardT = card != null ? card.transform : null;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            float t    = Mathf.Clamp01(elapsed / duration);
-            float ease = t * t; // ease-in quad
-
-            if (_cardGroup != null) _cardGroup.alpha = 1f - ease;
-            if (cardT      != null) cardT.localScale = Vector3.one * Mathf.Lerp(1f, 0.92f, ease);
-            yield return null;
-        }
-
+        yield return UITransitions.FadeScaleOut(_cardGroup, cardT);
         gameObject.SetActive(false);
     }
 }

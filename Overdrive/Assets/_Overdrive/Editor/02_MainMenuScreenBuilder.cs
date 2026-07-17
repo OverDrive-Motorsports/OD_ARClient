@@ -3,20 +3,52 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public static class OverdriveMenuBuilder
+/// <summary>
+/// BUILD ORDER — Tier 02 (Screens). Requires: 01_ODUIBuilder (UITheme.asset only —
+/// this screen builds its own GameObjects from scratch, no ODCard/ODButton prefabs).
+/// Downstream: 03_SearchPanelScreenBuilder, 03_ProfilePanelScreenBuilder,
+/// 03_VideoPlayerScreenBuilder (soft) all attach to the hierarchy this class saves,
+/// so re-run this BEFORE any of them if OverdriveMenuPanel.prefab doesn't exist yet.
+/// </summary>
+public static class MainMenuScreenBuilder
 {
-    private static readonly Color BgColor          = new Color(0.13f, 0.11f, 0.09f, 0.95f);
-    private static readonly Color SidebarColor     = new Color(0.10f, 0.09f, 0.07f, 1f);
-    private static readonly Color ContentAreaColor = new Color(0.16f, 0.14f, 0.11f, 1f);
-    private static readonly Color SearchBarColor   = new Color(0.20f, 0.18f, 0.15f, 1f);
-    private static readonly Color ButtonHoverColor = new Color(0.22f, 0.19f, 0.15f, 1f);
-    private static readonly Color GoldColor        = new Color(0.85f, 0.70f, 0.20f, 1f);
-    private static readonly Color TextColor        = new Color(0.90f, 0.88f, 0.84f, 1f);
-    private static readonly Color SubTextColor     = new Color(0.60f, 0.58f, 0.55f, 1f);
+    // Palette pulled from UITheme.Instance at build time — see PullTheme(). Falls
+    // back to UITheme's own default values if no asset exists yet in Resources.
+    private static Color BgColor;
+    private static Color SidebarColor;
+    private static Color ContentAreaColor;
+    private static Color SearchBarColor;
+    private static Color HoverOverlay;
+    private static Color PressedOverlay;
+    private static Color GoldColor;
+    private static Color TextColor;
+    private static Color SubTextColor;
+    private static float CornerRadius;
 
-    [MenuItem("Overdrive/Build Main Menu Prefab")]
-    public static void BuildMenu()
+    static void PullTheme()
     {
+        UITheme theme = UITheme.Instance;
+        UITheme fallback = ScriptableObject.CreateInstance<UITheme>();
+        if (theme == null) theme = fallback;
+
+        BgColor          = theme.panelBackgroundAlt;
+        SidebarColor     = theme.panelBackground;
+        ContentAreaColor = theme.panelBackgroundAlt;
+        SearchBarColor   = theme.surfaceColor;
+        HoverOverlay     = theme.hoverOverlay;
+        PressedOverlay   = theme.pressedOverlay;
+        GoldColor        = theme.accentGold;
+        TextColor        = theme.textPrimary;
+        SubTextColor     = theme.textSecondary;
+        CornerRadius     = theme.cornerRadius;
+
+        Object.DestroyImmediate(fallback);
+    }
+
+    public static void Build()
+    {
+        PullTheme();
+
         // -- Canvas --
         GameObject canvasGO = new GameObject("OverdriveMenuCanvas");
         Canvas canvas = canvasGO.AddComponent<Canvas>();
@@ -30,7 +62,7 @@ public static class OverdriveMenuBuilder
 
         // -- Root Panel (rounded dark bg) --
         GameObject panel = CreatePanel("OverdriveMenuPanel", canvasGO.transform,
-            new Vector2(0, 0), new Vector2(1400, 800), BgColor);
+            new Vector2(0, 0), new Vector2(1400, 800), BgColor, CornerRadius);
         RectTransform panelRT = panel.GetComponent<RectTransform>();
         panelRT.anchorMin = new Vector2(0.5f, 0.5f);
         panelRT.anchorMax = new Vector2(0.5f, 0.5f);
@@ -46,9 +78,9 @@ public static class OverdriveMenuBuilder
         titleRT.anchoredPosition = new Vector2(20, -16);
         titleRT.sizeDelta = new Vector2(220, 50);
 
-        // -- Search Bar --
+        // -- Search Bar (fully rounded pill: radius = height / 2) --
         GameObject searchBg = CreatePanel("SearchBar", panel.transform,
-            new Vector2(0, 0), new Vector2(800, 44), SearchBarColor);
+            new Vector2(0, 0), new Vector2(800, 44), SearchBarColor, 22f);
         RectTransform searchRT = searchBg.GetComponent<RectTransform>();
         searchRT.anchorMin = new Vector2(0.5f, 1);
         searchRT.anchorMax = new Vector2(0.5f, 1);
@@ -176,12 +208,23 @@ public static class OverdriveMenuBuilder
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    static GameObject CreatePanel(string name, Transform parent, Vector2 pos, Vector2 size, Color color)
+    // radius = 0 keeps a flat Image (used for panels flush against another
+    // panel's straight edge, e.g. Sidebar/ContentArea against the rounded root).
+    static GameObject CreatePanel(string name, Transform parent, Vector2 pos, Vector2 size, Color color, float radius = 0f)
     {
         GameObject go = new GameObject(name);
         go.transform.SetParent(parent, false);
-        Image img = go.AddComponent<Image>();
-        img.color = color;
+        if (radius > 0f)
+        {
+            RoundedImage rounded = go.AddComponent<RoundedImage>();
+            rounded.cornerRadius = radius;
+            rounded.color        = color;
+        }
+        else
+        {
+            Image img = go.AddComponent<Image>();
+            img.color = color;
+        }
         RectTransform rt = go.GetComponent<RectTransform>();
         rt.anchoredPosition = pos;
         rt.sizeDelta = size;
@@ -214,8 +257,8 @@ public static class OverdriveMenuBuilder
 
         ColorBlock cb = btn.colors;
         cb.normalColor = Color.clear;
-        cb.highlightedColor = ButtonHoverColor;
-        cb.pressedColor = ButtonHoverColor;
+        cb.highlightedColor = HoverOverlay;
+        cb.pressedColor = PressedOverlay;
         btn.colors = cb;
         btn.targetGraphic = bg;
 
@@ -239,14 +282,12 @@ public static class OverdriveMenuBuilder
 
     static void CreateGridItem(string name, Transform parent)
     {
-        GameObject go = CreatePanel(name, parent, Vector2.zero, Vector2.zero,
-            new Color(0.22f, 0.19f, 0.15f, 1f));
+        GameObject go = CreatePanel(name, parent, Vector2.zero, Vector2.zero, ContentAreaColor, CornerRadius);
 
         go.AddComponent<ContentGridItem>();
 
-        // Thumbnail placeholder
-        GameObject thumb = CreatePanel("Thumbnail", go.transform, Vector2.zero, Vector2.zero,
-            new Color(0.30f, 0.26f, 0.20f, 1f));
+        // Thumbnail placeholder — same radius as its parent card so corners align exactly
+        GameObject thumb = CreatePanel("Thumbnail", go.transform, Vector2.zero, Vector2.zero, SearchBarColor, CornerRadius);
         RectTransform trt = thumb.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
         trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;

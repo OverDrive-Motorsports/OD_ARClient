@@ -13,14 +13,15 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Generates all OD_UI prefabs via three Overdrive menu items:
-/// <list type="bullet">
-///   <item>Overdrive &gt; Build OD_UI Prefabs — atoms + molecules</item>
-///   <item>Overdrive &gt; Build OD_UI Organisms — ODCard, ODModal, ODNavBar</item>
-///   <item>Overdrive &gt; Build OD_UI Level3 — gold border, table, driver card, media controls</item>
-/// </list>
-/// Re-run at any time to reset prefabs to their defaults. All baked color constants
-/// must match UITheme.cs default values exactly so prefabs look correct before theme is loaded.
+/// BUILD ORDER — Tier 01 (Foundation). No dependencies: safe to run first, any time.
+/// Every other builder in Editor/02_*, 03_*, 04_* requires the prefabs this class
+/// produces (Screens instantiate ODCard/ODNavBar/etc., Fixers style them further).
+///
+/// Generates all OD_UI prefabs (atoms, molecules, organisms, Level3) via
+/// "Overdrive &gt; Build OD_UI Base", or individually via "Overdrive &gt; OD_AllUnit &gt; ...".
+/// Re-run at any time to reset prefabs to their defaults. Baked color constants are
+/// pulled from UITheme.Instance by PullTheme() at the start of BuildBase(), so they
+/// can never drift out of sync with the theme asset.
 /// </summary>
 public static class ODUIBuilder
 {
@@ -29,44 +30,147 @@ public static class ODUIBuilder
     private const string MolPath     = "Assets/_Overdrive/UI/Prefabs/Molecules/";
     private const string OrgPath     = "Assets/_Overdrive/UI/Prefabs/Organisms/";
 
-    // ── Brand colors baked into prefabs (must match UITheme defaults exactly) ────
-    private static readonly Color GoldColor        = new Color(0.788f, 0.659f, 0.298f, 1.00f); // #C9A84C
-    private static readonly Color GoldBorderColorA = new Color(0.788f, 0.659f, 0.298f, 0.60f); // #C9A84C 60%
-    private static readonly Color DangerColor      = new Color(0.910f, 0.000f, 0.176f, 1.00f); // #E8002D
-    private static readonly Color PanelBg          = new Color(0.110f, 0.110f, 0.125f, 0.78f); // rgba(28,28,32,0.78)
-    private static readonly Color SurfaceColor     = new Color(0.173f, 0.173f, 0.204f, 0.90f); // rgba(44,44,52,0.90)
-    private static readonly Color TextPrimary      = new Color(0.949f, 0.949f, 0.969f, 1.00f); // #F2F2F7
-    private static readonly Color TextSecondary    = new Color(0.557f, 0.557f, 0.576f, 1.00f); // #8E8E93
-    private static readonly Color BorderColor      = new Color(1.000f, 1.000f, 1.000f, 0.10f); // white 10%
+    // ── Brand colors baked into prefabs — pulled from UITheme.Instance by PullTheme()
+    // so hand-tuning UITheme.asset can never drift out of sync with these prefabs again.
+    private static Color GoldColor;
+    private static Color GoldBorderColorA;
+    private static Color DangerColor;
+    private static Color PanelBg;
+    private static Color SurfaceColor;
+    private static Color TextPrimary;
+    private static Color TextSecondary;
+    private static Color BorderColor;
+
+    static void PullTheme()
+    {
+        UITheme theme = AssetDatabase.LoadAssetAtPath<UITheme>(ThemePath);
+        UITheme fallback = ScriptableObject.CreateInstance<UITheme>();
+        if (theme == null) theme = fallback;
+
+        GoldColor        = theme.accentGold;
+        GoldBorderColorA = theme.goldBorderColorA;
+        DangerColor      = theme.dangerColor;
+        PanelBg          = theme.panelBackground;
+        SurfaceColor     = theme.surfaceColor;
+        TextPrimary      = theme.textPrimary;
+        TextSecondary    = theme.textSecondary;
+        BorderColor      = theme.borderColor;
+
+        Object.DestroyImmediate(fallback);
+    }
 
     // ── Menu items ───────────────────────────────────────────────────────────────
 
     /// <summary>Creates or refreshes all Atom and Molecule prefabs in Assets/_Overdrive/UI/Prefabs/.</summary>
-    [MenuItem("Overdrive/Build OD_UI Prefabs")]
-    public static void BuildAll()
+    static void BuildAll()
     {
-        EnsureDirectories();
-        EnsureUIThemeAsset();
         BuildAtomPrefabs();
         BuildMoleculePrefabs();
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
-        Debug.Log("[ODUIBuilder] All OD_UI prefabs built successfully.");
-        EditorUtility.DisplayDialog("OD_UI Builder", "Atoms + Molecules created in Assets/_Overdrive/UI/Prefabs/", "OK");
     }
 
     /// <summary>Creates or refreshes ODCard, ODModal, ODNavBar, ODPopup, and ODMenuOverlay prefabs in Assets/_Overdrive/UI/Prefabs/Organisms/.</summary>
-    [MenuItem("Overdrive/Build OD_UI Organisms")]
-    public static void BuildOrganisms()
+    static void BuildOrganisms()
+    {
+        BuildOrganismPrefabs();
+    }
+
+    // ── OD_AllUnit submenu — build any single unit, or a single prefab, in isolation ──
+    // (Overdrive > Build OD_UI Base still builds everything in one pass.)
+
+    /// <summary>Shared plumbing for every OD_AllUnit menu item: directories, theme asset, theme colors, then save+refresh+log.</summary>
+    static void RunSingleBuild(System.Action buildAction, string label)
     {
         EnsureDirectories();
         EnsureUIThemeAsset();
-        BuildOrganismPrefabs();
+        PullTheme();
+        buildAction();
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log("[ODUIBuilder] Organism prefabs built successfully.");
-        EditorUtility.DisplayDialog("OD_UI Builder", "Organisms created in Assets/_Overdrive/UI/Prefabs/Organisms/", "OK");
+        Debug.Log($"[ODUIBuilder] {label} built successfully.");
     }
+
+    // Category shortcuts (build every prefab in that unit level)
+    [MenuItem("Overdrive/OD_AllUnit/Atoms/Build All Atoms", false, 1)]
+    public static void BuildAtomsOnly() => RunSingleBuild(BuildAtomPrefabs, "All atom prefabs");
+
+    [MenuItem("Overdrive/OD_AllUnit/Molecules/Build All Molecules", false, 1)]
+    public static void BuildMoleculesOnly() => RunSingleBuild(BuildMoleculePrefabs, "All molecule prefabs");
+
+    [MenuItem("Overdrive/OD_AllUnit/Organisms/Build All Organisms", false, 1)]
+    public static void BuildOrganismsOnly() => RunSingleBuild(BuildOrganismPrefabs, "All organism prefabs");
+
+    [MenuItem("Overdrive/OD_AllUnit/Level3/Build All Level3", false, 1)]
+    public static void BuildLevel3Only() => RunSingleBuild(BuildLevel3, "All Level3 prefabs");
+
+    // Individual atoms
+    [MenuItem("Overdrive/OD_AllUnit/Atoms/ODBackground", false, 2)]
+    public static void BuildODBackgroundOnly() => RunSingleBuild(BuildODBackground, "ODBackground");
+
+    [MenuItem("Overdrive/OD_AllUnit/Atoms/ODLabel", false, 3)]
+    public static void BuildODLabelOnly() => RunSingleBuild(BuildODLabel, "ODLabel");
+
+    [MenuItem("Overdrive/OD_AllUnit/Atoms/ODIcon", false, 4)]
+    public static void BuildODIconOnly() => RunSingleBuild(BuildODIcon, "ODIcon");
+
+    [MenuItem("Overdrive/OD_AllUnit/Atoms/ODDivider", false, 5)]
+    public static void BuildODDividerOnly() => RunSingleBuild(BuildODDivider, "ODDivider");
+
+    // Individual molecules
+    [MenuItem("Overdrive/OD_AllUnit/Molecules/ODButton Primary", false, 2)]
+    public static void BuildODButtonPrimaryOnly() => RunSingleBuild(() => BuildODButton(ODButton.ButtonStyle.Primary, "ODButton_Primary"), "ODButton_Primary");
+
+    [MenuItem("Overdrive/OD_AllUnit/Molecules/ODButton Ghost", false, 3)]
+    public static void BuildODButtonGhostOnly() => RunSingleBuild(() => BuildODButton(ODButton.ButtonStyle.Ghost, "ODButton_Ghost"), "ODButton_Ghost");
+
+    [MenuItem("Overdrive/OD_AllUnit/Molecules/ODButton Danger", false, 4)]
+    public static void BuildODButtonDangerOnly() => RunSingleBuild(() => BuildODButton(ODButton.ButtonStyle.Danger, "ODButton_Danger"), "ODButton_Danger");
+
+    [MenuItem("Overdrive/OD_AllUnit/Molecules/ODInputField", false, 5)]
+    public static void BuildODInputFieldOnly() => RunSingleBuild(BuildODInputField, "ODInputField");
+
+    [MenuItem("Overdrive/OD_AllUnit/Molecules/ODBadge", false, 6)]
+    public static void BuildODBadgeOnly() => RunSingleBuild(BuildODBadge, "ODBadge");
+
+    // Individual organisms
+    [MenuItem("Overdrive/OD_AllUnit/Organisms/ODCard", false, 2)]
+    public static void BuildODCardOnly() => RunSingleBuild(BuildODCard, "ODCard");
+
+    [MenuItem("Overdrive/OD_AllUnit/Organisms/ODModal", false, 3)]
+    public static void BuildODModalOnly() => RunSingleBuild(BuildODModal, "ODModal");
+
+    [MenuItem("Overdrive/OD_AllUnit/Organisms/ODNavBar", false, 4)]
+    public static void BuildODNavBarOnly() => RunSingleBuild(BuildODNavBar, "ODNavBar");
+
+    [MenuItem("Overdrive/OD_AllUnit/Organisms/ODPopup", false, 5)]
+    public static void BuildODPopupOnly() => RunSingleBuild(BuildODPopup, "ODPopup");
+
+    [MenuItem("Overdrive/OD_AllUnit/Organisms/ODMenuOverlay", false, 6)]
+    public static void BuildODMenuOverlayOnly() => RunSingleBuild(BuildODMenuOverlay, "ODMenuOverlay");
+
+    // Individual Level3
+    [MenuItem("Overdrive/OD_AllUnit/Level3/ODGoldBorder", false, 2)]
+    public static void BuildODGoldBorderOnly() => RunSingleBuild(BuildODGoldBorder, "ODGoldBorder");
+
+    [MenuItem("Overdrive/OD_AllUnit/Level3/ODLiveBadge", false, 3)]
+    public static void BuildODLiveBadgeOnly() => RunSingleBuild(BuildODLiveBadge, "ODLiveBadge");
+
+    [MenuItem("Overdrive/OD_AllUnit/Level3/ODBackgroundMedia", false, 4)]
+    public static void BuildODBackgroundMediaOnly() => RunSingleBuild(BuildODBackgroundMedia, "ODBackgroundMedia");
+
+    [MenuItem("Overdrive/OD_AllUnit/Level3/ODTelemetryCell", false, 5)]
+    public static void BuildODTelemetryCellOnly() => RunSingleBuild(BuildODTelemetryCell, "ODTelemetryCell");
+
+    [MenuItem("Overdrive/OD_AllUnit/Level3/ODTableRow", false, 6)]
+    public static void BuildODTableRowOnly() => RunSingleBuild(BuildODTableRow, "ODTableRow");
+
+    [MenuItem("Overdrive/OD_AllUnit/Level3/ODDataTable", false, 7)]
+    public static void BuildODDataTableOnly() => RunSingleBuild(BuildODDataTable, "ODDataTable");
+
+    [MenuItem("Overdrive/OD_AllUnit/Level3/ODDriverCard", false, 8)]
+    public static void BuildODDriverCardOnly() => RunSingleBuild(BuildODDriverCard, "ODDriverCard");
+
+    [MenuItem("Overdrive/OD_AllUnit/Level3/ODMediaControls", false, 9)]
+    public static void BuildODMediaControlsOnly() => RunSingleBuild(BuildODMediaControls, "ODMediaControls");
 
     // ── Directories ──────────────────────────────────────────────────────────────
 
@@ -383,7 +487,7 @@ public static class ODUIBuilder
         GameObject bgGO    = new GameObject("Background");
         bgGO.transform.SetParent(root.transform, false);
         RoundedImage bgImg  = bgGO.AddComponent<RoundedImage>();
-        bgImg.color         = new Color(0.557f, 0.557f, 0.576f, 0.12f); // Default variant baked
+        bgImg.color         = new Color(TextSecondary.r, TextSecondary.g, TextSecondary.b, 0.12f); // Default variant baked
         bgImg.cornerRadius  = 24f;
         bgImg.raycastTarget = false;
         ODBackground bg     = bgGO.AddComponent<ODBackground>();
@@ -924,7 +1028,7 @@ public static class ODUIBuilder
             popup.dangerButtonPrefab == null || popup.inputFieldPrefab == null)
         {
             Debug.LogError("[ODUIBuilder] ODPopup could not find one of its button/input-field prefabs — " +
-                            "run 'Overdrive > Build OD_UI Prefabs' first, then re-run 'Build OD_UI Organisms'.");
+                            "run 'Overdrive > OD_AllUnit > Molecules > Build All Molecules' first, then re-run this.");
         }
 
         Save(root, OrgPath + "ODPopup.prefab");
@@ -1042,11 +1146,8 @@ public static class ODUIBuilder
     /// ODTableRow, ODDataTable, ODDriverCard, ODMediaControls) and refreshes atoms + molecules
     /// with the current dark-theme color constants.
     /// </summary>
-    [MenuItem("Overdrive/Build OD_UI Level3")]
-    public static void BuildLevel3()
+    static void BuildLevel3()
     {
-        EnsureDirectories();
-        EnsureUIThemeAsset();
         BuildODGoldBorder();
         BuildODLiveBadge();
         BuildODBackgroundMedia();
@@ -1058,10 +1159,22 @@ public static class ODUIBuilder
         // Refresh atoms + molecules with updated dark theme colours
         BuildAtomPrefabs();
         BuildMoleculePrefabs();
+    }
+
+    /// <summary>Creates or refreshes every base OD_UI prefab: atoms, molecules, organisms and Level3 (gold border, table, driver card, media controls).</summary>
+    [MenuItem("Overdrive/Build OD_UI Base", false, 1)]
+    public static void BuildBase()
+    {
+        EnsureDirectories();
+        EnsureUIThemeAsset();
+        PullTheme();
+        BuildAll();
+        BuildOrganisms();
+        BuildLevel3();
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log("[ODUIBuilder] Level3 prefabs built successfully.");
-        EditorUtility.DisplayDialog("OD_UI Builder", "Level3 (8 prefabs) created in Assets/_Overdrive/UI/Prefabs/", "OK");
+        Debug.Log("[ODUIBuilder] Base OD_UI prefabs (atoms, molecules, organisms, level3) built successfully.");
+        EditorUtility.DisplayDialog("OD_UI Builder", "Atoms, Molecules, Organisms and Level3 created in Assets/_Overdrive/UI/Prefabs/", "OK");
     }
 
     static void BuildODGoldBorder()

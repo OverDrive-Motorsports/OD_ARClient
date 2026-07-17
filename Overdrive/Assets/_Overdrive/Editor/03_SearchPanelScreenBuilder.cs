@@ -4,26 +4,47 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
+/// BUILD ORDER — Tier 03 (Screen sub-builder). Requires: 02_MainMenuScreenBuilder
+/// must have already saved "OverdriveMenuCanvas/OverdriveMenuPanel" in the scene —
+/// this class finds that path by name and aborts with an error if it's missing.
+///
 /// Upgrades the SearchBar into a working TMP_InputField and builds the
 /// SearchOverlay (filter chips + results list + empty-state) beneath it.
 /// Adds & auto-wires SearchController. Re-runnable.
 /// </summary>
-public static class BuildSearchPanel
+public static class SearchPanelScreenBuilder
 {
     const string PANEL = "OverdriveMenuCanvas/OverdriveMenuPanel";
 
-    static readonly Color Overlay  = new Color(0.12f, 0.10f, 0.08f, 0.98f);
-    static readonly Color Field    = new Color(0.20f, 0.18f, 0.15f, 1f);
-    static readonly Color ChipOff  = new Color(0.24f, 0.21f, 0.17f, 1f);
-    static readonly Color Gold     = new Color(0.85f, 0.70f, 0.20f, 1f);
-    static readonly Color Txt      = new Color(0.92f, 0.90f, 0.86f, 1f);
-    static readonly Color Sub      = new Color(0.62f, 0.60f, 0.56f, 1f);
+    static Color Overlay;
+    static Color Field;
+    static Color ChipOff;
+    static Color Gold;
+    static Color Txt;
+    static Color Sub;
 
     static readonly string[] Chips = { "All", "Races", "Drivers", "Teams", "Circuits", "Seasons" };
 
-    [MenuItem("Overdrive/Build Search (Command Bar)")]
+    static void PullTheme()
+    {
+        UITheme theme = UITheme.Instance;
+        UITheme fallback = ScriptableObject.CreateInstance<UITheme>();
+        if (theme == null) theme = fallback;
+
+        Overlay = theme.panelBackgroundAlt;
+        Field   = theme.surfaceColor;
+        ChipOff = theme.panelBackground;
+        Gold    = theme.accentGold;
+        Txt     = theme.textPrimary;
+        Sub     = theme.textSecondary;
+
+        Object.DestroyImmediate(fallback);
+    }
+
     public static void Build()
     {
+        PullTheme();
+
         var panel = GameObject.Find(PANEL);
         if (panel == null) { Debug.LogError("[Search] Panel not found"); return; }
 
@@ -91,7 +112,7 @@ public static class BuildSearchPanel
         inputField.lineType        = TMP_InputField.LineType.SingleLine;
         inputField.customCaretColor = true;
         inputField.caretColor      = Gold;
-        inputField.selectionColor  = new Color(0.85f, 0.70f, 0.20f, 0.35f);
+        inputField.selectionColor  = new Color(Gold.r, Gold.g, Gold.b, 0.35f);
     }
 
     // ── Overlay ───────────────────────────────────────────────────────────────

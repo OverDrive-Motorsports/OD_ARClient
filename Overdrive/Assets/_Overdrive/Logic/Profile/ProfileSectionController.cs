@@ -9,6 +9,7 @@
  ##
  */
 
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -32,12 +33,25 @@ public class ProfileSectionController : MonoBehaviour
     private const string MockName  = "Julien Martin";
     private const string MockEmail = "julien.martin@email.com";
 
+    private CanvasGroup _profileGroup;
+    private CanvasGroup _settingsGroup;
+    private Coroutine   _viewRoutine;
+
     private void Start()
     {
+        if (profileContent  != null) _profileGroup  = GetOrAddCanvasGroup(profileContent.gameObject);
+        if (settingsContent != null) _settingsGroup = GetOrAddCanvasGroup(settingsContent.gameObject);
+
         SetupMenuOverlay();
         BuildProfileContent();
         BuildSettingsContent();
         ShowProfile();
+    }
+
+    private static CanvasGroup GetOrAddCanvasGroup(GameObject go)
+    {
+        CanvasGroup cg = go.GetComponent<CanvasGroup>();
+        return cg != null ? cg : go.AddComponent<CanvasGroup>();
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -53,18 +67,39 @@ public class ProfileSectionController : MonoBehaviour
 
     public void ShowProfile()
     {
-        profileContent?.gameObject.SetActive(true);
-        settingsContent?.gameObject.SetActive(false);
+        SwitchView(profileContent?.gameObject, _profileGroup, settingsContent?.gameObject, _settingsGroup);
         menuOverlay?.SetTriggerLabel("Profil");
         RefreshMenuItems("Profil");
     }
 
     public void ShowSettings()
     {
-        profileContent?.gameObject.SetActive(false);
-        settingsContent?.gameObject.SetActive(true);
+        SwitchView(settingsContent?.gameObject, _settingsGroup, profileContent?.gameObject, _profileGroup);
         menuOverlay?.SetTriggerLabel("Réglages");
         RefreshMenuItems("Réglages");
+    }
+
+    /// <summary>Cross-fades from one tab view to the other instead of an instant SetActive cut. No-op if already showing.</summary>
+    private void SwitchView(GameObject show, CanvasGroup showGroup, GameObject hide, CanvasGroup hideGroup)
+    {
+        if (show != null && show.activeSelf) return;
+
+        if (_viewRoutine != null) StopCoroutine(_viewRoutine);
+        _viewRoutine = StartCoroutine(SwitchViewRoutine(show, showGroup, hide, hideGroup));
+    }
+
+    private IEnumerator SwitchViewRoutine(GameObject show, CanvasGroup showGroup, GameObject hide, CanvasGroup hideGroup)
+    {
+        if (hide != null && hide.activeSelf)
+        {
+            yield return UITransitions.FadeScaleOut(hideGroup, hide.transform);
+            hide.SetActive(false);
+        }
+        if (show != null)
+        {
+            show.SetActive(true);
+            yield return UITransitions.FadeScaleIn(showGroup, show.transform);
+        }
     }
 
     /// <summary>Only Profil/Réglages — no Abonnement entry.</summary>

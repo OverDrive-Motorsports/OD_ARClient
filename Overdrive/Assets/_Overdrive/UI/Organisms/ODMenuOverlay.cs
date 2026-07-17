@@ -9,6 +9,7 @@
  ##
  */
 
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -40,10 +41,19 @@ public class ODMenuOverlay : MonoBehaviour
     /// <summary>Items are parented directly here (root of overlayPanel) — see ChampionshipPageController's NewCardBlock pattern for why Background is a sibling with ignoreLayout instead of a separate container.</summary>
     public Transform    itemsContainer;
 
+    private CanvasGroup _overlayGroup;
+    private Coroutine   _transition;
+
     private void Awake()
     {
         overlayPanel?.SetActive(false);
         triggerButton?.onClick.AddListener(Toggle);
+
+        if (overlayPanel != null)
+        {
+            _overlayGroup = overlayPanel.GetComponent<CanvasGroup>();
+            if (_overlayGroup == null) _overlayGroup = overlayPanel.AddComponent<CanvasGroup>();
+        }
     }
 
     // ── Public API ────────────────────────────────────────────────────────────────
@@ -78,9 +88,23 @@ public class ODMenuOverlay : MonoBehaviour
         overlayPanel.SetActive(true);
         // Render above whatever siblings sit after us in the hierarchy.
         overlayPanel.transform.SetAsLastSibling();
+
+        if (_transition != null) StopCoroutine(_transition);
+        _transition = StartCoroutine(UITransitions.FadeScaleIn(_overlayGroup, overlayPanel.transform));
     }
 
-    public void Close() => overlayPanel?.SetActive(false);
+    public void Close()
+    {
+        if (overlayPanel == null) return;
+        if (_transition != null) StopCoroutine(_transition);
+        _transition = StartCoroutine(CloseRoutine());
+    }
+
+    private IEnumerator CloseRoutine()
+    {
+        yield return UITransitions.FadeScaleOut(_overlayGroup, overlayPanel.transform);
+        overlayPanel.SetActive(false);
+    }
 
     // ── Internal ─────────────────────────────────────────────────────────────────
 
@@ -98,7 +122,8 @@ public class ODMenuOverlay : MonoBehaviour
         row.AddComponent<LayoutElement>().preferredHeight = 48f;
 
         Image bg = row.AddComponent<Image>();
-        bg.color = item.isSelected ? new Color(1f, 1f, 1f, 0.08f) : Color.clear;
+        UITheme theme = UITheme.Instance;
+        bg.color = item.isSelected ? (theme != null ? theme.hoverOverlay : new Color(1f, 1f, 1f, 0.08f)) : Color.clear;
 
         Button button = row.AddComponent<Button>();
         button.targetGraphic = bg;

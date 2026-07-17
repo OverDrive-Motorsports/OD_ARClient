@@ -69,6 +69,38 @@ public class UITheme : ScriptableObject
     /// <summary>Gold border dim end (#C9A84C at 8%) — bottom-right of ODGoldBorder diagonal gradient.</summary>
     public Color goldBorderColorB = new Color(0.788f, 0.659f, 0.298f, 0.08f);
 
+    [Header("Interaction States")]
+    /// <summary>White overlay at low opacity, layered on any dark surface to signal hover. Matches ODMenuOverlay's selected-row tint.</summary>
+    public Color hoverOverlay   = new Color(1.000f, 1.000f, 1.000f, 0.08f);
+    /// <summary>White overlay at higher opacity for the pressed/active state.</summary>
+    public Color pressedOverlay = new Color(1.000f, 1.000f, 1.000f, 0.14f);
+
+    [Header("Team Colors")]
+    /// <summary>Scuderia Ferrari red.</summary>
+    public Color teamFerrari  = new Color(0.900f, 0.050f, 0.050f, 1.00f);
+    /// <summary>Red Bull Racing navy.</summary>
+    public Color teamRedBull  = new Color(0.100f, 0.220f, 0.600f, 1.00f);
+    /// <summary>Mercedes-AMG petronas teal.</summary>
+    public Color teamMercedes = new Color(0.000f, 0.820f, 0.740f, 1.00f);
+    /// <summary>McLaren papaya orange.</summary>
+    public Color teamMcLaren  = new Color(1.000f, 0.500f, 0.000f, 1.00f);
+
+    [Header("Spacing Scale")]
+    /// <summary>4pt — tightest gap, icon-to-label.</summary>
+    public float space1 = 4f;
+    /// <summary>8pt — compact spacing between related elements.</summary>
+    public float space2 = 8f;
+    /// <summary>12pt — default spacing inside layout groups.</summary>
+    public float space3 = 12f;
+    /// <summary>16pt — default outer padding.</summary>
+    public float space4 = 16f;
+    /// <summary>24pt — section spacing.</summary>
+    public float space5 = 24f;
+    /// <summary>32pt — generous section padding.</summary>
+    public float space6 = 32f;
+    /// <summary>48pt — page-level margins.</summary>
+    public float space7 = 48f;
+
     [Header("Shape")]
     /// <summary>Default rounded corner radius in UI units. Applied to panels and buttons.</summary>
     public float cornerRadius    = 24f;

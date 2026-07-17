@@ -3,7 +3,7 @@
  ## OverDrive 2026
  ## All Technical rights reserved
  ##
- ## HomeNavBuilder - Assembles the persistent bottom nav bar + floating home
+ ## HomeNavScreenBuilder - Assembles the persistent bottom nav bar + floating home
  ## mini-window screen out of the existing ODNavBar / ODCard organisms.
  ##
  */
@@ -15,6 +15,11 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
+/// BUILD ORDER — Tier 02 (Screens). Requires: 01_ODUIBuilder must have already
+/// produced ODNavBar, ODCard, ODButton_Ghost, ODButton_Danger, ODMenuOverlay and
+/// ODPopup (run "Overdrive &gt; Build OD_UI Base" first, or the matching
+/// OD_AllUnit entries) — Build() logs an error and aborts otherwise.
+///
 /// Builds "HomeNavScreen": the always-on-screen bottom navigation bar (5 tabs)
 /// with a floating ODCard above it. The card's content area is left empty —
 /// only its title changes to match the selected tab (Home/Championnats/
@@ -23,7 +28,7 @@ using TMPro;
 /// WindowHandle (never modified by this builder) is attached to the shared
 /// root so the nav bar and the home card always drag together as one group.
 /// </summary>
-public static class HomeNavBuilder
+public static class HomeNavScreenBuilder
 {
     const string NavBarPrefabPath        = "Assets/_Overdrive/UI/Prefabs/Organisms/ODNavBar.prefab";
     const string CardPrefabPath          = "Assets/_Overdrive/UI/Prefabs/Organisms/ODCard.prefab";
@@ -45,7 +50,6 @@ public static class HomeNavBuilder
     const float NavBarBottomOffset = 24f;
     const float CardToNavBarGap    = 16f;
 
-    [MenuItem("Overdrive/Build Home Nav Screen")]
     public static void Build()
     {
         var navBarAsset     = AssetDatabase.LoadAssetAtPath<GameObject>(NavBarPrefabPath);
@@ -57,7 +61,7 @@ public static class HomeNavBuilder
         if (navBarAsset == null || cardAsset == null || ghostAsset == null ||
             dangerAsset == null || menuOverlayAsset == null || popupAsset == null)
         {
-            Debug.LogError("[HomeNavBuilder] A required prefab (ODNavBar/ODCard/ODButton_Ghost/ODButton_Danger/ODMenuOverlay/ODPopup) was not found — run 'Overdrive > Build OD_UI Prefabs' then 'Build OD_UI Organisms' first.");
+            Debug.LogError("[HomeNavScreenBuilder] A required prefab (ODNavBar/ODCard/ODButton_Ghost/ODButton_Danger/ODMenuOverlay/ODPopup) was not found — run 'Overdrive > Build OD_UI Base' first.");
             return;
         }
 
@@ -149,7 +153,7 @@ public static class HomeNavBuilder
         // ── Save ─────────────────────────────────────────────────────────────
         System.IO.Directory.CreateDirectory(SaveDir);
         PrefabUtility.SaveAsPrefabAsset(canvasGO, SavePath);
-        Debug.Log($"[HomeNavBuilder] Home nav screen saved to {SavePath}");
+        Debug.Log($"[HomeNavScreenBuilder] Home nav screen saved to {SavePath}");
 
         Selection.activeGameObject = canvasGO;
     }
@@ -264,7 +268,7 @@ public static class HomeNavBuilder
         Transform container = navBar.itemsContainer;
         if (container == null || container.childCount == 0)
         {
-            Debug.LogError("[HomeNavBuilder] ODNavBar has no itemsContainer/children to clone from.");
+            Debug.LogError("[HomeNavScreenBuilder] ODNavBar has no itemsContainer/children to clone from.");
             return;
         }
 

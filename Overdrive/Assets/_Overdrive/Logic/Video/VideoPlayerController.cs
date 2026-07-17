@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
@@ -97,10 +98,23 @@ public class VideoPlayerController : MonoBehaviour
         }
         UpdatePlayLabel();
         ShowRanking();
+
+        // Fade only (no scale): the root's own localScale is the baked 0.001
+        // world-space canvas scale, so UITransitions must not touch transform here.
+        StopAllCoroutines();
+        StartCoroutine(UITransitions.FadeScaleIn(_cg, null));
     }
 
     public void BackToMenu()
     {
+        StopAllCoroutines();
+        StartCoroutine(BackToMenuRoutine());
+    }
+
+    private IEnumerator BackToMenuRoutine()
+    {
+        yield return UITransitions.FadeScaleOut(_cg, null);
+
         if (videoPlayer != null) videoPlayer.Stop();
 
         if (rankingWidget != null) rankingWidget.SetActive(false);

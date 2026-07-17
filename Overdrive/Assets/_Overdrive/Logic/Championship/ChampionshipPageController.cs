@@ -11,6 +11,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -47,6 +48,8 @@ public class ChampionshipPageController : MonoBehaviour
 
     private static readonly string[] FrenchDays = { "Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam" };
 
+    private CanvasGroup _canvasGroup;
+
     private void Awake()
     {
         Instance = this;
@@ -56,6 +59,9 @@ public class ChampionshipPageController : MonoBehaviour
         // Never bake a scene camera reference into the prefab itself.
         Canvas canvas = GetComponent<Canvas>();
         if (canvas != null) canvas.worldCamera = Camera.main;
+
+        _canvasGroup = GetComponent<CanvasGroup>();
+        if (_canvasGroup == null) _canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
         gameObject.SetActive(false);
     }
@@ -92,9 +98,22 @@ public class ChampionshipPageController : MonoBehaviour
         if (data.standings != null) PopulateStandings(data.standings);
 
         PlaceInFrontOfUser();
+
+        StopAllCoroutines();
+        StartCoroutine(UITransitions.FadeScaleIn(_canvasGroup, card != null ? card.transform : null));
     }
 
-    public void Close() => gameObject.SetActive(false);
+    public void Close()
+    {
+        StopAllCoroutines();
+        StartCoroutine(CloseRoutine());
+    }
+
+    private IEnumerator CloseRoutine()
+    {
+        yield return UITransitions.FadeScaleOut(_canvasGroup, card != null ? card.transform : null);
+        gameObject.SetActive(false);
+    }
 
     private static void SetSectionActive(RectTransform section, bool active)
     {

@@ -3,7 +3,17 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public static class EnhanceGridPlaceholders
+/// <summary>
+/// BUILD ORDER — Tier 04 (Visual fix). Requires: an "OverdriveMenuCanvas" INSTANCE
+/// already present in the currently open scene (GameObject.Find, not a prefab
+/// lookup) with its grid built by 02_MainMenuScreenBuilder — aborts with an error
+/// if GridContent isn't found.
+///
+/// Tints each grid placeholder with a distinct accent color + adds a play icon
+/// and race name bar, purely so mock grid items are visually distinguishable
+/// before real thumbnails exist (see 04_MockupThumbnailsFixer for the real ones).
+/// </summary>
+public static class GridPlaceholdersFixer
 {
     // Thumbnail accent colors to differentiate placeholders
     static Color[] accentColors = {
@@ -20,8 +30,7 @@ public static class EnhanceGridPlaceholders
         "Japan GP",   "China GP",        "Miami GP"
     };
 
-    [MenuItem("Overdrive/Enhance Grid Placeholders")]
-    public static void Enhance()
+    public static void Apply()
     {
         GameObject gridContent = GameObject.Find(
             "OverdriveMenuCanvas/OverdriveMenuPanel/Body/ContentArea/GridScrollView/Viewport/GridContent");

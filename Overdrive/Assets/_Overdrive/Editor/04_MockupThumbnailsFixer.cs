@@ -4,20 +4,26 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
+/// BUILD ORDER — Tier 04 (Visual fix). Requires: an "OverdriveMenuCanvas" INSTANCE
+/// already present in the currently open scene (GameObject.Find, not a prefab
+/// lookup) with its grid built by 02_MainMenuScreenBuilder — aborts with an error
+/// if GridContent isn't found.
+///
 /// Fills the Races grid with the mockup thumbnails from
 /// Assets/_Overdrive/DevAssets/Miniature — one card per image, as if real video
 /// thumbnails had been fetched from the backend. Each card is clickable
 /// and opens the VideoPlayerCanvas. Re-runnable.
 /// </summary>
-public static class ApplyMockupThumbnails
+public static class MockupThumbnailsFixer
 {
     const string MINIATURE_DIR = "Assets/_Overdrive/DevAssets/Miniature";
     const string GRID_PATH =
         "OverdriveMenuCanvas/OverdriveMenuPanel/Body/ContentArea/GridScrollView/Viewport/GridContent";
 
-    static readonly Color CardBg  = new Color(0.22f, 0.19f, 0.15f, 1f);
-    static readonly Color BarBg   = new Color(0.08f, 0.07f, 0.06f, 0.85f);
-    static readonly Color Txt     = new Color(0.92f, 0.90f, 0.86f, 1f);
+    // Palette — pulled from UITheme.Instance by PullTheme() so grid cards match the rest of the app.
+    static Color CardBg;
+    static Color BarBg;
+    static Color Txt;
 
     // Nice display names instead of raw file names
     static readonly string[] RaceNames = {
@@ -27,9 +33,20 @@ public static class ApplyMockupThumbnails
         "Spa GP", "Monza GP", "Singapore GP"
     };
 
-    [MenuItem("Overdrive/Apply Mockup Thumbnails")]
+    static void PullTheme()
+    {
+        UITheme theme = UITheme.Instance;
+        if (theme == null) return;
+
+        CardBg = theme.panelBackgroundAlt;
+        BarBg  = Color.Lerp(theme.panelBackground, Color.black, 0.3f);
+        Txt    = theme.textPrimary;
+    }
+
     public static void Apply()
     {
+        PullTheme();
+
         var grid = GameObject.Find(GRID_PATH);
         if (grid == null) { Debug.LogError("[Thumbs] GridContent not found"); return; }
 

@@ -5,32 +5,61 @@ using UnityEngine.Video;
 using TMPro;
 
 /// <summary>
+/// BUILD ORDER — Tier 03 (Screen sub-builder), soft dependency only: builds its
+/// own canvas from scratch, and only LOOKS UP "OverdriveMenuCanvas" (from
+/// 02_MainMenuScreenBuilder) to wire the back-to-menu link — safe to run before
+/// or after it, just re-run this once the menu exists if that link matters.
+///
 /// Builds the floating "VideoPlayerCanvas": a liquid-glass world-space window
 /// with the video surface (RawImage + RenderTexture), a scrub bar, transport
 /// buttons (⏮10 · play/pause · 10⏭), a back button (top-left), and the
 /// draggable WindowHandle pill. Wires VideoPlayerController automatically.
 /// Re-runnable.
 /// </summary>
-public static class BuildVideoPlayer
+public static class VideoPlayerScreenBuilder
 {
     // ── layout (canvas local units, scale 0.001 ⇒ 1000 units = 1 m) ──────────
     const float W = 1280f, H = 860f;      // window
     const float VIDEO_H = 700f;           // video surface height
     const float PAD = 24f;
 
-    // ── palette (liquid glass, consistent with the menu) ─────────────────────
-    static readonly Color Glass    = new Color(0.10f, 0.09f, 0.08f, 0.86f);
-    static readonly Color GlassSoft= new Color(0.22f, 0.20f, 0.17f, 0.90f);
-    static readonly Color Track    = new Color(0.35f, 0.33f, 0.29f, 0.8f);
-    static readonly Color Gold     = new Color(0.85f, 0.70f, 0.20f, 1f);
-    static readonly Color Txt      = new Color(0.94f, 0.92f, 0.88f, 1f);
+    // ── palette (liquid glass) — pulled from UITheme.Instance by PullTheme() ──
+    static Color Glass;
+    static Color GlassSoft;
+    static Color Track;
+    static Color Gold;
+    static Color Txt;
+    static Color TxtSecondary;
+    static Color ButtonHighlight;
+    static Color ButtonPressed;
+
+    static void PullTheme()
+    {
+        UITheme theme = UITheme.Instance;
+        UITheme fallback = ScriptableObject.CreateInstance<UITheme>();
+        if (theme == null) theme = fallback;
+
+        Glass        = theme.panelBackground;
+        GlassSoft    = theme.panelBackgroundAlt;
+        Track        = Color.Lerp(Glass, Color.white, 0.2f);
+        Gold         = theme.accentGold;
+        Txt          = theme.textPrimary;
+        TxtSecondary = theme.textSecondary;
+        // Button ColorTint replaces the graphic's color outright, so hover/press
+        // need solid tones (not the low-alpha hoverOverlay/pressedOverlay tokens).
+        ButtonHighlight = Color.Lerp(GlassSoft, Color.white, 0.10f);
+        ButtonPressed   = Color.Lerp(GlassSoft, Gold, 0.20f);
+
+        Object.DestroyImmediate(fallback);
+    }
 
     const string RT_PATH   = "Assets/_Overdrive/DevAssets/VideoRenderTexture.renderTexture";
     const string VIDEO_DIR = "Assets/_Overdrive/DevAssets/Video";
 
-    [MenuItem("Overdrive/Build Video Player")]
     public static void Build()
     {
+        PullTheme();
+
         var old = GameObject.Find("VideoPlayerCanvas");
         if (old != null) Object.DestroyImmediate(old);
         // also find inactive leftover
@@ -121,7 +150,7 @@ public static class BuildVideoPlayer
 
         // Time label (right side of the transport row)
         var time = Label(root.transform, "TimeLabel", "0:00 / 0:00", 17f, FontStyles.Normal,
-                         new Color(0.7f, 0.68f, 0.64f, 1f), TextAlignmentOptions.MidlineRight);
+                         TxtSecondary, TextAlignmentOptions.MidlineRight);
         var timeRT = time.GetComponent<RectTransform>();
         timeRT.anchorMin = new Vector2(1, 1); timeRT.anchorMax = new Vector2(1, 1); timeRT.pivot = new Vector2(1, 0.5f);
         timeRT.anchoredPosition = new Vector2(-PAD - 8f, rowY); timeRT.sizeDelta = new Vector2(220, 30);
@@ -215,8 +244,8 @@ public static class BuildVideoPlayer
         var btn = go.AddComponent<Button>(); btn.targetGraphic = bg;
 
         var cb = btn.colors;
-        cb.highlightedColor = new Color(0.32f, 0.29f, 0.24f, 1f);
-        cb.pressedColor     = new Color(0.42f, 0.36f, 0.26f, 1f);
+        cb.highlightedColor = ButtonHighlight;
+        cb.pressedColor     = ButtonPressed;
         btn.colors = cb;
 
         Label(go.transform, "Label", txt, big ? 26f : 18f, FontStyles.Bold, Txt, TextAlignmentOptions.Center, stretch: true);

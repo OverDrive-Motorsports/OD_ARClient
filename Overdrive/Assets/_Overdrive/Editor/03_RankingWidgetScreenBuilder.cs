@@ -4,27 +4,46 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
+/// BUILD ORDER — Tier 03 (Screen sub-builder), but standalone: builds its own
+/// canvas from scratch and doesn't depend on 02_MainMenuScreenBuilder or any
+/// 01_ODUIBuilder prefab. Safe to run any time.
+///
 /// Builds the live race standings widget (liquid-glass vertical panel):
 /// F1 RACE header, LAP counter, and 20 driver rows driven at runtime by
 /// RaceRankingManager (random overtakes + lap progression). Movable via
 /// WindowHandle. Explicit fixed positions everywhere — no layout groups.
 /// Re-runnable.
 /// </summary>
-public static class BuildRankingWidget
+public static class RankingWidgetScreenBuilder
 {
     // ── layout ────────────────────────────────────────────────────────────────
     const float W = 420f, H = 1500f;
     const float ROW_H = 56f, ROW_GAP = 8f, SIDE_PAD = 16f;
 
-    // ── palette (liquid glass) ───────────────────────────────────────────────
-    static readonly Color Glass   = new Color(0.10f, 0.09f, 0.08f, 0.72f);
-    static readonly Color RowBg   = new Color(0.07f, 0.06f, 0.06f, 0.78f);
-    static readonly Color F1Red   = new Color(0.88f, 0.06f, 0.10f, 1f);
-    static readonly Color Txt     = new Color(0.96f, 0.95f, 0.93f, 1f);
+    // ── palette (liquid glass) — Glass/RowBg/Txt pulled from UITheme.Instance,
+    // F1Red stays a literal since it's the F1 brand mark, not a themeable UI color.
+    static Color Glass;
+    static Color RowBg;
+    static readonly Color F1Red = new Color(0.88f, 0.06f, 0.10f, 1f);
+    static Color Txt;
 
-    [MenuItem("Overdrive/Build Ranking Widget")]
+    static void PullTheme()
+    {
+        UITheme theme = UITheme.Instance;
+        UITheme fallback = ScriptableObject.CreateInstance<UITheme>();
+        if (theme == null) theme = fallback;
+
+        Glass = theme.panelBackground;
+        RowBg = Color.Lerp(theme.panelBackground, Color.black, 0.3f);
+        Txt   = theme.textPrimary;
+
+        Object.DestroyImmediate(fallback);
+    }
+
     public static void Build()
     {
+        PullTheme();
+
         // remove old (also inactive)
         foreach (var c in Resources.FindObjectsOfTypeAll<Canvas>())
             if (c != null && c.gameObject.name == "RankingWidget" && c.gameObject.scene.IsValid())

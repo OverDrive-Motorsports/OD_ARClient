@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,25 +25,48 @@ public class SearchController : MonoBehaviour
         public Entry(string t, string s, Kind k, Color c) { title=t; subtitle=s; kind=k; accent=c; }
     }
 
-    // ── palette ────────────────────────────────────────────────────────────
-    static readonly Color RowBg   = new Color(0.20f, 0.18f, 0.15f, 1f);
-    static readonly Color RowHover= new Color(0.26f, 0.23f, 0.18f, 1f);
-    static readonly Color Gold    = new Color(0.85f, 0.70f, 0.20f, 1f);
-    static readonly Color Txt     = new Color(0.92f, 0.90f, 0.86f, 1f);
-    static readonly Color Sub     = new Color(0.62f, 0.60f, 0.56f, 1f);
-    static readonly Color ChipOn  = new Color(0.85f, 0.70f, 0.20f, 1f);
-    static readonly Color ChipOff = new Color(0.24f, 0.21f, 0.17f, 1f);
+    // ── palette — pulled from UITheme.Instance in Start() via PullTheme() so
+    // runtime-built rows match the rest of the app instead of their own brand. ──
+    static Color RowBg;
+    static Color RowHover;
+    static Color Gold;
+    static Color Txt;
+    static Color Sub;
+    static Color ChipOn;
+    static Color ChipOff;
 
-    static readonly Color Ferrari = new Color(0.90f, 0.05f, 0.05f, 1f);
-    static readonly Color RedBull = new Color(0.10f, 0.22f, 0.60f, 1f);
-    static readonly Color Merc    = new Color(0.00f, 0.82f, 0.74f, 1f);
-    static readonly Color McLaren = new Color(1.00f, 0.50f, 0.00f, 1f);
+    static Color Ferrari;
+    static Color RedBull;
+    static Color Merc;
+    static Color McLaren;
+    // Aston/Neutral aren't in UITheme (only the 4 teams already used elsewhere are) — literals stay.
     static readonly Color Aston   = new Color(0.00f, 0.45f, 0.40f, 1f);
     static readonly Color Neutral = new Color(0.55f, 0.55f, 0.60f, 1f);
+
+    static void PullTheme()
+    {
+        UITheme theme = UITheme.Instance;
+        if (theme == null) return;
+
+        RowBg     = theme.panelBackgroundAlt;
+        RowHover  = theme.surfaceColor;
+        Gold      = theme.accentGold;
+        Txt       = theme.textPrimary;
+        Sub       = theme.textSecondary;
+        ChipOn    = theme.accentGold;
+        ChipOff   = theme.panelBackground;
+
+        Ferrari = theme.teamFerrari;
+        RedBull = theme.teamRedBull;
+        Merc    = theme.teamMercedes;
+        McLaren = theme.teamMcLaren;
+    }
 
     // ── wired at runtime (auto-found) ───────────────────────────────────────
     private TMP_InputField _input;
     private GameObject      _overlay;
+    private CanvasGroup     _overlayGroup;
+    private Coroutine       _overlayRoutine;
     private GameObject      _emptyState;
     private GameObject      _resultsScroll;
     private Transform       _resultsContent;
@@ -61,6 +85,7 @@ public class SearchController : MonoBehaviour
     // ─────────────────────────────────────────────────────────────────────────
     private void Start()
     {
+        PullTheme();
         BuildDataset();
         AutoWire();
 
@@ -82,14 +107,25 @@ public class SearchController : MonoBehaviour
     // ── open / close ──────────────────────────────────────────────────────────
     public void Open()
     {
-        if (_overlay == null) return;
+        if (_overlay == null || _overlay.activeSelf) { Refresh(); return; }
+
         _overlay.SetActive(true);
+        if (_overlayRoutine != null) StopCoroutine(_overlayRoutine);
+        _overlayRoutine = StartCoroutine(UITransitions.FadeScaleIn(_overlayGroup, _overlay.transform));
         Refresh();
     }
 
     public void Close()
     {
-        if (_overlay != null) _overlay.SetActive(false);
+        if (_overlay == null || !_overlay.activeSelf) return;
+        if (_overlayRoutine != null) StopCoroutine(_overlayRoutine);
+        _overlayRoutine = StartCoroutine(CloseOverlayRoutine());
+    }
+
+    private IEnumerator CloseOverlayRoutine()
+    {
+        yield return UITransitions.FadeScaleOut(_overlayGroup, _overlay.transform);
+        _overlay.SetActive(false);
     }
 
     public void ToggleFromBar()
@@ -101,8 +137,8 @@ public class SearchController : MonoBehaviour
     // ── input / chips ──────────────────────────────────────────────────────────
     private void OnValueChanged(string _)
     {
-        if (!_overlay.activeSelf) _overlay.SetActive(true);
-        Refresh();
+        if (!_overlay.activeSelf) Open();
+        else Refresh();
     }
 
     private void SetChip(int idx)
@@ -289,6 +325,8 @@ public class SearchController : MonoBehaviour
         var overlayT = transform.Find("SearchOverlay");
         if (overlayT == null) { Debug.LogError("[Search] SearchOverlay not found"); return; }
         _overlay = overlayT.gameObject;
+        _overlayGroup = _overlay.GetComponent<CanvasGroup>();
+        if (_overlayGroup == null) _overlayGroup = _overlay.AddComponent<CanvasGroup>();
 
         _emptyState     = overlayT.Find("EmptyState")?.gameObject;
         _resultsScroll  = overlayT.Find("Results")?.gameObject;
