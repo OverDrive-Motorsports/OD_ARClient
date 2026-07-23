@@ -24,6 +24,11 @@ Groups the former `Scripts/UI/` controllers that already did orchestration
 playback. They currently rely on the mocks in `Data/Mock/ODMockData.cs`
 while waiting for a real backend.
 
+See [UI-Refresh-Pattern.md](./UI-Refresh-Pattern.md) for how a screen should
+hold and refresh its Entities (mutate in place, never replace), and
+[Example-EntityToODDataTable.md](./Example-EntityToODDataTable.md) for a
+worked example wiring `StandingEntry` into the existing `ODDataTable` prefab.
+
 ## Allowed dependencies
 
 Logic is the only layer allowed to depend on everything: Core, Data, UI,

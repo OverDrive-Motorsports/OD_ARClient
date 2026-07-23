@@ -16,13 +16,19 @@ Everything displayed in the app still comes from static mocks (see
 ```
 Core/
 ├── Network/
-│   ├── ApiConfig.cs          Gateway base URL + optional Bearer token
-│   ├── ApiClient.cs          Generic coroutine GET, deserializes with Newtonsoft
-│   ├── GatewayHealthApi.cs   GET /health
-│   └── GatewayHealthCheck.cs Manual test MonoBehaviour (not wired into app startup)
+│   ├── ApiConfig.cs            Gateway base URL + optional Bearer token
+│   ├── ApiClient.cs            Generic coroutine GET, deserializes with Newtonsoft
+│   ├── GatewayHealthApi.cs     GET /health
+│   └── GatewayHealthCheck.cs   Manual test MonoBehaviour (not wired into app startup)
 ├── Auth/      OAuth, session/token management (not started)
 └── Services/  Global services (SceneLoader, AppSettings...) (not started)
 ```
+
+No championship endpoint is wired to the backend yet — `Data/DTO/Championship`,
+`Data/Entities`, `Data/Mappers` exist (see [Data/Doc/README.md](../../Data/Doc/README.md))
+but nothing in `Core/Network` calls them yet. A `ChampionshipApi.cs` following
+the same shape as `GatewayHealthApi.cs` will be added here once a screen
+needs it.
 
 The gateway (`gateway/` service, see its `ROUTES.md`) currently accepts
 requests with no `Authorization` header, but will require a Bearer token
