@@ -15,8 +15,11 @@ Data/
 
 ## Current state
 
-- `DTO/` and `Entities/` are empty: no backend exchange exists yet in the
-  project (see [Core](../../Core/Doc/README.md)).
+- `DTO/Health/HealthStatusDTO.cs` mirrors the gateway's `GET /health`
+  response (`{"status":"ok"}`) — the first real DTO in the project, used by
+  [Core/Network](../../Core/Doc/README.md)'s `GatewayHealthApi`.
+- `Entities/` is still empty: no championship/race data flows through the
+  backend yet, only this health probe.
 - `Mock/ODMockData.cs` (moved from `OD_UI/Dev/`) holds the fake data
   currently used by UI and Logic to display rankings, drivers, videos, etc.
   Eventually these mocks should be replaced by real `Entities` fed through
