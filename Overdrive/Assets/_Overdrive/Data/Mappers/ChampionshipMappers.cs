@@ -6,21 +6,22 @@
  ## ChampionshipMappers - Applies championship DTOs onto existing Entities.
  ## Every TryApply mutates the "target" passed in and never creates one
  ## (creation only happens once per key, in Mappers/EntityCollectionSync.cs).
- ## Returns null on success, an error message when the entity's identifying
- ## field is missing/inconsistent - cosmetic fields are never validated.
+ ## Returns null on success, a DataError (kind Validation) when the entity's
+ ## identifying field is missing/inconsistent - cosmetic fields are never validated.
  ##
  */
 
 // Championship
 public static class ChampionshipMapper
 {
-    public static string TryApply(this ChampionshipDTO dto, Championship target)
+    public static DataError? TryApply(this ChampionshipDTO dto, Championship target)
     {
         if (dto == null || string.IsNullOrEmpty(dto.championshipCode))
-            return "championship missing championshipCode";
+            return new DataError(DataErrorKind.Validation, "ChampionshipMapper", "championship missing championshipCode");
 
         if (!string.IsNullOrEmpty(target.code) && target.code != dto.championshipCode)
-            return $"championship code mismatch: target is '{target.code}', dto is '{dto.championshipCode}'";
+            return new DataError(DataErrorKind.Validation, "ChampionshipMapper",
+                $"championship code mismatch: target is '{target.code}', dto is '{dto.championshipCode}'");
 
         target.code = dto.championshipCode;
         target.name = dto.name;
@@ -33,13 +34,14 @@ public static class ChampionshipMapper
 // ChampionshipEvent - two overloads, one per endpoint shape (EventSummaryDTO/EventDetailDTO).
 public static class ChampionshipEventMapper
 {
-    public static string TryApply(this EventSummaryDTO dto, ChampionshipEvent target)
+    public static DataError? TryApply(this EventSummaryDTO dto, ChampionshipEvent target)
     {
         if (dto == null || string.IsNullOrEmpty(dto.eventId))
-            return "event missing eventId";
+            return new DataError(DataErrorKind.Validation, "ChampionshipEventMapper", "event missing eventId");
 
         if (!string.IsNullOrEmpty(target.id) && target.id != dto.eventId)
-            return $"event id mismatch: target is '{target.id}', dto is '{dto.eventId}'";
+            return new DataError(DataErrorKind.Validation, "ChampionshipEventMapper",
+                $"event id mismatch: target is '{target.id}', dto is '{dto.eventId}'");
 
         target.id = dto.eventId;
         target.name = dto.name;
@@ -50,13 +52,14 @@ public static class ChampionshipEventMapper
         return null;
     }
 
-    public static string TryApply(this EventDetailDTO dto, ChampionshipEvent target)
+    public static DataError? TryApply(this EventDetailDTO dto, ChampionshipEvent target)
     {
         if (dto == null || string.IsNullOrEmpty(dto.eventId))
-            return "event missing eventId";
+            return new DataError(DataErrorKind.Validation, "ChampionshipEventMapper", "event missing eventId");
 
         if (!string.IsNullOrEmpty(target.id) && target.id != dto.eventId)
-            return $"event id mismatch: target is '{target.id}', dto is '{dto.eventId}'";
+            return new DataError(DataErrorKind.Validation, "ChampionshipEventMapper",
+                $"event id mismatch: target is '{target.id}', dto is '{dto.eventId}'");
 
         target.id = dto.eventId;
         target.championshipCode = dto.championshipCode;
@@ -73,13 +76,14 @@ public static class ChampionshipEventMapper
 // RaceSession - two overloads, one per endpoint shape (SessionSummaryDTO/SessionDetailDTO).
 public static class RaceSessionMapper
 {
-    public static string TryApply(this SessionSummaryDTO dto, RaceSession target)
+    public static DataError? TryApply(this SessionSummaryDTO dto, RaceSession target)
     {
         if (dto == null || string.IsNullOrEmpty(dto.sessionId))
-            return "session missing sessionId";
+            return new DataError(DataErrorKind.Validation, "RaceSessionMapper", "session missing sessionId");
 
         if (!string.IsNullOrEmpty(target.id) && target.id != dto.sessionId)
-            return $"session id mismatch: target is '{target.id}', dto is '{dto.sessionId}'";
+            return new DataError(DataErrorKind.Validation, "RaceSessionMapper",
+                $"session id mismatch: target is '{target.id}', dto is '{dto.sessionId}'");
 
         target.id = dto.sessionId;
         target.type = dto.type;
@@ -89,13 +93,14 @@ public static class RaceSessionMapper
         return null;
     }
 
-    public static string TryApply(this SessionDetailDTO dto, RaceSession target)
+    public static DataError? TryApply(this SessionDetailDTO dto, RaceSession target)
     {
         if (dto == null || string.IsNullOrEmpty(dto.sessionId))
-            return "session missing sessionId";
+            return new DataError(DataErrorKind.Validation, "RaceSessionMapper", "session missing sessionId");
 
         if (!string.IsNullOrEmpty(target.id) && target.id != dto.sessionId)
-            return $"session id mismatch: target is '{target.id}', dto is '{dto.sessionId}'";
+            return new DataError(DataErrorKind.Validation, "RaceSessionMapper",
+                $"session id mismatch: target is '{target.id}', dto is '{dto.sessionId}'");
 
         target.id = dto.sessionId;
         target.eventId = dto.eventId;
@@ -119,13 +124,14 @@ public static class RaceSessionMapper
 // Driver - two overloads, one per endpoint shape (SessionDriverDTO/DriverProfileDTO).
 public static class DriverMapper
 {
-    public static string TryApply(this SessionDriverDTO dto, Driver target)
+    public static DataError? TryApply(this SessionDriverDTO dto, Driver target)
     {
         if (dto == null || dto.driverNumber <= 0)
-            return "driver missing driverNumber";
+            return new DataError(DataErrorKind.Validation, "DriverMapper", "driver missing driverNumber");
 
         if (target.number != 0 && target.number != dto.driverNumber)
-            return $"driver number mismatch: target is '{target.number}', dto is '{dto.driverNumber}'";
+            return new DataError(DataErrorKind.Validation, "DriverMapper",
+                $"driver number mismatch: target is '{target.number}', dto is '{dto.driverNumber}'");
 
         target.number = dto.driverNumber;
         target.fullName = dto.fullName;
@@ -134,13 +140,14 @@ public static class DriverMapper
         return null;
     }
 
-    public static string TryApply(this DriverProfileDTO dto, Driver target)
+    public static DataError? TryApply(this DriverProfileDTO dto, Driver target)
     {
         if (dto == null || dto.driverNumber <= 0)
-            return "driver missing driverNumber";
+            return new DataError(DataErrorKind.Validation, "DriverMapper", "driver missing driverNumber");
 
         if (target.number != 0 && target.number != dto.driverNumber)
-            return $"driver number mismatch: target is '{target.number}', dto is '{dto.driverNumber}'";
+            return new DataError(DataErrorKind.Validation, "DriverMapper",
+                $"driver number mismatch: target is '{target.number}', dto is '{dto.driverNumber}'");
 
         target.number = dto.driverNumber;
         target.fullName = dto.fullName;
@@ -156,13 +163,14 @@ public static class DriverMapper
 // Team
 public static class TeamMapper
 {
-    public static string TryApply(this TeamDTO dto, Team target)
+    public static DataError? TryApply(this TeamDTO dto, Team target)
     {
         if (dto == null || string.IsNullOrEmpty(dto.teamId))
-            return "team missing teamId";
+            return new DataError(DataErrorKind.Validation, "TeamMapper", "team missing teamId");
 
         if (!string.IsNullOrEmpty(target.id) && target.id != dto.teamId)
-            return $"team id mismatch: target is '{target.id}', dto is '{dto.teamId}'";
+            return new DataError(DataErrorKind.Validation, "TeamMapper",
+                $"team id mismatch: target is '{target.id}', dto is '{dto.teamId}'");
 
         target.id = dto.teamId;
         target.name = dto.name;
@@ -171,16 +179,17 @@ public static class TeamMapper
     }
 }
 
-// StandingEntry - the one entity in this file that lives in Entities/Live (refreshed often).
+// StandingEntry - the one entity in this file refreshed often (see Entities/StandingEntry.cs).
 public static class StandingEntryMapper
 {
-    public static string TryApply(this StandingEntryDTO dto, StandingEntry target)
+    public static DataError? TryApply(this StandingEntryDTO dto, StandingEntry target)
     {
         if (dto == null || dto.driverNumber <= 0)
-            return "standing entry missing driverNumber";
+            return new DataError(DataErrorKind.Validation, "StandingEntryMapper", "standing entry missing driverNumber");
 
         if (target.driverNumber != 0 && target.driverNumber != dto.driverNumber)
-            return $"standing entry driver mismatch: target is '{target.driverNumber}', dto is '{dto.driverNumber}'";
+            return new DataError(DataErrorKind.Validation, "StandingEntryMapper",
+                $"standing entry driver mismatch: target is '{target.driverNumber}', dto is '{dto.driverNumber}'");
 
         target.position = dto.position;
         target.driverNumber = dto.driverNumber;

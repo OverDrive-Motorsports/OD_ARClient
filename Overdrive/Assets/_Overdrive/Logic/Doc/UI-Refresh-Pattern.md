@@ -20,11 +20,10 @@ remplacée, seul son contenu change (`EntityCollectionSync.Sync`).
   fonction de repaint après le fetch, qui **relit l'état courant** de
   l'entity/la liste et met à jour les éléments visuels.
 
-Ces deux exemples sont **illustratifs** : `Core/Network` n'a pas encore de
-façade championnat (pas de `ChampionshipApi.cs` pour l'instant — voir
-[Core/Doc/README.md](../../Core/Doc/README.md)). `GetEventDetail`/`GetStandings`
-ci-dessous montrent la forme qu'aura cette façade le jour où elle existera :
-fetch les DTO, les passe au mapper, `onSuccess`/`onError` en callback.
+`GetEventDetail`/`GetStandings` ci-dessous existent réellement dans
+`Core/Network/ChampionshipApi.cs` (voir
+[Core/Doc/README.md](../../Core/Doc/README.md)) : fetch les DTO, les passe
+au mapper, `onSuccess`/`onError` en callback.
 
 ## Cas 1 — une entity seule (donnée statique)
 
@@ -36,8 +35,8 @@ public class EventDetailController : MonoBehaviour
     private IEnumerator Refresh(string eventId)
     {
         yield return ChampionshipApi.GetEventDetail(eventId, _event,
-            () => Repaint(_event),           // succès : redessine avec l'état courant
-            error => Debug.LogError(error)); // échec : l'ancien affichage reste tel quel
+            () => Repaint(_event),   // succès : redessine avec l'état courant
+            error => error.Report()); // échec : l'ancien affichage reste tel quel (voir Data/Doc/README.md)
     }
 
     private void Repaint(ChampionshipEvent e)
@@ -66,7 +65,7 @@ public class StandingsController : MonoBehaviour
         {
             yield return ChampionshipApi.GetStandings(sessionId, _standings,
                 () => Repaint(_standings),
-                error => Debug.LogError(error));
+                error => error.Report());
 
             yield return new WaitForSeconds(5f);
         }

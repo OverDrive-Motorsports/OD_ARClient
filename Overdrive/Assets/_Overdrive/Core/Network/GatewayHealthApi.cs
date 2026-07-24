@@ -15,6 +15,6 @@ using System.Collections;
 public static class GatewayHealthApi
 {
     // Checks the gateway process itself is up (not the upstream services behind it).
-    public static IEnumerator GetGatewayHealth(Action<HealthStatusDTO> onSuccess, Action<string> onError)
+    public static IEnumerator GetGatewayHealth(Action<HealthStatusDTO> onSuccess, Action<DataError> onError)
         => ApiClient.Get("/health", onSuccess, onError);
 }

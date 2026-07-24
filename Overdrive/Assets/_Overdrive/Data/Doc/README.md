@@ -9,32 +9,43 @@ dependency on UI or Interaction.
 ```
 Data/
 ├── DTO/       Classes mirroring the JSON exchanged with the backend, grouped by domain/lifecycle
-├── Entities/
-│   ├── Static/  Rarely-changing objects (Championship...) — fetched once, rarely re-fetched
-│   └── Live/    Objects re-fetched on a timer while relevant (StandingEntry...) — updated in place, never replaced
+├── Entities/  Objects usable on the Unity side, mutated in place (no Static/Live subfolders - see below)
+├── Errors/    DataError - centralized error type + severity policy for the whole backend pipeline (see "Error handling" below)
 ├── Mappers/   DTO -> Entity conversion (TryApply mutates an existing entity; see "Error handling" below)
 └── Mock/      Static development/demo data
 ```
 
-An Entity's folder (`Static/` vs `Live/`) is decided purely by how often the
-screen showing it needs fresh data — not by the endpoint or the backend
-service it comes from.
+Entities aren't split into subfolders by refresh frequency — how often a
+screen re-fetches an Entity is a Logic-level decision (see
+[Logic/Doc/UI-Refresh-Pattern.md](../../Logic/Doc/UI-Refresh-Pattern.md)),
+not something the folder structure needs to encode. Each Entity's header
+comment says whether it's expected to be fetched once or refreshed often.
 
 ## Error handling
 
-DTOs stay pure mirrors of the JSON — no validation logic in them.
-`Core/Network/ApiClient` already handles network failures and unparseable
-JSON. What's left for `Mappers/` is validating the *identifying* field an
-Entity needs to be usable elsewhere (e.g. `championshipCode`,
-`driverNumber`) — if that's missing, `TryApply` returns an error message and
-the caller skips that one entry (logs a warning) instead of failing the
-whole list. Cosmetic fields (name, gap...) are never validated: missing just
-means an empty value on screen.
+Every backend-communication failure — network, JSON parsing, mapper
+validation — is reported as one `DataError` (`Errors/DataError.cs`) instead
+of each layer logging its own ad-hoc string:
+
+- `Core/Network/ApiClient` produces `DataErrorKind.Network` (request
+  unreachable/non-2xx) or `DataErrorKind.Deserialize` (JSON doesn't parse).
+- `Mappers/` produce `DataErrorKind.Validation` when an Entity's
+  *identifying* field is missing/inconsistent (e.g. `championshipCode`,
+  `driverNumber`) — cosmetic fields (name, gap...) are never validated.
+- `DataError.Report()` is the single place deciding severity: `Validation`
+  logs a warning (one entry skipped, the rest of the batch is still fine),
+  `Network`/`Deserialize` log an error (the whole call failed). Every
+  `onError` callback in the project should just call `error.Report()`
+  rather than reimplementing this decision.
+
+See [Error-Messages.md](./Error-Messages.md) for the full catalog of
+messages this can produce, where the `[Source]` tag comes from, and how to
+add a new one.
 
 ## Entities are mutated in place, never replaced
 
 Every mapper follows the same shape: `dto.TryApply(existingEntity)` (returns
-`null` on success, an error string otherwise) — it never returns a `new`
+`null` on success, a `DataError?` otherwise) — it never returns a `new`
 entity. The caller owns one long-lived instance (or `List<T>`) per screen and
 passes it into every fetch; for lists, `Mappers/EntityCollectionSync.cs`
 reconciles it in place (update matched keys, add new ones, drop missing
@@ -52,19 +63,19 @@ how a screen should hold and refresh these.
   `EventDetailDTO`), `SessionDTO.cs` (`SessionSummaryDTO`/`SessionDetailDTO`
   + `WeatherDTO`), `ParticipantDTO.cs` (`SessionDriverDTO`/`DriverProfileDTO`,
   `TeamDTO`, `StandingEntryDTO`).
-- `Entities/Static/ChampionshipEntities.cs` bundles `Championship`,
+- `Entities/ChampionshipEntities.cs` bundles `Championship`,
   `ChampionshipEvent`, `RaceSession` (+`SessionWeather`), `Driver`, `Team` —
   same grouping convention already used by `Mock/ODChampionshipMockData.cs`.
-  `Entities/Live/StandingEntry.cs` stays its own file (the `Static`/`Live`
-  folder split is the meaningful boundary, not one-class-per-file).
+  `Entities/StandingEntry.cs` stays its own file — it's the one entity
+  refreshed often, worth being able to spot at a glance in the file list.
 - `Mappers/ChampionshipMappers.cs` bundles every `TryApply` (one static
   class per entity, some with two overloads since two endpoints feed the
   same entity with different subsets of fields). `EntityCollectionSync.cs`
   stays separate — it's a generic utility, not a domain mapper.
-- Not wired to the backend yet: no `Core/Network` code calls into any of
-  this — DTO/Entities/Mappers exist ahead of the network layer that will
-  feed them (a `ChampionshipApi.cs` façade, one method per endpoint, the
-  same shape as `Core/Network/GatewayHealthApi.cs`).
+- Wired to the backend: `Core/Network/ChampionshipApi.cs` (see
+  [Core/Doc/README.md](../../Core/Doc/README.md)) covers every DTO/Entity
+  above — `DriverProfileDTO` included, though its endpoint needs a
+  `sessionId` the other championship endpoints don't require.
 - `Mock/ODMockData.cs` (moved from `OD_UI/Dev/`) still holds the fake data
   used by the current UI/Logic (rankings, drivers, videos, championship
   page...). Not yet replaced by real Entities — no screen consumes backend

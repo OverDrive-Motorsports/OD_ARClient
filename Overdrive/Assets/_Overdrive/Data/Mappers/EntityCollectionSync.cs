@@ -13,19 +13,18 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 public static class EntityCollectionSync
 {
-    // A dto that fails TryApply is skipped and logged; if that dto's key belonged to an
-    // already-tracked entity, that entity gets removed too (this fetch no longer confirms it).
+    // A dto that fails TryApply is reported (see DataError.Report) and skipped; if that dto's key
+    // belonged to an already-tracked entity, that entity gets removed too (this fetch no longer confirms it).
     public static void Sync<TDto, TEntity, TKey>(
         List<TEntity> target,
         List<TDto> dtos,
         Func<TDto, TKey> dtoKey,
         Func<TEntity, TKey> entityKey,
         Func<TEntity> createEntity,
-        Func<TDto, TEntity, string> tryApply)
+        Func<TDto, TEntity, DataError?> tryApply)
     {
         if (dtos == null) return;
 
@@ -38,10 +37,10 @@ public static class EntityCollectionSync
             bool isNew = entity == null;
             if (isNew) entity = createEntity();
 
-            string error = tryApply(dto, entity);
+            DataError? error = tryApply(dto, entity);
             if (error != null)
             {
-                Debug.LogWarning($"[EntityCollectionSync] {error}");
+                error.Value.Report();
                 continue;
             }
 

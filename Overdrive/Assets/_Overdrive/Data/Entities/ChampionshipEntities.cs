@@ -5,8 +5,8 @@
  ##
  ## ChampionshipEntities - Rarely-changing objects of the championship
  ## domain: catalog, calendar, sessions, drivers, teams. Mutated in place by
- ## Mappers/ChampionshipMappers.cs. See Entities/Live/StandingEntry.cs for
- ## the one entity refreshed often.
+ ## Mappers/ChampionshipMappers.cs. See StandingEntry.cs for the one entity
+ ## refreshed often.
  ##
  */
 

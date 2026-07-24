@@ -18,7 +18,7 @@ public class GatewayHealthCheck : MonoBehaviour
     {
         StartCoroutine(GatewayHealthApi.GetGatewayHealth(
             data => Debug.Log($"[GatewayHealthCheck] Gateway reachable at {ApiConfig.BaseUrl} - status: {data.status}"),
-            error => Debug.LogError($"[GatewayHealthCheck] {error}")
+            error => error.Report()
         ));
     }
 }

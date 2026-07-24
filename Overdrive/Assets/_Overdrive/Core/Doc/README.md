@@ -9,9 +9,11 @@ application does with that data (that's [Logic](../../Logic/Doc/README.md)'s job
 
 ## Current state
 
-`Network/` now holds the first real network call: a gateway health check.
-Everything displayed in the app still comes from static mocks (see
-[Data/Mock](../../Data/Doc/README.md)) — no feature consumes Core yet.
+`Network/` holds every real network call so far: a gateway health check and
+the championship endpoints. Nothing displayed in the app uses this yet
+though — screens still read from static mocks (see
+[Data/Mock](../../Data/Doc/README.md)); wiring a screen to `ChampionshipApi`
+is the next step.
 
 ```
 Core/
@@ -19,21 +21,39 @@ Core/
 │   ├── ApiConfig.cs            Gateway base URL + optional Bearer token
 │   ├── ApiClient.cs            Generic coroutine GET, deserializes with Newtonsoft
 │   ├── GatewayHealthApi.cs     GET /health
-│   └── GatewayHealthCheck.cs   Manual test MonoBehaviour (not wired into app startup)
+│   ├── GatewayHealthCheck.cs   Manual test MonoBehaviour (not wired into app startup)
+│   └── ChampionshipApi.cs      Championship endpoints (see below)
 ├── Auth/      OAuth, session/token management (not started)
 └── Services/  Global services (SceneLoader, AppSettings...) (not started)
 ```
 
-No championship endpoint is wired to the backend yet — `Data/DTO/Championship`,
-`Data/Entities`, `Data/Mappers` exist (see [Data/Doc/README.md](../../Data/Doc/README.md))
-but nothing in `Core/Network` calls them yet. A `ChampionshipApi.cs` following
-the same shape as `GatewayHealthApi.cs` will be added here once a screen
-needs it.
+`ChampionshipApi.cs` covers every endpoint under `/v1/championship/*`
+(`gateway/ROUTES.md`): `GetChampionships`, `GetEvents`, `GetEventDetail`,
+`GetSessions`, `GetSessionDetail`, `GetSessionDrivers`, `GetSessionTeams`,
+`GetStandings`, `GetDriverProfile` (`sessions/{sessionId}/drivers/{driverNumber}/profile`,
+scoped by session rather than just by driver number). Every method takes
+the caller-owned entity/`List<Entity>` as a parameter and updates it in
+place — see [Data/Doc/README.md](../../Data/Doc/README.md) and
+[Logic/Doc/UI-Refresh-Pattern.md](../../Logic/Doc/UI-Refresh-Pattern.md).
+
+Two response shapes in the source doc aren't confirmed yet and were left
+out: `GET /sessions/{sessionId}/broadcast` and
+`GET /sessions/{sessionId}/datasets/{dataset}` have no documented JSON body,
+so no DTO/method exists for them — add them once their shape is confirmed
+rather than guessing. The standings path also differs between the two docs
+(`/standings` in the draft vs `/standings/race` in `ROUTES.md`); the gateway
+path is used, on the assumption the JSON shape is the same — flag this if a
+real call proves otherwise.
 
 The gateway (`gateway/` service, see its `ROUTES.md`) currently accepts
 requests with no `Authorization` header, but will require a Bearer token
 later — `ApiConfig.AuthToken` is the single place that changes when that
 happens; `ApiClient` already reads it on every request.
+
+`ApiClient.Get<T>`'s `onError` callback receives a `DataError`
+(`Data/Errors/DataError.cs`, kind `Network` or `Deserialize`) rather than a
+raw string — see [Data/Doc/README.md](../../Data/Doc/README.md#error-handling)
+for the full error-handling picture across DTO/Mapper/Network.
 
 ## Communication technologies
 

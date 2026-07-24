@@ -5,7 +5,7 @@
  ##
  ## StandingEntry - One driver's row in a session's standings. Re-fetched on
  ## a timer while a session is live and updated in place each time (see
- ## Mappers/EntityCollectionSync.cs) - lives under Entities/Live.
+ ## Mappers/EntityCollectionSync.cs).
  ##
  */
 

@@ -15,14 +15,13 @@
 
 using System;
 using System.Collections;
-using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
 
 public static class ApiClient
 {
     // Generic GET call: fetches a path and deserializes the JSON response into T.
-    public static IEnumerator Get<T>(string path, Action<T> onSuccess, Action<string> onError)
+    public static IEnumerator Get<T>(string path, Action<T> onSuccess, Action<DataError> onError)
     {
         string url = ApiConfig.BaseUrl.TrimEnd('/') + path;
 
@@ -35,7 +34,8 @@ public static class ApiClient
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                onError?.Invoke($"[ApiClient] GET {url} failed: {request.error} (HTTP {request.responseCode})");
+                onError?.Invoke(new DataError(DataErrorKind.Network, "ApiClient",
+                    $"GET {url} failed: {request.error} (HTTP {request.responseCode})"));
                 yield break;
             }
 
@@ -46,7 +46,8 @@ public static class ApiClient
             }
             catch (JsonException e)
             {
-                onError?.Invoke($"[ApiClient] GET {url} returned unparseable JSON: {e.Message}");
+                onError?.Invoke(new DataError(DataErrorKind.Deserialize, "ApiClient",
+                    $"GET {url} returned unparseable JSON: {e.Message}"));
                 yield break;
             }
 

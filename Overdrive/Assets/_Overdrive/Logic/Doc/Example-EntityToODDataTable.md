@@ -26,10 +26,8 @@ reçoit jamais un objet `StandingEntry` directement.
 
 ## Le controller
 
-`ChampionshipApi.GetStandings` ci-dessous est **illustratif** : cette façade
-n'existe pas encore dans `Core/Network` (voir
-[Core/Doc/README.md](../../Core/Doc/README.md)) — elle montre la forme
-qu'elle aura le jour où on la construit.
+`ChampionshipApi.GetStandings` existe réellement dans `Core/Network` (voir
+[Core/Doc/README.md](../../Core/Doc/README.md)).
 
 ```csharp
 public class StandingsTableController : MonoBehaviour
@@ -59,7 +57,7 @@ public class StandingsTableController : MonoBehaviour
         {
             yield return ChampionshipApi.GetStandings(sessionId, _standings,
                 () => Repaint(_standings),
-                error => Debug.LogError(error));
+                error => error.Report());
 
             yield return new WaitForSeconds(refreshSeconds);
         }
