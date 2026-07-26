@@ -25,9 +25,12 @@ playback. They currently rely on the mocks in `Data/Mock/ODMockData.cs`
 while waiting for a real backend.
 
 See [UI-Refresh-Pattern.md](./UI-Refresh-Pattern.md) for how a screen should
-hold and refresh its Entities (mutate in place, never replace), and
+hold and refresh its Entities (mutate in place, never replace),
 [Example-EntityToODDataTable.md](./Example-EntityToODDataTable.md) for a
-worked example wiring `StandingEntry` into the existing `ODDataTable` prefab.
+worked example wiring `StandingEntry` into the existing `ODDataTable`
+prefab, and [RaceReplay-DownloadAndPlayback.md](./RaceReplay-DownloadAndPlayback.md)
+for the different case of a full-race download consumed by seeking through
+a local timeline instead of being refreshed.
 
 ## Allowed dependencies
 

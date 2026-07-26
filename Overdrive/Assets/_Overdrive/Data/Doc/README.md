@@ -15,6 +15,16 @@ Data/
 └── Mock/      Static development/demo data
 ```
 
+`Data/` has its own `Overdrive.Data.asmdef` — needed so
+`Tests/EditMode/Overdrive.Data.Tests.asmdef` can reference it (a custom
+test assembly can't see the default `Assembly-CSharp` scripts, only other
+assembly definitions). A handful of small NUnit tests cover the trickiest
+logic — mapper validation (`ChampionshipMapperTests`,
+`ChampionshipEventMapperTests`, `DriverMapperTests`,
+`StandingEntryMapperTests`) and the add/update/remove reconciliation
+(`EntityCollectionSyncTests`) — not exhaustive across every mapper, since
+Race/Telemetry mappers follow the exact same pattern already covered here.
+
 Entities aren't split into subfolders by refresh frequency — how often a
 screen re-fetches an Entity is a Logic-level decision (see
 [Logic/Doc/UI-Refresh-Pattern.md](../../Logic/Doc/UI-Refresh-Pattern.md)),
