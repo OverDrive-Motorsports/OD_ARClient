@@ -9,51 +9,49 @@ application does with that data (that's [Logic](../../Logic/Doc/README.md)'s job
 
 ## Current state
 
-`Network/` holds every real network call so far: a gateway health check and
-the championship endpoints. Nothing displayed in the app uses this yet
-though — screens still read from static mocks (see
-[Data/Mock](../../Data/Doc/README.md)); wiring a screen to `ChampionshipApi`
-is the next step.
+`Network/` holds every real network call so far: a gateway health check,
+the championship endpoints, and the race/telemetry endpoints. Nothing
+displayed in the app uses this yet though — screens still read from static
+mocks (see [Data/Mock](../../Data/Doc/README.md)); wiring a screen to
+`ChampionshipApi`/`RaceDataApi` is the next step.
 
 ```
 Core/
 ├── Network/
-│   ├── ApiConfig.cs            Gateway base URL + optional Bearer token
-│   ├── ApiClient.cs            Generic coroutine GET, deserializes with Newtonsoft
+│   ├── ApiConfig.cs            Gateway base URL + Bearer token (now mandatory - see below)
+│   ├── ApiClient.cs            Generic coroutine GET/POST, deserializes with Newtonsoft
 │   ├── GatewayHealthApi.cs     GET /health
 │   ├── GatewayHealthCheck.cs   Manual test MonoBehaviour (not wired into app startup)
-│   └── ChampionshipApi.cs      Championship endpoints (see below)
+│   ├── ChampionshipApi.cs      Championship endpoints (see below)
+│   └── RaceDataApi.cs          Race/telemetry endpoints (see below)
 ├── Auth/      OAuth, session/token management (not started)
 └── Services/  Global services (SceneLoader, AppSettings...) (not started)
 ```
 
-`ChampionshipApi.cs` covers every endpoint under `/v1/championship/*`
-(`gateway/ROUTES.md`): `GetChampionships`, `GetEvents`, `GetEventDetail`,
-`GetSessions`, `GetSessionDetail`, `GetSessionDrivers`, `GetSessionTeams`,
-`GetStandings`, `GetDriverProfile` (`sessions/{sessionId}/drivers/{driverNumber}/profile`,
-scoped by session rather than just by driver number). Every method takes
-the caller-owned entity/`List<Entity>` as a parameter and updates it in
-place — see [Data/Doc/README.md](../../Data/Doc/README.md) and
+**Auth is now mandatory on every route** (`Authorization: Bearer <token>`),
+confirmed by the backend's endpoints doc — it used to be optional.
+`ApiConfig.AuthToken` is still the single place that sets it; every call
+will now fail (`401`) until it's set to a real token, so this needs wiring
+up (e.g. from a login/config screen) before any real feature can use these
+APIs, unlike before when things worked with no token at all.
+
+`ChampionshipApi.cs` covers every endpoint under `/v1/championship/*`:
+`GetChampionships`, `GetEvents`, `GetEventDetail`, `GetSessions`,
+`GetSessionDetail`, `GetSessionDrivers`, `GetSessionTeams`, `GetStandings`
+(`/sessions/{sessionId}/standings`), `GetDriverProfile` — the last one is
+**global**, not session-scoped: `driverNumber` + optional
+`championshipCode` filter, no `sessionId` at all (this was wrong before —
+it used to require a `sessionId` it doesn't actually need). Every method
+takes the caller-owned entity/`List<Entity>` as a parameter and updates it
+in place — see [Data/Doc/README.md](../../Data/Doc/README.md) and
 [Logic/Doc/UI-Refresh-Pattern.md](../../Logic/Doc/UI-Refresh-Pattern.md).
 
-Two response shapes in the source doc aren't confirmed yet and were left
-out: `GET /sessions/{sessionId}/broadcast` and
-`GET /sessions/{sessionId}/datasets/{dataset}` have no documented JSON body,
-so no DTO/method exists for them — add them once their shape is confirmed
-rather than guessing. The standings path also differs between the two docs
-(`/standings` in the draft vs `/standings/race` in `ROUTES.md`); the gateway
-path is used, on the assumption the JSON shape is the same — flag this if a
-real call proves otherwise.
-
-The gateway (`gateway/` service, see its `ROUTES.md`) currently accepts
-requests with no `Authorization` header, but will require a Bearer token
-later — `ApiConfig.AuthToken` is the single place that changes when that
-happens; `ApiClient` already reads it on every request.
-
-`ApiClient.Get<T>`'s `onError` callback receives a `DataError`
-(`Data/Errors/DataError.cs`, kind `Network` or `Deserialize`) rather than a
-raw string — see [Data/Doc/README.md](../../Data/Doc/README.md#error-handling)
-for the full error-handling picture across DTO/Mapper/Network.
+`ApiClient` now has both `Get<T>` and `Post<T>` (the latter added for
+`race/control`, the one endpoint that isn't a plain GET — see below).
+`onError` on both receives a `DataError` (`Data/Errors/DataError.cs`, kind
+`Network` or `Deserialize`) rather than a raw string — see
+[Data/Doc/README.md](../../Data/Doc/README.md#error-handling) for the full
+error-handling picture across DTO/Mapper/Network.
 
 ## Communication technologies
 
@@ -77,21 +75,63 @@ profiles, health checks. One HTTP request in, one JSON response out.
   (reflection-based parsing + HTTP overhead repeated every frame, GC
   pressure) if reused to poll fast-changing data.
 
-### High-frequency live data (planned, not implemented) — telemetry
+### High-frequency live data — deliberately kept simple for now
 
-Needed for the live race/telemetry endpoints (position, speed, engine,
-location... at up to 10-60Hz). REST polling is the wrong tool here: each
-value would cost a full HTTP round-trip plus a reflection-based JSON parse,
-which on a VR headset means GC-driven frame hitches (motion sickness risk).
+A `WebSocket` module (`LiveSocket`, against a `WS /v1/race-data/live`
+endpoint assumed from an earlier draft) was built once, then deliberately
+reverted: too much complexity for where the project was at, with no real
+screen consuming any of this yet. `RaceDataApi.cs` covers the
+race/telemetry endpoints instead, using the exact same simple shape as
+`ChampionshipApi.cs` (coroutine + `ApiClient.Get`/`Post`, REST, no
+background thread).
 
-- **Transport**: WebSocket — the gateway already exposes
-  `WS /v1/race-data/live?sessionId={sessionId}` for exactly this: one
-  persistent connection, server pushes updates, no repeated request
-  overhead.
-- **Status**: not built yet. Will live under `Network/` alongside `ApiClient`
-  as a separate module (e.g. `LiveSocket`), not as an extension of it —
-  it needs its own connection lifecycle (open/close/reconnect) and a
-  low-allocation message path, neither of which the REST path needs.
+The backend's endpoints doc has since revealed what the real high-frequency
+mechanism actually is, and it's neither of those guesses:
+
+- **`GET /sessions/{sessionId}/race/live/stream`** — a **Server-Sent
+  Events** stream (`EventSource`, one-way server→client over plain HTTP),
+  not a WebSocket. **Not implemented yet** — `UnityWebRequest` doesn't
+  support SSE directly; would need a streaming `DownloadHandler` or
+  `HttpClient` reading the response as a live stream. Build this only when
+  a screen actually needs it, same reasoning as the reverted `LiveSocket`.
+- **V1 semantics are a replay, not a live feed**: it replays a session's
+  already-ingested historical data at `(real recorded interval) / speed`
+  (query param, default `10`), capped at 5 real seconds between frames —
+  there is no "currently live" race in this environment. A V2 may add a
+  true live-tail mode; explicitly out of scope for now.
+- **Three named SSE events**, via the `event:` field (not a JSON `"type"`
+  key) — `telemetry` (combines speed+engine+location+`lapNumber` in one
+  flat object per frame, a real answer to the earlier "does the generic
+  telemetry dataset combine speed+engine?" question — for the *stream*, yes,
+  but the historical REST endpoints below still return them separately),
+  `position` (like `GetPositions`/`GetDriverPosition` but without
+  `gapToLeader`), `raceControl` (same shape as `GetRaceControlEvents`), and
+  a final `done` event (empty payload) when the replay ends. No DTOs exist
+  for these yet — build them against this doc's shapes when the SSE client
+  is actually built, not before.
+- **Known limitation documented by the backend**: browser `EventSource`
+  can't send custom headers, so it can't carry the now-mandatory
+  `Authorization` header — a token-in-query-param or proxy would be needed
+  for a browser client. Not relevant to a native mobile/Quest client, which
+  can set its own headers.
+
+`RaceDataApi.cs` covers, under `/v1/race-data/*`, using the endpoints'
+**confirmed real paths** (not the generic `/datasets/{dataset}` pattern
+assumed earlier from `gateway/ROUTES.md` — the backend's own doc uses
+explicit named paths instead, matching the original draft):
+`GetPositions`/`GetDriverPosition` (`/race/position` — object instead of
+array when `driverNumber` is passed), `GetLaps`/`GetDriverLaps`
+(`/race/laps` — same object/array behavior), `GetStints`, `GetPitStops`,
+`GetWeather`, `GetTeamRadio` (always arrays), `GetRaceControlEvents`
+(`POST /race/control`, confirmed long-poll: holds up to 30s, returns `[]`
+on timeout rather than an error — `RaceDataApi` does one call per
+invocation, the caller loops to keep listening), and driver-scoped
+`GetDriverSpeedHistory`/`GetDriverEngineHistory`/`GetDriverLocationHistory`/
+`GetDriverIntervals`. `speed`/`engine` are now wired — confirmed simple
+per-sample shapes (`{speed, gear, timestamp}` / `{rpm, gear,
+throttlePercent, brakePercent, drsActive, timestamp}`, no `battery` field
+at all, confirmed no data source). Left out, no DTO yet: `result`,
+`starting_grid`, `session_result`, `overtakes`, `car_data`.
 
 ## Allowed dependencies
 

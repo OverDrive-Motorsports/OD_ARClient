@@ -23,18 +23,20 @@ public static class ChampionshipMapper
             return new DataError(DataErrorKind.Validation, "ChampionshipMapper",
                 $"championship code mismatch: target is '{target.code}', dto is '{dto.championshipCode}'");
 
+        target.id = dto.id;
         target.code = dto.championshipCode;
         target.name = dto.name;
         target.provider = dto.provider;
-        target.season = dto.season;
+        target.category = dto.category;
+        target.isActive = dto.isActive;
         return null;
     }
 }
 
-// ChampionshipEvent - two overloads, one per endpoint shape (EventSummaryDTO/EventDetailDTO).
+// ChampionshipEvent - one shape covers both the calendar list and the single-event detail route.
 public static class ChampionshipEventMapper
 {
-    public static DataError? TryApply(this EventSummaryDTO dto, ChampionshipEvent target)
+    public static DataError? TryApply(this EventDTO dto, ChampionshipEvent target)
     {
         if (dto == null || string.IsNullOrEmpty(dto.eventId))
             return new DataError(DataErrorKind.Validation, "ChampionshipEventMapper", "event missing eventId");
@@ -44,56 +46,27 @@ public static class ChampionshipEventMapper
                 $"event id mismatch: target is '{target.id}', dto is '{dto.eventId}'");
 
         target.id = dto.eventId;
-        target.name = dto.name;
-        target.location = dto.location;
-        target.startDate = dto.startDate;
-        target.endDate = dto.endDate;
-        target.status = dto.status;
-        return null;
-    }
-
-    public static DataError? TryApply(this EventDetailDTO dto, ChampionshipEvent target)
-    {
-        if (dto == null || string.IsNullOrEmpty(dto.eventId))
-            return new DataError(DataErrorKind.Validation, "ChampionshipEventMapper", "event missing eventId");
-
-        if (!string.IsNullOrEmpty(target.id) && target.id != dto.eventId)
-            return new DataError(DataErrorKind.Validation, "ChampionshipEventMapper",
-                $"event id mismatch: target is '{target.id}', dto is '{dto.eventId}'");
-
-        target.id = dto.eventId;
+        target.championshipId = dto.championshipId;
         target.championshipCode = dto.championshipCode;
+        target.seasonYear = dto.seasonYear;
+        target.roundNumber = dto.roundNumber;
         target.name = dto.name;
+        target.officialName = dto.officialName;
         target.circuit = dto.circuit;
         target.location = dto.location;
+        target.countryName = dto.countryName;
+        target.countryCode = dto.countryCode;
+        target.status = dto.status;
         target.startDate = dto.startDate;
         target.endDate = dto.endDate;
-        // status: not carried by EventDetailDTO, whatever EventSummaryDTO already set stays untouched.
         return null;
     }
 }
 
-// RaceSession - two overloads, one per endpoint shape (SessionSummaryDTO/SessionDetailDTO).
+// RaceSession - one shape covers both the session list and the single-session detail route.
 public static class RaceSessionMapper
 {
-    public static DataError? TryApply(this SessionSummaryDTO dto, RaceSession target)
-    {
-        if (dto == null || string.IsNullOrEmpty(dto.sessionId))
-            return new DataError(DataErrorKind.Validation, "RaceSessionMapper", "session missing sessionId");
-
-        if (!string.IsNullOrEmpty(target.id) && target.id != dto.sessionId)
-            return new DataError(DataErrorKind.Validation, "RaceSessionMapper",
-                $"session id mismatch: target is '{target.id}', dto is '{dto.sessionId}'");
-
-        target.id = dto.sessionId;
-        target.type = dto.type;
-        target.status = dto.status;
-        target.startTime = dto.startTime;
-        target.endTime = dto.endTime;
-        return null;
-    }
-
-    public static DataError? TryApply(this SessionDetailDTO dto, RaceSession target)
+    public static DataError? TryApply(this SessionDTO dto, RaceSession target)
     {
         if (dto == null || string.IsNullOrEmpty(dto.sessionId))
             return new DataError(DataErrorKind.Validation, "RaceSessionMapper", "session missing sessionId");
@@ -106,17 +79,11 @@ public static class RaceSessionMapper
         target.eventId = dto.eventId;
         target.type = dto.type;
         target.status = dto.status;
+        target.name = dto.name;
         target.circuit = dto.circuit;
+        target.broadcastUrl = dto.broadcastUrl;
         target.startTime = dto.startTime;
         target.endTime = dto.endTime;
-
-        if (dto.weatherAtStart != null)
-        {
-            target.weather ??= new SessionWeather();
-            target.weather.airTemperature = dto.weatherAtStart.airTemperature;
-            target.weather.trackTemperature = dto.weatherAtStart.trackTemperature;
-            target.weather.rainfall = dto.weatherAtStart.rainfall;
-        }
         return null;
     }
 }
@@ -135,8 +102,12 @@ public static class DriverMapper
 
         target.number = dto.driverNumber;
         target.fullName = dto.fullName;
+        target.firstName = dto.firstName;
+        target.lastName = dto.lastName;
+        target.code = dto.code;
         target.teamId = dto.teamId;
         target.teamName = dto.teamName;
+        target.teamColor = dto.teamColor;
         return null;
     }
 
@@ -154,8 +125,7 @@ public static class DriverMapper
         target.nationality = dto.nationality;
         target.teamId = dto.currentTeamId;
         target.championshipCode = dto.championshipCode;
-        target.pictureUrl = dto.driverPicture;
-        // teamName: not carried by DriverProfileDTO, whatever SessionDriverDTO already set stays untouched.
+        // firstName/lastName/code/teamName/teamColor: not carried by DriverProfileDTO, stay untouched.
         return null;
     }
 }
@@ -174,12 +144,13 @@ public static class TeamMapper
 
         target.id = dto.teamId;
         target.name = dto.name;
+        target.code = dto.code;
         target.color = dto.color;
         return null;
     }
 }
 
-// StandingEntry - the one entity in this file refreshed often (see Entities/StandingEntry.cs).
+// StandingEntry - the one entity in this file that lives in Entities/Live (refreshed often).
 public static class StandingEntryMapper
 {
     public static DataError? TryApply(this StandingEntryDTO dto, StandingEntry target)

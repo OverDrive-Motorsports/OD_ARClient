@@ -3,43 +3,25 @@
  ## OverDrive 2026
  ## All Technical rights reserved
  ##
- ## SessionDTO - Mirrors session-related endpoints. Same summary/detail split
- ## as CatalogDTO's events: SessionDetailDTO adds eventId/circuit/weather.
+ ## SessionDTO - Mirrors GET /events/{eventId}/sessions (array) and
+ ## GET /sessions/{sessionId} (single object) - same shape both ways per the
+ ## backend. No nested weather anymore (weatherAtStart was dropped from the
+ ## contract - see RaceWeatherDTO for the unrelated race/weather time series).
  ##
  */
 
 using System;
 
-// GET /events/{eventId}/sessions (one entry)
 [Serializable]
-public class SessionSummaryDTO
-{
-    public string sessionId;
-    public string type;
-    public string status;
-    public string startTime;
-    public string endTime;
-}
-
-// GET /sessions/{sessionId}
-[Serializable]
-public class SessionDetailDTO
+public class SessionDTO
 {
     public string sessionId;
     public string eventId;
     public string type;
     public string status;
+    public string name;
     public string circuit;
+    public string broadcastUrl; // usually null
     public string startTime;
     public string endTime;
-    public WeatherDTO weatherAtStart;
-}
-
-// Nested in SessionDetailDTO.weatherAtStart, not fetched on its own.
-[Serializable]
-public class WeatherDTO
-{
-    public float airTemperature;
-    public float trackTemperature;
-    public bool rainfall;
 }

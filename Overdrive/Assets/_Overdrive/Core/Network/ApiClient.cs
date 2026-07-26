@@ -54,4 +54,43 @@ public static class ApiClient
             onSuccess?.Invoke(data);
         }
     }
+
+    // POST call that waits up to timeoutSeconds - needed for endpoints like race/control, which
+    // hold the request open server-side (long-poll) instead of responding immediately.
+    public static IEnumerator Post<T>(string path, Action<T> onSuccess, Action<DataError> onError, int timeoutSeconds = 35)
+    {
+        string url = ApiConfig.BaseUrl.TrimEnd('/') + path;
+
+        using (var request = new UnityWebRequest(url, "POST"))
+        {
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.timeout = timeoutSeconds;
+
+            if (!string.IsNullOrEmpty(ApiConfig.AuthToken))
+                request.SetRequestHeader("Authorization", "Bearer " + ApiConfig.AuthToken);
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                onError?.Invoke(new DataError(DataErrorKind.Network, "ApiClient",
+                    $"POST {url} failed: {request.error} (HTTP {request.responseCode})"));
+                yield break;
+            }
+
+            T data;
+            try
+            {
+                data = JsonConvert.DeserializeObject<T>(request.downloadHandler.text);
+            }
+            catch (JsonException e)
+            {
+                onError?.Invoke(new DataError(DataErrorKind.Deserialize, "ApiClient",
+                    $"POST {url} returned unparseable JSON: {e.Message}"));
+                yield break;
+            }
+
+            onSuccess?.Invoke(data);
+        }
+    }
 }
