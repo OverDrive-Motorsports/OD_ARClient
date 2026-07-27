@@ -39,33 +39,65 @@ resteront figées à leur dernière valeur connue pendant tout le replay.
 
 ## 2. Le nouvel endpoint (proposition backend)
 
-`GET /sessions/{sessionId}/race/full` — agrège tout ce qu'on a déjà
-modélisé, pour tous les pilotes, sur toute la course, y compris les
-rosters (drivers/teams) et les métadonnées de session pour l'affichage :
+Point de départ : une démo backend du flux replay réel est arrivée sous
+forme de **SSE** (`event: <type>` / `data: <json>`), pas le `GET /race/full`
+agrégé imaginé initialement — voir `docs/replay-sse-sample.txt` à la racine
+du repo pour un extrait réel. Bon points : format déjà proche des DTO
+existants (stint/pitStop/weather/raceControl/radio matchent tels quels),
+livraison chronologique donc parsable en flux (résout le problème de hitch
+de la section 3 sans avoir à choisir entre pagination et parse en tâche de
+fond). Mauvais point : ce SSE réutilise tel quel le transport du live pour
+un besoin différent (archive téléchargée une fois) et le volume est dominé
+à 99.8% par la télémétrie (669 540 events sur 671 393 dans la démo, ~134 Mo
+au total) — sous forme d'un objet JSON complet par échantillon, avec toutes
+les clés répétées à chaque fois. Pas optimal pour du stockage.
+
+Proposition envoyée au backend pour un **endpoint d'archive dédié**
+(`GET /sessions/{sessionId}/race/archive`, distinct du SSE live) — exemple
+concret avec de vraies valeurs dans
+`docs/replay-archive-format-proposal.example.json` :
 
 ```json
 {
   "sessionId": "openf1:session:9998",
-  "session": { /* SessionDTO - nom, circuit, horaires... pour l'affichage */ },
-  "drivers": [ /* SessionDriverDTO[] */ ],
-  "teams": [ /* TeamDTO[] */ ],
-  "positions": [ /* RacePositionDTO[] - historique complet, pas juste le dernier (à confirmer) */ ],
-  "laps": [ /* RaceLapsDTO[] - un par pilote, déjà complet aujourd'hui */ ],
+  "sessionStart": "2025-03-23T06:04:39.545Z",
+  "telemetry": {
+    "63": {
+      "t": [876344, 885905, 886144, ...],
+      "speed": [3, 4, 5, ...],
+      "rpm": [3843, 3676, 3983, ...],
+      "gear": [...], "throttlePercent": [...], "brakePercent": [...],
+      "drsActive": [...], "lapNumber": [...], "x": [...], "y": [...], "z": [...]
+    }
+  },
+  "laps": [ /* LapDTO[] + driverNumber, flat, inchangé */ ],
   "stints": [ /* StintDTO[] */ ],
   "pitStops": [ /* PitStopDTO[] */ ],
   "raceControl": [ /* RaceControlEventDTO[] */ ],
   "weather": [ /* RaceWeatherSampleDTO[] */ ],
-  "radio": [ /* TeamRadioMessageDTO[] */ ],
-  "telemetry": {
-    "63": { "speed": [...], "engine": [...], "location": [...], "intervals": [...] },
-    "1":  { "speed": [...], "engine": [...], "location": [...], "intervals": [...] }
-  }
+  "radio": [ /* TeamRadioMessageDTO[] */ ]
 }
 ```
 
-Réutilise tous les DTO existants — rien de nouveau à modéliser côté champs,
-juste la forme d'agrégation. `standings` volontairement absent de cette
-liste : rien à agréger tant qu'il n'y a pas d'historique côté backend.
+Trois changements par rapport au SSE démo, uniquement là où le volume le
+justifie :
+
+- **Télémétrie columnaire par pilote** (tableaux parallèles) au lieu d'un
+  objet par échantillon — élimine la répétition des noms de clé sur 670k
+  échantillons, gain attendu 5-10x sur la partie qui pèse le plus.
+- **`t` en offset ms depuis `sessionStart`** (int) au lieu d'un timestamp
+  ISO string répété (24 octets → 4-5 chiffres).
+- **Réponse compressée gzip** — ce JSON très répétitif compresse très bien
+  (souvent 10x), et rien n'indique que le SSE actuel l'est.
+
+`laps`/`stints`/`pitStops`/`raceControl`/`weather`/`radio` restent flat, un
+objet par event comme dans le SSE démo — leur volume (quelques milliers
+d'events sur toute la course) ne justifie pas de complexifier.
+`positions` et `intervals`/`gapToLeader` restent à confirmer avec le
+backend (voir section 1) avant d'être ajoutés à cette liste. `session`,
+`drivers`, `teams` : absents du SSE démo, à récupérer via les endpoints
+existants plutôt qu'inline — pas encore confirmé si l'endpoint d'archive
+les inclura.
 
 ## 3. Le téléchargement — pourquoi ce n'est pas un simple `ApiClient.Get<T>`
 
