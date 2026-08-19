@@ -61,8 +61,8 @@ jobs:
   test:
     name: Test (${{ matrix.testMode }})
     runs-on: ubuntu-latest
-    # Skips cleanly (not red) until UNITY_LICENSE is set as a repo secret.
-    if: ${{ secrets.UNITY_LICENSE != '' }}
+    # Skips cleanly (not red) until UNITY_CI_ENABLED repo variable is set to 'true'.
+    if: ${{ vars.UNITY_CI_ENABLED == 'true' }}
     strategy:
       fail-fast: false
       matrix:
@@ -88,8 +88,8 @@ jobs:
   build-android:
     name: Build (Android / Quest)
     runs-on: ubuntu-latest
-    # Skips cleanly (not red) until UNITY_LICENSE is set as a repo secret.
-    if: ${{ secrets.UNITY_LICENSE != '' }}
+    # Skips cleanly (not red) until UNITY_CI_ENABLED repo variable is set to 'true'.
+    if: ${{ vars.UNITY_CI_ENABLED == 'true' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
