@@ -29,24 +29,24 @@ public class ODDriverCard : MonoBehaviour
 
     [Header("Content")]
     public string driverNumber = "44";
-    public string driverName   = "Driver Name";
+    public string driverName = "Driver Name";
     public Sprite teamLogo;
-    public Color  teamColor = Color.white;
+    public Color teamColor = Color.white;
 
     [Header("Telemetry")]
     public List<TelemetryCellData> telemetry = new List<TelemetryCellData>();
 
     [Header("References — wired by ODUIBuilder")]
-    public ODBackground    background;
-    public ODGoldBorder    goldBorder;
+    public ODBackground background;
+    public ODGoldBorder goldBorder;
     /// <summary>4px left-edge color bar tinted to the team's brand color.</summary>
-    public Image           teamColorBar;
+    public Image teamColorBar;
     public TextMeshProUGUI driverNumberText;
-    public Image           teamLogoImage;
+    public Image teamLogoImage;
     public TextMeshProUGUI driverNameText;
-    public Image           divider;
+    public Image divider;
     /// <summary>GridLayoutGroup (2 columns) that hosts the ODTelemetryCell children.</summary>
-    public RectTransform   telemetryGrid;
+    public RectTransform telemetryGrid;
 
     private void Start()
     {
@@ -60,13 +60,13 @@ public class ODDriverCard : MonoBehaviour
 
         if (driverNumberText != null)
         {
-            driverNumberText.text      = driverNumber;
+            driverNumberText.text = driverNumber;
             driverNumberText.fontStyle = FontStyles.Bold;
             if (theme != null)
             {
                 driverNumberText.fontSize = theme.h1Size;
                 // Driver number uses gold to make it the visual anchor of the card
-                driverNumberText.color    = theme.accentGold;
+                driverNumberText.color = theme.accentGold;
             }
         }
 
@@ -76,7 +76,7 @@ public class ODDriverCard : MonoBehaviour
             if (theme != null)
             {
                 driverNameText.fontSize = theme.bodySize;
-                driverNameText.color    = theme.textPrimary;
+                driverNameText.color = theme.textPrimary;
             }
         }
 
@@ -98,18 +98,18 @@ public class ODDriverCard : MonoBehaviour
     public void SetDriver(string number, string name)
     {
         driverNumber = number;
-        driverName   = name;
+        driverName = name;
         if (driverNumberText != null) driverNumberText.text = number;
-        if (driverNameText   != null) driverNameText.text   = name;
+        if (driverNameText != null) driverNameText.text = name;
     }
 
     /// <summary>Replaces the team logo sprite and applies the team color to the side color bar.</summary>
     public void SetTeam(Sprite logo, Color color)
     {
-        teamLogo  = logo;
+        teamLogo = logo;
         teamColor = color;
         if (teamLogoImage != null && logo != null) teamLogoImage.sprite = logo;
-        if (teamColorBar  != null) teamColorBar.color = color;
+        if (teamColorBar != null) teamColorBar.color = color;
     }
 
     /// <summary>Replaces the full telemetry cell list and triggers a grid rebuild.</summary>
@@ -148,7 +148,7 @@ public class ODDriverCard : MonoBehaviour
             cellGO.transform.SetParent(telemetryGrid, false);
 
             var vg = cellGO.AddComponent<VerticalLayoutGroup>();
-            vg.childForceExpandWidth  = true;
+            vg.childForceExpandWidth = true;
             vg.childForceExpandHeight = false;
             vg.spacing = 2f;
             vg.padding = new RectOffset(0, 0, 4, 4);
@@ -156,23 +156,23 @@ public class ODDriverCard : MonoBehaviour
             var lblGO = new GameObject("Label", typeof(RectTransform));
             lblGO.transform.SetParent(cellGO.transform, false);
             var lbl = lblGO.AddComponent<TextMeshProUGUI>();
-            lbl.text      = data.label;
+            lbl.text = data.label;
             lbl.fontStyle = FontStyles.Normal;
             if (theme != null) { lbl.fontSize = theme.captionSize; lbl.color = theme.textSecondary; }
 
             var valGO = new GameObject("Value", typeof(RectTransform));
             valGO.transform.SetParent(cellGO.transform, false);
             var val = valGO.AddComponent<TextMeshProUGUI>();
-            val.text      = data.value;
+            val.text = data.value;
             val.fontStyle = FontStyles.Bold;
             if (theme != null) { val.fontSize = theme.h2Size; val.color = theme.textPrimary; }
 
             // Wire references into ODTelemetryCell so SetValue() can animate updates
-            var telCell       = cellGO.AddComponent<ODTelemetryCell>();
+            var telCell = cellGO.AddComponent<ODTelemetryCell>();
             telCell.labelText = lbl;
             telCell.valueText = val;
-            telCell.label     = data.label;
-            telCell.value     = data.value;
+            telCell.label = data.label;
+            telCell.value = data.value;
         }
     }
 }

@@ -35,7 +35,7 @@ public static class RankingWidgetScreenBuilder
 
         Glass = theme.panelBackground;
         RowBg = Color.Lerp(theme.panelBackground, Color.black, 0.3f);
-        Txt   = theme.textPrimary;
+        Txt = theme.textPrimary;
 
         Object.DestroyImmediate(fallback);
     }
@@ -100,10 +100,10 @@ public static class RankingWidgetScreenBuilder
         // ── manager wiring ────────────────────────────────────────────────────
         var mgr = root.AddComponent<RaceRankingManager>();
         mgr.cardTemplate = row;
-        mgr.container    = rowsRT;
-        mgr.lapText      = lap.GetComponent<TextMeshProUGUI>();
-        mgr.rowHeight    = ROW_H;
-        mgr.rowSpacing   = ROW_GAP;
+        mgr.container = rowsRT;
+        mgr.lapText = lap.GetComponent<TextMeshProUGUI>();
+        mgr.rowHeight = ROW_H;
+        mgr.rowSpacing = ROW_GAP;
 
         row.SetActive(false);
 
@@ -163,8 +163,8 @@ public static class RankingWidgetScreenBuilder
         var card = row.AddComponent<RaceStandingCard>();
         card.rankText = rank.GetComponent<TextMeshProUGUI>();
         card.codeText = code.GetComponent<TextMeshProUGUI>();
-        card.gapText  = gap.GetComponent<TextMeshProUGUI>();
-        card.teamDot  = dotImg;
+        card.gapText = gap.GetComponent<TextMeshProUGUI>();
+        card.teamDot = dotImg;
 
         return row;
     }

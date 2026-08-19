@@ -20,7 +20,7 @@ using TMPro;
 public class ODNavItem : MonoBehaviour
 {
     [Header("References — wired by ODUIBuilder")]
-    public ODIcon  icon;
+    public ODIcon icon;
     public ODLabel label;
 
     [Header("Data")]
@@ -32,7 +32,7 @@ public class ODNavItem : MonoBehaviour
     private void Awake()
     {
         _button = GetComponent<Button>();
-        if (icon  == null) icon  = GetComponentInChildren<ODIcon>(true);
+        if (icon == null) icon = GetComponentInChildren<ODIcon>(true);
         if (label == null) label = GetComponentInChildren<ODLabel>(true);
     }
 
@@ -40,7 +40,7 @@ public class ODNavItem : MonoBehaviour
     public void Setup(string labelText, Sprite iconSprite)
     {
         itemLabel = labelText;
-        itemIcon  = iconSprite;
+        itemIcon = iconSprite;
         label?.SetText(labelText);
         icon?.SetIcon(iconSprite);
     }
@@ -56,11 +56,11 @@ public class ODNavItem : MonoBehaviour
 
         Color color = selected ? theme.accentGold : theme.textSecondary;
 
-        Image           iconImage = icon  != null ? icon.GetComponent<Image>()            : null;
+        Image iconImage = icon != null ? icon.GetComponent<Image>() : null;
         TextMeshProUGUI labelText = label != null ? label.GetComponent<TextMeshProUGUI>() : null;
 
-        if (iconImage  != null) iconImage.color  = color;
-        if (labelText  != null) labelText.color  = color;
+        if (iconImage != null) iconImage.color = color;
+        if (labelText != null) labelText.color = color;
     }
 
     /// <summary>Exposes the Button component so ODNavBar can wire onClick without GetComponent.</summary>

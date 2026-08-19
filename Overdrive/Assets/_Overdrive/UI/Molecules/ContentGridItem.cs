@@ -11,28 +11,28 @@ public class ContentGridItem : MonoBehaviour,
     IPointerEnterHandler, IPointerExitHandler
 {
     [Header("References")]
-    public Image           thumbnail;
+    public Image thumbnail;
     public TextMeshProUGUI titleLabel;
 
     [Header("Hover")]
     public Color normalColor = new Color(0.22f, 0.19f, 0.15f, 1f);
-    public Color hoverColor  = new Color(0.32f, 0.28f, 0.22f, 1f);
+    public Color hoverColor = new Color(0.32f, 0.28f, 0.22f, 1f);
 
     private Button _btn;
-    private Image  _bg;
+    private Image _bg;
     private ContentItemData _data;
 
     private void Awake()
     {
         _btn = GetComponent<Button>();
-        _bg  = GetComponent<Image>();
+        _bg = GetComponent<Image>();
         _btn.onClick.AddListener(OnClick);
     }
 
     public void Setup(ContentItemData data)
     {
         _data = data;
-        if (thumbnail  != null && data.thumbnail != null)
+        if (thumbnail != null && data.thumbnail != null)
             thumbnail.sprite = data.thumbnail;
         if (titleLabel != null)
             titleLabel.text = data.title;

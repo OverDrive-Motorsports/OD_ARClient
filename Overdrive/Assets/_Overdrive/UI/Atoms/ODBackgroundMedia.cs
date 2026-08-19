@@ -23,7 +23,7 @@ public class ODBackgroundMedia : MonoBehaviour
     /// <summary>Middle layer that darkens and optionally blurs the media for legibility.</summary>
     public RawImage blurOverlay;
     /// <summary>Top layer: a gradient Image anchored to the bottom half to improve text readability.</summary>
-    public Image    gradientOverlay;
+    public Image gradientOverlay;
 
     [Header("Media")]
     /// <summary>Texture assigned to the media layer. Set at runtime via SetTexture() or SetRenderTexture().</summary>

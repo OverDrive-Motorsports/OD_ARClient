@@ -24,20 +24,20 @@ public class ODGoldBorder : MonoBehaviour
     [Header("Shape")]
     [SerializeField] private float oversize = 2f;
     /// <summary>Resolution of the generated border texture. Higher = smoother curves, more memory.</summary>
-    [SerializeField] private int   texSize  = 128;
+    [SerializeField] private int texSize = 128;
 
     [Header("Animation")]
     /// <summary>When true, the border alpha oscillates (0.3→0.6) on a 3-second sine loop.</summary>
     [SerializeField] private bool animatePulse = false;
 
-    private Image         _image;
+    private Image _image;
     private RectTransform _rt;
-    private Texture2D     _tex;
+    private Texture2D _tex;
 
     private void OnEnable()
     {
         _image = GetComponent<Image>();
-        _rt    = GetComponent<RectTransform>();
+        _rt = GetComponent<RectTransform>();
 
         GenerateTexture();
         ExtendBeyondParent();
@@ -67,23 +67,23 @@ public class ODGoldBorder : MonoBehaviour
     /// </summary>
     private void GenerateTexture()
     {
-        UITheme theme  = UITheme.Instance;
-        Color   colorA = theme != null ? theme.goldBorderColorA : new Color(0.788f, 0.659f, 0.298f, 0.60f);
-        Color   colorB = theme != null ? theme.goldBorderColorB : new Color(0.788f, 0.659f, 0.298f, 0.08f);
-        float   radius = theme != null ? theme.cornerRadius     : 24f;
-        float   bw     = theme != null ? theme.goldBorderWidth  : 1.5f;
+        UITheme theme = UITheme.Instance;
+        Color colorA = theme != null ? theme.goldBorderColorA : new Color(0.788f, 0.659f, 0.298f, 0.60f);
+        Color colorB = theme != null ? theme.goldBorderColorB : new Color(0.788f, 0.659f, 0.298f, 0.08f);
+        float radius = theme != null ? theme.cornerRadius : 24f;
+        float bw = theme != null ? theme.goldBorderWidth : 1.5f;
 
-        int   w        = texSize;
-        int   h        = texSize;
+        int w = texSize;
+        int h = texSize;
         // Scale corner radius and border width from UI units to texture pixel space (100-unit reference)
-        float radiusPx  = Mathf.Clamp(radius * (w / 100f), 2f, w * 0.45f);
-        float borderPx  = Mathf.Max(2f, bw * (w / 100f));
-        float innerR    = Mathf.Max(1f, radiusPx - borderPx);
+        float radiusPx = Mathf.Clamp(radius * (w / 100f), 2f, w * 0.45f);
+        float borderPx = Mathf.Max(2f, bw * (w / 100f));
+        float innerR = Mathf.Max(1f, radiusPx - borderPx);
 
         if (_tex != null) Destroy(_tex);
-        _tex             = new Texture2D(w, h, TextureFormat.RGBA32, false);
-        _tex.wrapMode    = TextureWrapMode.Clamp;
-        _tex.filterMode  = FilterMode.Bilinear;
+        _tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+        _tex.wrapMode = TextureWrapMode.Clamp;
+        _tex.filterMode = FilterMode.Bilinear;
 
         Color[] pixels = new Color[w * h];
 
@@ -110,10 +110,10 @@ public class ODGoldBorder : MonoBehaviour
         _tex.SetPixels(pixels);
         _tex.Apply();
 
-        Sprite sp        = Sprite.Create(_tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f));
-        _image.sprite    = sp;
-        _image.color     = Color.white;
-        _image.type      = Image.Type.Simple;
+        Sprite sp = Sprite.Create(_tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f));
+        _image.sprite = sp;
+        _image.color = Color.white;
+        _image.type = Image.Type.Simple;
         _image.raycastTarget = false;
     }
 
@@ -127,7 +127,7 @@ public class ODGoldBorder : MonoBehaviour
         if (px < x0 || px > x1 || py < y0 || py > y1) return false;
 
         float cx = -1f, cy = -1f;
-        if      (px < x0 + r && py < y0 + r) { cx = x0 + r; cy = y0 + r; }
+        if (px < x0 + r && py < y0 + r) { cx = x0 + r; cy = y0 + r; }
         else if (px > x1 - r && py < y0 + r) { cx = x1 - r; cy = y0 + r; }
         else if (px < x0 + r && py > y1 - r) { cx = x0 + r; cy = y1 - r; }
         else if (px > x1 - r && py > y1 - r) { cx = x1 - r; cy = y1 - r; }
@@ -148,7 +148,7 @@ public class ODGoldBorder : MonoBehaviour
         _rt.anchorMin = Vector2.zero;
         _rt.anchorMax = Vector2.one;
         _rt.offsetMin = new Vector2(-oversize, -oversize);
-        _rt.offsetMax = new Vector2(oversize,  oversize);
+        _rt.offsetMax = new Vector2(oversize, oversize);
     }
 
     // ── Animation ────────────────────────────────────────────────────────────────
@@ -157,8 +157,8 @@ public class ODGoldBorder : MonoBehaviour
     private IEnumerator PulseRoutine()
     {
         const float periodSeconds = 3f;
-        const float alphaMin      = 0.3f;
-        const float alphaMax      = 0.6f;
+        const float alphaMin = 0.3f;
+        const float alphaMax = 0.6f;
 
         while (true)
         {

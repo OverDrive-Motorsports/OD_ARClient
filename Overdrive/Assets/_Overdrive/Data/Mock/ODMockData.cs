@@ -149,18 +149,18 @@ public static class ODMockData
     // ─────────────────────────────────────────────────────────────────────────────
 
     /// <summary>Default live state for ODMediaControls showcase — badge shows LIVE, slider locked.</summary>
-    public static bool  MockIsLive    = true;
+    public static bool MockIsLive = true;
     /// <summary>0.0 when live (no recorded progress), otherwise 0–1 position in replay.</summary>
-    public static float MockProgress  = 0.0f;
+    public static float MockProgress = 0.0f;
 
     // ─────────────────────────────────────────────────────────────────────────────
     // Session info
     // ─────────────────────────────────────────────────────────────────────────────
 
     /// <summary>Displayed in session header banners (e.g. ODCard title or overlay label).</summary>
-    public static string MockSessionTitle  = "F1 · RACE";
+    public static string MockSessionTitle = "F1 · RACE";
     /// <summary>Lap counter string for timing overlays.</summary>
-    public static string MockLapInfo       = "LAP 42 / 58";
+    public static string MockLapInfo = "LAP 42 / 58";
     /// <summary>Championship branding line.</summary>
-    public static string MockChampionship  = "FORMULA 1";
+    public static string MockChampionship = "FORMULA 1";
 }

@@ -20,16 +20,16 @@ using UnityEngine.Events;
 public class ODCard : MonoBehaviour
 {
     [Header("Content")]
-    public string title           = "Card Title";
-    public bool   showDivider     = true;
-    public bool   showCloseButton = false;
+    public string title = "Card Title";
+    public bool showDivider = true;
+    public bool showCloseButton = false;
 
     [Header("References — wired by ODUIBuilder")]
-    public ODLabel        titleLabel;
-    public ODButton       closeButton;
-    public GameObject     divider;
+    public ODLabel titleLabel;
+    public ODButton closeButton;
+    public GameObject divider;
     /// <summary>RectTransform that acts as the parent for any content placed inside the card.</summary>
-    public RectTransform  contentArea;
+    public RectTransform contentArea;
 
     private void Start()
     {
@@ -40,7 +40,7 @@ public class ODCard : MonoBehaviour
     private void Sync()
     {
         titleLabel?.SetText(title);
-        if (divider     != null) divider.SetActive(showDivider);
+        if (divider != null) divider.SetActive(showDivider);
         if (closeButton != null) closeButton.gameObject.SetActive(showCloseButton);
     }
 

@@ -14,12 +14,12 @@ public class VideoPlayerController : MonoBehaviour
     public static VideoPlayerController Instance { get; private set; }
 
     [Header("References (auto-wired by builder)")]
-    public VideoPlayer     videoPlayer;
-    public Slider          scrubSlider;
+    public VideoPlayer videoPlayer;
+    public Slider scrubSlider;
     public TextMeshProUGUI playPauseLabel;
     public TextMeshProUGUI timeLabel;
     public TextMeshProUGUI titleLabel;
-    public Canvas          menuCanvas;     // main menu to return to
+    public Canvas menuCanvas;     // main menu to return to
 
     [Header("Live Standings")]
     [Tooltip("The RankingWidget shown next to the video (auto-found if empty)")]
@@ -28,7 +28,7 @@ public class VideoPlayerController : MonoBehaviour
     public float rankingSideOffset = 1.0f;
 
     private CanvasGroup _cg;
-    private bool        _seeking;
+    private bool _seeking;
 
     private void Awake()
     {
@@ -55,9 +55,9 @@ public class VideoPlayerController : MonoBehaviour
         // Buttons must be wired at RUNTIME: editor-time AddListener calls are
         // not serialized into the scene, so they'd be dead in a build.
         WireButton("VideoSurface/BackButton", BackToMenu);
-        WireButton("PlayPause",  TogglePlayPause);
-        WireButton("Rewind10",   () => SkipSeconds(-10f));
-        WireButton("Forward10",  () => SkipSeconds(+10f));
+        WireButton("PlayPause", TogglePlayPause);
+        WireButton("Rewind10", () => SkipSeconds(-10f));
+        WireButton("Forward10", () => SkipSeconds(+10f));
 
         gameObject.SetActive(false);
     }
@@ -144,7 +144,7 @@ public class VideoPlayerController : MonoBehaviour
     {
         if (videoPlayer == null) return;
         if (videoPlayer.isPlaying) videoPlayer.Pause();
-        else                       videoPlayer.Play();
+        else videoPlayer.Play();
         UpdatePlayLabel();
     }
 

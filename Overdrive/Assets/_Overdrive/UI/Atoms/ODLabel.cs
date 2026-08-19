@@ -52,25 +52,25 @@ public class ODLabel : MonoBehaviour
         switch (textStyle)
         {
             case TextStyle.H1:
-                _text.fontSize  = theme.h1Size;
+                _text.fontSize = theme.h1Size;
                 _text.fontStyle = FontStyles.Bold;
-                _text.color     = theme.textPrimary;
+                _text.color = theme.textPrimary;
                 break;
             case TextStyle.H2:
-                _text.fontSize  = theme.h2Size;
+                _text.fontSize = theme.h2Size;
                 _text.fontStyle = FontStyles.Bold;
-                _text.color     = theme.textPrimary;
+                _text.color = theme.textPrimary;
                 break;
             case TextStyle.Body:
-                _text.fontSize  = theme.bodySize;
+                _text.fontSize = theme.bodySize;
                 _text.fontStyle = FontStyles.Normal;
-                _text.color     = theme.textPrimary;
+                _text.color = theme.textPrimary;
                 break;
             case TextStyle.Caption:
-                _text.fontSize  = theme.captionSize;
+                _text.fontSize = theme.captionSize;
                 _text.fontStyle = FontStyles.Normal;
                 // Caption uses secondary (grey) to de-emphasize supporting information
-                _text.color     = theme.textSecondary;
+                _text.color = theme.textSecondary;
                 break;
         }
     }

@@ -81,20 +81,20 @@ public class ChampionshipPageController : MonoBehaviour
         ClearChildren(scheduleSection);
         ClearChildren(standingsSection);
 
-        bool hasLive            = data.liveGroups != null && data.liveGroups.Count > 0;
-        bool hasCircuitWeather  = data.circuit.HasValue && data.weather.HasValue;
-        bool hasNextEvent       = data.nextEvent.HasValue;
-        bool hasSchedule        = data.schedule != null && data.schedule.Count > 0;
+        bool hasLive = data.liveGroups != null && data.liveGroups.Count > 0;
+        bool hasCircuitWeather = data.circuit.HasValue && data.weather.HasValue;
+        bool hasNextEvent = data.nextEvent.HasValue;
+        bool hasSchedule = data.schedule != null && data.schedule.Count > 0;
 
         SetSectionActive(liveSection, hasLive);
         SetSectionActive(circuitWeatherSection, hasCircuitWeather);
         SetSectionActive(nextEventSection, hasNextEvent);
         SetSectionActive(scheduleSection, hasSchedule);
 
-        if (hasLive)           PopulateLive(data.liveGroups);
+        if (hasLive) PopulateLive(data.liveGroups);
         if (hasCircuitWeather) PopulateCircuitWeather(data.circuit.Value, data.weather.Value);
-        if (hasNextEvent)      PopulateNextEvent(data.nextEvent.Value);
-        if (hasSchedule)       PopulateSchedule(data.schedule);
+        if (hasNextEvent) PopulateNextEvent(data.nextEvent.Value);
+        if (hasSchedule) PopulateSchedule(data.schedule);
         if (data.standings != null) PopulateStandings(data.standings);
 
         PlaceInFrontOfUser();
@@ -189,9 +189,9 @@ public class ChampionshipPageController : MonoBehaviour
         BuildMapWidget(eventCard.transform, evt.location);
 
         GameObject countdownRow = NewHorizontalRow(eventCard.transform, "Countdown", 32f);
-        CreateStatColumn(countdownRow.transform, "JOURS",  ((int)span.TotalDays).ToString());
+        CreateStatColumn(countdownRow.transform, "JOURS", ((int)span.TotalDays).ToString());
         CreateStatColumn(countdownRow.transform, "HEURES", span.Hours.ToString());
-        CreateStatColumn(countdownRow.transform, "MIN",    span.Minutes.ToString());
+        CreateStatColumn(countdownRow.transform, "MIN", span.Minutes.ToString());
     }
 
     private void PopulateSchedule(List<ChampionshipSession> sessions)
@@ -226,9 +226,9 @@ public class ChampionshipPageController : MonoBehaviour
     /// </summary>
     private void PopulateStandings(List<ChampionshipStandingTable> tables)
     {
-        var order      = new List<string>();
-        var drivers    = new Dictionary<string, ChampionshipStandingTable>();
-        var teams      = new Dictionary<string, ChampionshipStandingTable>();
+        var order = new List<string>();
+        var drivers = new Dictionary<string, ChampionshipStandingTable>();
+        var teams = new Dictionary<string, ChampionshipStandingTable>();
 
         foreach (var table in tables)
         {
@@ -236,13 +236,13 @@ public class ChampionshipPageController : MonoBehaviour
             if (!order.Contains(category)) order.Add(category);
 
             if (table.type == StandingType.Drivers) drivers[category] = table;
-            else                                    teams[category]  = table;
+            else teams[category] = table;
         }
 
         foreach (string category in order)
         {
             ChampionshipStandingTable? d = drivers.TryGetValue(category, out var dv) ? dv : (ChampionshipStandingTable?)null;
-            ChampionshipStandingTable? t = teams.TryGetValue(category, out var tv)   ? tv : (ChampionshipStandingTable?)null;
+            ChampionshipStandingTable? t = teams.TryGetValue(category, out var tv) ? tv : (ChampionshipStandingTable?)null;
 
             ODStandingsWidget widget = ODStandingsWidget.Create(standingsSection, ghostButtonPrefab, dataTablePrefab);
             widget.Setup(category, d, t);
@@ -257,8 +257,8 @@ public class ChampionshipPageController : MonoBehaviour
     {
         string c = condition.ToLowerInvariant();
         if (c.Contains("ensoleil")) return "☀";
-        if (c.Contains("nuage"))    return "☁";
-        if (c.Contains("pluie"))    return "🌧";
+        if (c.Contains("nuage")) return "☁";
+        if (c.Contains("pluie")) return "🌧";
         return "🌡";
     }
 
@@ -269,10 +269,10 @@ public class ChampionshipPageController : MonoBehaviour
         GameObject go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
         HorizontalLayoutGroup hlg = go.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing               = spacing;
-        hlg.childAlignment        = TextAnchor.MiddleLeft;
-        hlg.childControlWidth     = false;
-        hlg.childControlHeight    = true;
+        hlg.spacing = spacing;
+        hlg.childAlignment = TextAnchor.MiddleLeft;
+        hlg.childControlWidth = false;
+        hlg.childControlHeight = true;
         hlg.childForceExpandWidth = false;
         go.AddComponent<LayoutElement>().preferredHeight = 56f;
         go.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, 56f);
@@ -285,12 +285,12 @@ public class ChampionshipPageController : MonoBehaviour
         GameObject go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
         VerticalLayoutGroup vlg = go.AddComponent<VerticalLayoutGroup>();
-        vlg.padding                = new RectOffset(20, 20, 16, 16);
-        vlg.spacing                = 8f;
-        vlg.childAlignment         = TextAnchor.UpperCenter;
-        vlg.childControlWidth      = true;
-        vlg.childControlHeight     = false;
-        vlg.childForceExpandWidth  = true;
+        vlg.padding = new RectOffset(20, 20, 16, 16);
+        vlg.spacing = 8f;
+        vlg.childAlignment = TextAnchor.UpperCenter;
+        vlg.childControlWidth = true;
+        vlg.childControlHeight = false;
+        vlg.childForceExpandWidth = true;
         go.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         go.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
 
@@ -313,10 +313,10 @@ public class ChampionshipPageController : MonoBehaviour
         GameObject go = new GameObject("Label", typeof(RectTransform));
         go.transform.SetParent(parent, false);
         TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
-        tmp.text               = text;
-        tmp.alignment          = TextAlignmentOptions.Center;
+        tmp.text = text;
+        tmp.alignment = TextAlignmentOptions.Center;
         tmp.enableWordWrapping = false;
-        tmp.overflowMode       = TextOverflowModes.Ellipsis;
+        tmp.overflowMode = TextOverflowModes.Ellipsis;
         ODLabel lbl = go.AddComponent<ODLabel>();
         lbl.textStyle = style;
         go.AddComponent<LayoutElement>().preferredHeight = style == ODLabel.TextStyle.H1 ? 44f : 28f;
@@ -328,9 +328,9 @@ public class ChampionshipPageController : MonoBehaviour
         GameObject col = new GameObject(label, typeof(RectTransform));
         col.transform.SetParent(parent, false);
         VerticalLayoutGroup vlg = col.AddComponent<VerticalLayoutGroup>();
-        vlg.childAlignment    = TextAnchor.UpperCenter;
+        vlg.childAlignment = TextAnchor.UpperCenter;
         vlg.childControlWidth = true;
-        vlg.spacing           = 2f;
+        vlg.spacing = 2f;
         col.AddComponent<LayoutElement>().preferredWidth = 80f;
 
         CreateLabel(col.transform, value, ODLabel.TextStyle.H1);
@@ -345,7 +345,7 @@ public class ChampionshipPageController : MonoBehaviour
         GameObject nameGO = new GameObject("Name", typeof(RectTransform));
         nameGO.transform.SetParent(row.transform, false);
         TextMeshProUGUI nameTmp = nameGO.AddComponent<TextMeshProUGUI>();
-        nameTmp.text      = $"{name}\n<size=70%>{time}</size>";
+        nameTmp.text = $"{name}\n<size=70%>{time}</size>";
         nameTmp.alignment = TextAlignmentOptions.MidlineLeft;
         ODLabel nameLbl = nameGO.AddComponent<ODLabel>();
         nameLbl.textStyle = ODLabel.TextStyle.Body;
@@ -372,12 +372,12 @@ public class ChampionshipPageController : MonoBehaviour
         blRT.offsetMin = new Vector2(8f, 0f); blRT.offsetMax = new Vector2(-8f, 0f);
         TextMeshProUGUI blTmp = badgeLabelGO.AddComponent<TextMeshProUGUI>();
         blTmp.alignment = TextAlignmentOptions.Center;
-        blTmp.fontSize  = 16f;
+        blTmp.fontSize = 16f;
         ODLabel blLbl = badgeLabelGO.AddComponent<ODLabel>();
         blLbl.textStyle = ODLabel.TextStyle.Caption;
 
         badge.background = badgeBg;
-        badge.label      = blLbl;
+        badge.label = blLbl;
         badge.SetVariant(status == "PROCHAIN" ? ODBadge.BadgeVariant.Gold : ODBadge.BadgeVariant.Default);
         badge.SetText(status);
     }
@@ -386,18 +386,18 @@ public class ChampionshipPageController : MonoBehaviour
     {
         GameObject root = NewCardBlock(parent, "WeatherWidget");
         LayoutElement le = root.AddComponent<LayoutElement>();
-        le.flexibleWidth   = 1f;
+        le.flexibleWidth = 1f;
         le.preferredHeight = 160f;
 
         ODWeatherWidget widget = root.AddComponent<ODWeatherWidget>();
         widget.background = root.GetComponentInChildren<ODBackground>();
 
-        GameObject iconGO  = CreateLabel(root.transform, "", ODLabel.TextStyle.H1);
+        GameObject iconGO = CreateLabel(root.transform, "", ODLabel.TextStyle.H1);
         GameObject valueGO = CreateLabel(root.transform, "", ODLabel.TextStyle.H1);
-        GameObject condGO  = CreateLabel(root.transform, "", ODLabel.TextStyle.Caption);
+        GameObject condGO = CreateLabel(root.transform, "", ODLabel.TextStyle.Caption);
 
-        widget.iconLabel      = iconGO.GetComponent<ODLabel>();
-        widget.valueLabel     = valueGO.GetComponent<ODLabel>();
+        widget.iconLabel = iconGO.GetComponent<ODLabel>();
+        widget.valueLabel = valueGO.GetComponent<ODLabel>();
         widget.conditionLabel = condGO.GetComponent<ODLabel>();
 
         return widget;
@@ -407,17 +407,17 @@ public class ChampionshipPageController : MonoBehaviour
     {
         GameObject root = NewCardBlock(parent, "MapWidget");
         LayoutElement le = root.AddComponent<LayoutElement>();
-        le.flexibleWidth   = 1f;
+        le.flexibleWidth = 1f;
         le.preferredHeight = 160f;
 
         ODMapWidget widget = root.AddComponent<ODMapWidget>();
         widget.background = root.GetComponentInChildren<ODBackground>();
 
         GameObject placeholderGO = CreateLabel(root.transform, "Carte", ODLabel.TextStyle.H2);
-        GameObject locationGO    = CreateLabel(root.transform, location, ODLabel.TextStyle.Caption);
+        GameObject locationGO = CreateLabel(root.transform, location, ODLabel.TextStyle.Caption);
 
         widget.placeholderLabel = placeholderGO.GetComponent<ODLabel>();
-        widget.locationLabel    = locationGO.GetComponent<ODLabel>();
+        widget.locationLabel = locationGO.GetComponent<ODLabel>();
         widget.SetLocation(location);
 
         return widget;

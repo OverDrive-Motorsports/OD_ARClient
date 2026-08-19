@@ -26,17 +26,17 @@ using UnityEngine.UI;
 /// </summary>
 public static class ChampionshipPageScreenBuilder
 {
-    const string CardPrefabPath        = "Assets/_Overdrive/UI/Prefabs/Organisms/ODCard.prefab";
+    const string CardPrefabPath = "Assets/_Overdrive/UI/Prefabs/Organisms/ODCard.prefab";
     const string GhostButtonPrefabPath = "Assets/_Overdrive/UI/Prefabs/Molecules/ODButton_Ghost.prefab";
-    const string DataTablePrefabPath   = "Assets/_Overdrive/UI/Prefabs/Organisms/ODDataTable.prefab";
-    const string SaveDir  = "Assets/_Overdrive/UI/Prefabs/Screens";
+    const string DataTablePrefabPath = "Assets/_Overdrive/UI/Prefabs/Organisms/ODDataTable.prefab";
+    const string SaveDir = "Assets/_Overdrive/UI/Prefabs/Screens";
     const string SavePath = SaveDir + "/ChampionshipPage.prefab";
 
     public static void Build()
     {
-        var cardAsset   = AssetDatabase.LoadAssetAtPath<GameObject>(CardPrefabPath);
-        var ghostAsset  = AssetDatabase.LoadAssetAtPath<GameObject>(GhostButtonPrefabPath);
-        var tableAsset  = AssetDatabase.LoadAssetAtPath<GameObject>(DataTablePrefabPath);
+        var cardAsset = AssetDatabase.LoadAssetAtPath<GameObject>(CardPrefabPath);
+        var ghostAsset = AssetDatabase.LoadAssetAtPath<GameObject>(GhostButtonPrefabPath);
+        var tableAsset = AssetDatabase.LoadAssetAtPath<GameObject>(DataTablePrefabPath);
         if (cardAsset == null || ghostAsset == null || tableAsset == null)
         {
             Debug.LogError("[ChampionshipPageScreenBuilder] ODCard/ODButton_Ghost/ODDataTable prefabs not found — run 'Overdrive > Build OD_UI Base' first.");
@@ -50,38 +50,38 @@ public static class ChampionshipPageScreenBuilder
         canvasGO.AddComponent<CanvasScaler>();
         canvasGO.AddComponent<GraphicRaycaster>();
         RectTransform canvasRT = canvasGO.GetComponent<RectTransform>();
-        canvasRT.sizeDelta  = new Vector2(760f, 900f);
+        canvasRT.sizeDelta = new Vector2(760f, 900f);
         canvasRT.localScale = Vector3.one * 0.001f;
 
         // ── Card ─────────────────────────────────────────────────────────────
         GameObject cardGO = (GameObject)PrefabUtility.InstantiatePrefab(cardAsset, canvasGO.transform);
         ODCard card = cardGO.GetComponent<ODCard>();
-        card.showDivider     = true;
+        card.showDivider = true;
         card.showCloseButton = false;
         card.SetTitle("Championnat");
 
         RectTransform cardRT = cardGO.GetComponent<RectTransform>();
-        cardRT.anchorMin        = new Vector2(0.5f, 0.5f);
-        cardRT.anchorMax        = new Vector2(0.5f, 0.5f);
-        cardRT.pivot            = new Vector2(0.5f, 0.5f);
+        cardRT.anchorMin = new Vector2(0.5f, 0.5f);
+        cardRT.anchorMax = new Vector2(0.5f, 0.5f);
+        cardRT.pivot = new Vector2(0.5f, 0.5f);
         cardRT.anchoredPosition = Vector2.zero;
-        cardRT.sizeDelta        = new Vector2(680f, 0f); // height driven by ContentSizeFitter
+        cardRT.sizeDelta = new Vector2(680f, 0f); // height driven by ContentSizeFitter
 
         FixTitleOrientation(cardGO);
 
         // ── 5 empty section containers, direct siblings in the content area ────
         // ChampionshipPageController shows/hides/populates each one at Open()
         // time based purely on which fields are present on the data passed in.
-        RectTransform liveSection           = NewSection(card.contentArea, "LiveSection");
+        RectTransform liveSection = NewSection(card.contentArea, "LiveSection");
         RectTransform circuitWeatherSection = NewSection(card.contentArea, "CircuitWeatherSection");
-        RectTransform nextEventSection      = NewSection(card.contentArea, "NextEventSection");
-        RectTransform scheduleSection       = NewSection(card.contentArea, "ScheduleSection");
-        RectTransform standingsSection      = NewSection(card.contentArea, "StandingsSection");
+        RectTransform nextEventSection = NewSection(card.contentArea, "NextEventSection");
+        RectTransform scheduleSection = NewSection(card.contentArea, "ScheduleSection");
+        RectTransform standingsSection = NewSection(card.contentArea, "StandingsSection");
 
         // ── Persistent footer — Replay is available no matter the status ──────
         GameObject footer = NewSectionGO(card.contentArea, "Footer");
         HorizontalLayoutGroup footerHlg = footer.AddComponent<HorizontalLayoutGroup>();
-        footerHlg.childControlWidth  = false;
+        footerHlg.childControlWidth = false;
         footerHlg.childControlHeight = true;
         footer.AddComponent<LayoutElement>().preferredHeight = 56f;
         footer.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, 56f);
@@ -92,14 +92,14 @@ public static class ChampionshipPageScreenBuilder
 
         // ── Controller ───────────────────────────────────────────────────────
         ChampionshipPageController controller = canvasGO.AddComponent<ChampionshipPageController>();
-        controller.card                  = card;
-        controller.liveSection           = liveSection;
+        controller.card = card;
+        controller.liveSection = liveSection;
         controller.circuitWeatherSection = circuitWeatherSection;
-        controller.nextEventSection      = nextEventSection;
-        controller.scheduleSection       = scheduleSection;
-        controller.standingsSection      = standingsSection;
-        controller.ghostButtonPrefab     = ghostAsset;
-        controller.dataTablePrefab       = tableAsset;
+        controller.nextEventSection = nextEventSection;
+        controller.scheduleSection = scheduleSection;
+        controller.standingsSection = standingsSection;
+        controller.ghostButtonPrefab = ghostAsset;
+        controller.dataTablePrefab = tableAsset;
 
         // ── WindowHandle — attached only, never modified ─────────────────────
         canvasGO.AddComponent<WindowHandle>();
@@ -123,11 +123,11 @@ public static class ChampionshipPageScreenBuilder
     {
         GameObject go = NewSectionGO(parent, name);
         VerticalLayoutGroup vlg = go.AddComponent<VerticalLayoutGroup>();
-        vlg.spacing                = 12f;
-        vlg.childAlignment         = TextAnchor.UpperLeft;
-        vlg.childControlWidth      = true;
-        vlg.childControlHeight     = false;
-        vlg.childForceExpandWidth  = true;
+        vlg.spacing = 12f;
+        vlg.childAlignment = TextAnchor.UpperLeft;
+        vlg.childControlWidth = true;
+        vlg.childControlHeight = false;
+        vlg.childForceExpandWidth = true;
         vlg.childForceExpandHeight = false;
         go.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         RectTransform rt = go.GetComponent<RectTransform>();
@@ -151,8 +151,8 @@ public static class ChampionshipPageScreenBuilder
         if (tmp != null)
         {
             tmp.enableWordWrapping = false;
-            tmp.overflowMode       = TMPro.TextOverflowModes.Ellipsis;
-            tmp.alignment          = TMPro.TextAlignmentOptions.MidlineLeft;
+            tmp.overflowMode = TMPro.TextOverflowModes.Ellipsis;
+            tmp.alignment = TMPro.TextAlignmentOptions.MidlineLeft;
         }
     }
 }

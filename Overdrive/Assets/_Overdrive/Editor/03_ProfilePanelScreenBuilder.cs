@@ -35,17 +35,17 @@ public static class ProfilePanelScreenBuilder
         UITheme fallback = ScriptableObject.CreateInstance<UITheme>();
         if (theme == null) theme = fallback;
 
-        Card     = theme.panelBackgroundAlt;
+        Card = theme.panelBackgroundAlt;
         CardSoft = theme.surfaceColor;
-        Track    = Color.Lerp(Card, Color.white, 0.15f);
-        Gold     = theme.accentGold;
-        Txt      = theme.textPrimary;
-        Sub      = theme.textSecondary;
+        Track = Color.Lerp(Card, Color.white, 0.15f);
+        Gold = theme.accentGold;
+        Txt = theme.textPrimary;
+        Sub = theme.textSecondary;
 
-        Ferrari  = theme.teamFerrari;
-        RedBull  = theme.teamRedBull;
-        Merc     = theme.teamMercedes;
-        McLaren  = theme.teamMcLaren;
+        Ferrari = theme.teamFerrari;
+        RedBull = theme.teamRedBull;
+        Merc = theme.teamMercedes;
+        McLaren = theme.teamMcLaren;
 
         Object.DestroyImmediate(fallback);
     }
@@ -58,7 +58,7 @@ public static class ProfilePanelScreenBuilder
     const float INNERW = W - PADX * 2f;     // 1124
 
     const float HEADER_H = 168f;
-    const float STATS_H  = 118f;
+    const float STATS_H = 118f;
 
     public static void Build()
     {
@@ -75,12 +75,12 @@ public static class ProfilePanelScreenBuilder
         Stretch(panel);
 
         float headerY = -PADTOP;
-        float statsY  = headerY - HEADER_H - GAP;
+        float statsY = headerY - HEADER_H - GAP;
         float bottomY = statsY - STATS_H - GAP;
         float bottomH = H - (-bottomY) - PADTOP;   // fill down to bottom padding
 
         BuildHeader(panel.transform, PADX, headerY, INNERW, HEADER_H);
-        BuildStats (panel.transform, PADX, statsY,  INNERW, STATS_H);
+        BuildStats(panel.transform, PADX, statsY, INNERW, STATS_H);
         BuildBottom(panel.transform, PADX, bottomY, INNERW, bottomH);
 
         panel.SetActive(false); // SelectNav manages visibility at runtime
@@ -99,18 +99,18 @@ public static class ProfilePanelScreenBuilder
         VLeft(ring, 26f, 112f, 112f);
         var inner = Rounded(NewGO("AvatarInner", ring.transform), CardSoft, 50f);
         Center(inner, 100f, 100f);
-        Label(inner.transform, "Initials", "A", 44f, FontStyles.Bold, Txt, TextAlignmentOptions.Center, full:true);
+        Label(inner.transform, "Initials", "A", 44f, FontStyles.Bold, Txt, TextAlignmentOptions.Center, full: true);
 
         float tx = 160f;
-        TL(Label(card.transform, "Name",   "Anthony",        32f, FontStyles.Bold,   Txt, TextAlignmentOptions.TopLeft), tx, -20f, 460f, 42f);
+        TL(Label(card.transform, "Name", "Anthony", 32f, FontStyles.Bold, Txt, TextAlignmentOptions.TopLeft), tx, -20f, 460f, 42f);
         TL(Label(card.transform, "Handle", "@overdrive_fan", 16f, FontStyles.Normal, Sub, TextAlignmentOptions.TopLeft), tx, -60f, 460f, 26f);
 
-        Chip(card.transform, "TeamChip",   tx,         -92f, 150f, 32f, Ferrari, "Ferrari");
-        Chip(card.transform, "DriverChip", tx + 162f,  -92f, 104f, 32f, RedBull, "VER");
+        Chip(card.transform, "TeamChip", tx, -92f, 150f, 32f, Ferrari, "Ferrari");
+        Chip(card.transform, "DriverChip", tx + 162f, -92f, 104f, 32f, RedBull, "VER");
 
         TL(Label(card.transform, "Level", "Level 7 · Veteran", 14f, FontStyles.Bold, Gold, TextAlignmentOptions.TopLeft), tx, -132f, 220f, 22f);
         var track = TL(Rounded(NewGO("XPTrack", card.transform), Track, 6f), tx + 210f, -128f, 360f, 12f);
-        var fill  = Rounded(NewGO("XPFill", track.transform), Gold, 6f);
+        var fill = Rounded(NewGO("XPFill", track.transform), Gold, 6f);
         var fr = fill.GetComponent<RectTransform>();
         fr.anchorMin = new Vector2(0, 0); fr.anchorMax = new Vector2(0.68f, 1);
         fr.offsetMin = Vector2.zero; fr.offsetMax = Vector2.zero;
@@ -122,7 +122,7 @@ public static class ProfilePanelScreenBuilder
         er.anchoredPosition = new Vector2(-22f, -22f); er.sizeDelta = new Vector2(170f, 44f);
         var btn = edit.AddComponent<Button>(); btn.targetGraphic = edit.GetComponent<Graphic>();
         edit.GetComponent<Graphic>().raycastTarget = true;
-        Label(edit.transform, "Label", "Edit Profile", 16f, FontStyles.Bold, Txt, TextAlignmentOptions.Center, full:true);
+        Label(edit.transform, "Label", "Edit Profile", 16f, FontStyles.Bold, Txt, TextAlignmentOptions.Center, full: true);
     }
 
     // ── STATS ───────────────────────────────────────────────────────────────
@@ -134,8 +134,8 @@ public static class ProfilePanelScreenBuilder
         for (int i = 0; i < 4; i++)
         {
             var card = TL(Rounded(NewGO("Stat_" + data[i, 1], row.transform), Card, 18f), i * (cw + 16f), 0f, cw, h);
-            TL(Label(card.transform, "Value", data[i, 0], 40f, FontStyles.Bold,   Gold, TextAlignmentOptions.Center), 0f, -24f, cw, 52f);
-            TL(Label(card.transform, "Label", data[i, 1], 15f, FontStyles.Normal, Sub,  TextAlignmentOptions.Center), 0f, -80f, cw, 24f);
+            TL(Label(card.transform, "Value", data[i, 0], 40f, FontStyles.Bold, Gold, TextAlignmentOptions.Center), 0f, -24f, cw, 52f);
+            TL(Label(card.transform, "Label", data[i, 1], 15f, FontStyles.Normal, Sub, TextAlignmentOptions.Center), 0f, -80f, cw, 24f);
         }
     }
 
@@ -149,14 +149,14 @@ public static class ProfilePanelScreenBuilder
         Label2(follow, "Following", cw);
         FollowRow(follow, cw, 0, RedBull, "VER", "Red Bull Racing");
         FollowRow(follow, cw, 1, Ferrari, "LEC", "Ferrari");
-        FollowRow(follow, cw, 2, Merc,    "HAM", "Mercedes");
+        FollowRow(follow, cw, 2, Merc, "HAM", "Mercedes");
         FollowRow(follow, cw, 3, McLaren, "NOR", "McLaren");
 
         var watch = TL(Rounded(NewGO("Card_Watch", row.transform), Card, 20f), cw + 16f, 0f, cw, h);
         Label2(watch, "Continue Watching", cw);
         WatchRow(watch, cw, 0, Ferrari, "Monaco GP 2024", "32:10 remaining");
-        WatchRow(watch, cw, 1, RedBull, "Japan GP",        "Lap 40 / 53");
-        WatchRow(watch, cw, 2, McLaren, "Bahrain GP",      "Highlights · 8 min");
+        WatchRow(watch, cw, 1, RedBull, "Japan GP", "Lap 40 / 53");
+        WatchRow(watch, cw, 2, McLaren, "Bahrain GP", "Highlights · 8 min");
     }
 
     static void Label2(GameObject card, string title, float cw)
@@ -170,7 +170,7 @@ public static class ProfilePanelScreenBuilder
         var row = TL(NewGO("Follow_" + code, card.transform), 16f, y, cw - 32f, 44f);
         var dot = Rounded(NewGO("Dot", row.transform), team, 11f);
         VLeft(dot, 6f, 22f, 22f);
-        TL(Label(row.transform, "Code", code, 17f, FontStyles.Bold,   Txt, TextAlignmentOptions.MidlineLeft), 40f, -10f, 60f, 24f);
+        TL(Label(row.transform, "Code", code, 17f, FontStyles.Bold, Txt, TextAlignmentOptions.MidlineLeft), 40f, -10f, 60f, 24f);
         TL(Label(row.transform, "Team", name, 15f, FontStyles.Normal, Sub, TextAlignmentOptions.MidlineLeft), 104f, -10f, cw - 150f, 24f);
     }
 
@@ -180,8 +180,8 @@ public static class ProfilePanelScreenBuilder
         var row = TL(NewGO("Watch_" + i, card.transform), 16f, y, cw - 32f, 56f);
         var thumb = Rounded(NewGO("Thumb", row.transform), accent, 8f);
         VLeft(thumb, 0f, 72f, 44f);
-        TL(Label(row.transform, "Title", title, 17f, FontStyles.Bold,   Txt, TextAlignmentOptions.BottomLeft), 86f, -4f,  cw - 130f, 26f);
-        TL(Label(row.transform, "Sub",   sub,   14f, FontStyles.Normal, Sub, TextAlignmentOptions.TopLeft),    86f, -30f, cw - 130f, 22f);
+        TL(Label(row.transform, "Title", title, 17f, FontStyles.Bold, Txt, TextAlignmentOptions.BottomLeft), 86f, -4f, cw - 130f, 26f);
+        TL(Label(row.transform, "Sub", sub, 14f, FontStyles.Normal, Sub, TextAlignmentOptions.TopLeft), 86f, -30f, cw - 130f, 22f);
     }
 
     // ── chip ────────────────────────────────────────────────────────────────
@@ -190,7 +190,7 @@ public static class ProfilePanelScreenBuilder
         var chip = TL(Rounded(NewGO(name, parent), CardSoft, h * 0.5f), x, y, w, h);
         var d = Rounded(NewGO("Dot", chip.transform), dot, 8f);
         VLeft(d, 10f, 16f, 16f);
-        TL(Label(chip.transform, "Label", label, 14f, FontStyles.Bold, Txt, TextAlignmentOptions.MidlineLeft), 34f, -(h-20f)*0.5f, w - 40f, 20f);
+        TL(Label(chip.transform, "Label", label, 14f, FontStyles.Bold, Txt, TextAlignmentOptions.MidlineLeft), 34f, -(h - 20f) * 0.5f, w - 40f, 20f);
     }
 
     // ── primitives ─────────────────────────────────────────────────────────────

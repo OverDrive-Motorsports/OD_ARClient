@@ -9,18 +9,18 @@ using UnityEngine;
 public class AppLauncher : MonoBehaviour
 {
     [Header("References")]
-    public Canvas    menuCanvas;
+    public Canvas menuCanvas;
     public Transform centerEyeAnchor;
 
     [Header("Placement")]
     [Tooltip("Distance from the user's head in metres when it first appears")]
-    public float spawnDistance  = 1.5f;
+    public float spawnDistance = 1.5f;
 
     [Tooltip("Vertical offset from eye height (0 = exact eye level)")]
     public float verticalOffset = 0f;
 
     [Header("Fade")]
-    public float fadeInDuration  = 0.6f;
+    public float fadeInDuration = 0.6f;
     public float delayBeforeFade = 0.5f;
 
     private CanvasGroup _cg;
@@ -70,7 +70,7 @@ public class AppLauncher : MonoBehaviour
 
         Vector3 fwd = FlatForward(head.forward);
         menuCanvas.transform.position = head.position
-                                      + fwd        * spawnDistance
+                                      + fwd * spawnDistance
                                       + Vector3.up * verticalOffset;
         menuCanvas.transform.rotation = Quaternion.LookRotation(fwd, Vector3.up);
     }
@@ -107,7 +107,7 @@ public class AppLauncher : MonoBehaviour
     private Transform GetHead()
     {
         if (centerEyeAnchor != null) return centerEyeAnchor;
-        if (Camera.main     != null) return Camera.main.transform;
+        if (Camera.main != null) return Camera.main.transform;
         return null;
     }
 

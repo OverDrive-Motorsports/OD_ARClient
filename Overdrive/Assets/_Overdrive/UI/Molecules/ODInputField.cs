@@ -21,10 +21,10 @@ using TMPro;
 public class ODInputField : MonoBehaviour
 {
     [Header("References")]
-    public ODBackground  background;
+    public ODBackground background;
     public TMP_InputField inputField;
     /// <summary>Thin Image stretched over the background that animates between border and gold on focus.</summary>
-    public Image          borderImage;
+    public Image borderImage;
 
     [Header("Events")]
     public UnityEvent<string> OnValueChanged;
@@ -34,8 +34,8 @@ public class ODInputField : MonoBehaviour
 
     private void Awake()
     {
-        if (background == null) background  = GetComponentInChildren<ODBackground>();
-        if (inputField == null) inputField  = GetComponentInChildren<TMP_InputField>();
+        if (background == null) background = GetComponentInChildren<ODBackground>();
+        if (inputField == null) inputField = GetComponentInChildren<TMP_InputField>();
 
         SetupColors();
 
@@ -75,10 +75,10 @@ public class ODInputField : MonoBehaviour
         UITheme theme = UITheme.Instance;
         if (theme == null || borderImage == null) yield break;
 
-        Color from     = borderImage.color;
-        Color to       = focused ? theme.accentGold : theme.borderColor;
+        Color from = borderImage.color;
+        Color to = focused ? theme.accentGold : theme.borderColor;
         float duration = 0.15f;
-        float elapsed  = 0f;
+        float elapsed = 0f;
 
         while (elapsed < duration)
         {

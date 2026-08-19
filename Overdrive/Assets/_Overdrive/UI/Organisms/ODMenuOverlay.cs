@@ -27,22 +27,22 @@ public class ODMenuOverlay : MonoBehaviour
     [System.Serializable]
     public class MenuOverlayItem
     {
-        public string      label;
+        public string label;
         /// <summary>Text/emoji glyph shown before the label — no icon Sprite assets exist in the project yet.</summary>
-        public string      iconGlyph;
-        public bool         isSelected;
-        public UnityAction  onClick;
+        public string iconGlyph;
+        public bool isSelected;
+        public UnityAction onClick;
     }
 
     [Header("References — wired by ODUIBuilder")]
-    public Button      triggerButton;
-    public ODLabel      triggerLabel;
-    public GameObject   overlayPanel;
+    public Button triggerButton;
+    public ODLabel triggerLabel;
+    public GameObject overlayPanel;
     /// <summary>Items are parented directly here (root of overlayPanel) — see ChampionshipPageController's NewCardBlock pattern for why Background is a sibling with ignoreLayout instead of a separate container.</summary>
-    public Transform    itemsContainer;
+    public Transform itemsContainer;
 
     private CanvasGroup _overlayGroup;
-    private Coroutine   _transition;
+    private Coroutine _transition;
 
     private void Awake()
     {
@@ -79,7 +79,7 @@ public class ODMenuOverlay : MonoBehaviour
     {
         if (overlayPanel == null) return;
         if (overlayPanel.activeSelf) Close();
-        else                          Open();
+        else Open();
     }
 
     public void Open()
@@ -114,11 +114,11 @@ public class ODMenuOverlay : MonoBehaviour
         row.transform.SetParent(itemsContainer, false);
 
         HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
-        hlg.padding               = new RectOffset(16, 16, 10, 10);
-        hlg.spacing               = 12f;
-        hlg.childAlignment        = TextAnchor.MiddleLeft;
-        hlg.childControlWidth     = false;
-        hlg.childControlHeight    = true;
+        hlg.padding = new RectOffset(16, 16, 10, 10);
+        hlg.spacing = 12f;
+        hlg.childAlignment = TextAnchor.MiddleLeft;
+        hlg.childControlWidth = false;
+        hlg.childControlHeight = true;
         row.AddComponent<LayoutElement>().preferredHeight = 48f;
 
         Image bg = row.AddComponent<Image>();
@@ -136,7 +136,7 @@ public class ODMenuOverlay : MonoBehaviour
         GameObject iconGO = new GameObject("Icon", typeof(RectTransform));
         iconGO.transform.SetParent(row.transform, false);
         TextMeshProUGUI iconTmp = iconGO.AddComponent<TextMeshProUGUI>();
-        iconTmp.text      = item.iconGlyph;
+        iconTmp.text = item.iconGlyph;
         iconTmp.alignment = TextAlignmentOptions.Center;
         ODLabel iconLbl = iconGO.AddComponent<ODLabel>();
         iconLbl.textStyle = ODLabel.TextStyle.Body;
@@ -145,8 +145,8 @@ public class ODMenuOverlay : MonoBehaviour
         GameObject labelGO = new GameObject("Label", typeof(RectTransform));
         labelGO.transform.SetParent(row.transform, false);
         TextMeshProUGUI labelTmp = labelGO.AddComponent<TextMeshProUGUI>();
-        labelTmp.text               = item.label;
-        labelTmp.alignment          = TextAlignmentOptions.MidlineLeft;
+        labelTmp.text = item.label;
+        labelTmp.alignment = TextAlignmentOptions.MidlineLeft;
         labelTmp.enableWordWrapping = false;
         ODLabel labelLbl = labelGO.AddComponent<ODLabel>();
         labelLbl.textStyle = ODLabel.TextStyle.Body;

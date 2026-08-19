@@ -46,16 +46,16 @@ public class ODToggle : MonoBehaviour
         RectTransform knobRT = knobGO.GetComponent<RectTransform>();
         knobRT.anchorMin = new Vector2(0f, 0.5f);
         knobRT.anchorMax = new Vector2(0f, 0.5f);
-        knobRT.pivot     = new Vector2(0.5f, 0.5f);
+        knobRT.pivot = new Vector2(0.5f, 0.5f);
         knobRT.sizeDelta = new Vector2(24f, 24f);
         RoundedImage knobImg = knobGO.AddComponent<RoundedImage>();
-        knobImg.color        = Color.white;
+        knobImg.color = Color.white;
         knobImg.cornerRadius = 12f;
         knobImg.raycastTarget = false;
 
         ODToggle toggle = root.AddComponent<ODToggle>();
         toggle.track = trackImg;
-        toggle.knob  = knobRT;
+        toggle.knob = knobRT;
         toggle._button = button;
         toggle._button.onClick.AddListener(toggle.Toggle);
         toggle.Apply();
@@ -75,10 +75,10 @@ public class ODToggle : MonoBehaviour
     private void Apply()
     {
         UITheme theme = UITheme.Instance;
-        Color onColor  = theme != null ? theme.accentGold : Color.yellow;
+        Color onColor = theme != null ? theme.accentGold : Color.yellow;
         Color offColor = new Color(1f, 1f, 1f, 0.12f);
 
         if (track != null) track.color = value ? onColor : offColor;
-        if (knob  != null) knob.anchoredPosition = new Vector2(value ? 12f : -12f, 0f);
+        if (knob != null) knob.anchoredPosition = new Vector2(value ? 12f : -12f, 0f);
     }
 }

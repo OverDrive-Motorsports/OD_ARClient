@@ -30,14 +30,14 @@ using TMPro;
 /// </summary>
 public static class HomeNavScreenBuilder
 {
-    const string NavBarPrefabPath        = "Assets/_Overdrive/UI/Prefabs/Organisms/ODNavBar.prefab";
-    const string CardPrefabPath          = "Assets/_Overdrive/UI/Prefabs/Organisms/ODCard.prefab";
-    const string GhostButtonPrefabPath   = "Assets/_Overdrive/UI/Prefabs/Molecules/ODButton_Ghost.prefab";
-    const string DangerButtonPrefabPath  = "Assets/_Overdrive/UI/Prefabs/Molecules/ODButton_Danger.prefab";
-    const string MenuOverlayPrefabPath   = "Assets/_Overdrive/UI/Prefabs/Organisms/ODMenuOverlay.prefab";
-    const string PopupPrefabPath         = "Assets/_Overdrive/UI/Prefabs/Organisms/ODPopup.prefab";
-    const string SaveDir                 = "Assets/_Overdrive/UI/Prefabs/Screens";
-    const string SavePath                = SaveDir + "/HomeNavScreen.prefab";
+    const string NavBarPrefabPath = "Assets/_Overdrive/UI/Prefabs/Organisms/ODNavBar.prefab";
+    const string CardPrefabPath = "Assets/_Overdrive/UI/Prefabs/Organisms/ODCard.prefab";
+    const string GhostButtonPrefabPath = "Assets/_Overdrive/UI/Prefabs/Molecules/ODButton_Ghost.prefab";
+    const string DangerButtonPrefabPath = "Assets/_Overdrive/UI/Prefabs/Molecules/ODButton_Danger.prefab";
+    const string MenuOverlayPrefabPath = "Assets/_Overdrive/UI/Prefabs/Organisms/ODMenuOverlay.prefab";
+    const string PopupPrefabPath = "Assets/_Overdrive/UI/Prefabs/Organisms/ODPopup.prefab";
+    const string SaveDir = "Assets/_Overdrive/UI/Prefabs/Screens";
+    const string SavePath = SaveDir + "/HomeNavScreen.prefab";
 
     static readonly Color ShadowColor = new Color(0f, 0f, 0f, 0.35f);
 
@@ -46,18 +46,18 @@ public static class HomeNavScreenBuilder
 
     // Nav bar geometry — the card is anchored relative to these so the gap
     // between the two stays constant no matter how tall the card grows.
-    const float NavBarHeight       = 84f;
+    const float NavBarHeight = 84f;
     const float NavBarBottomOffset = 24f;
-    const float CardToNavBarGap    = 16f;
+    const float CardToNavBarGap = 16f;
 
     public static void Build()
     {
-        var navBarAsset     = AssetDatabase.LoadAssetAtPath<GameObject>(NavBarPrefabPath);
-        var cardAsset       = AssetDatabase.LoadAssetAtPath<GameObject>(CardPrefabPath);
-        var ghostAsset      = AssetDatabase.LoadAssetAtPath<GameObject>(GhostButtonPrefabPath);
-        var dangerAsset     = AssetDatabase.LoadAssetAtPath<GameObject>(DangerButtonPrefabPath);
+        var navBarAsset = AssetDatabase.LoadAssetAtPath<GameObject>(NavBarPrefabPath);
+        var cardAsset = AssetDatabase.LoadAssetAtPath<GameObject>(CardPrefabPath);
+        var ghostAsset = AssetDatabase.LoadAssetAtPath<GameObject>(GhostButtonPrefabPath);
+        var dangerAsset = AssetDatabase.LoadAssetAtPath<GameObject>(DangerButtonPrefabPath);
         var menuOverlayAsset = AssetDatabase.LoadAssetAtPath<GameObject>(MenuOverlayPrefabPath);
-        var popupAsset      = AssetDatabase.LoadAssetAtPath<GameObject>(PopupPrefabPath);
+        var popupAsset = AssetDatabase.LoadAssetAtPath<GameObject>(PopupPrefabPath);
         if (navBarAsset == null || cardAsset == null || ghostAsset == null ||
             dangerAsset == null || menuOverlayAsset == null || popupAsset == null)
         {
@@ -72,7 +72,7 @@ public static class HomeNavScreenBuilder
         canvasGO.AddComponent<CanvasScaler>();
         canvasGO.AddComponent<GraphicRaycaster>();
         RectTransform canvasRT = canvasGO.GetComponent<RectTransform>();
-        canvasRT.sizeDelta  = new Vector2(700f, 620f);
+        canvasRT.sizeDelta = new Vector2(700f, 620f);
         canvasRT.localScale = Vector3.one * 0.001f;
 
         // ── Nav bar (bottom, floating pill, 5 tabs) ─────────────────────────────
@@ -82,11 +82,11 @@ public static class HomeNavScreenBuilder
         ExpandToFiveTabs(navBar);
 
         RectTransform navRT = navGO.GetComponent<RectTransform>();
-        navRT.anchorMin        = new Vector2(0.5f, 0f);
-        navRT.anchorMax        = new Vector2(0.5f, 0f);
-        navRT.pivot            = new Vector2(0.5f, 0f);
+        navRT.anchorMin = new Vector2(0.5f, 0f);
+        navRT.anchorMax = new Vector2(0.5f, 0f);
+        navRT.pivot = new Vector2(0.5f, 0f);
         navRT.anchoredPosition = new Vector2(0f, NavBarBottomOffset);
-        navRT.sizeDelta        = new Vector2(620f, NavBarHeight);
+        navRT.sizeDelta = new Vector2(620f, NavBarHeight);
 
         StylePillNavBar(navGO);
 
@@ -97,16 +97,16 @@ public static class HomeNavScreenBuilder
         // added later.
         GameObject cardGO = (GameObject)PrefabUtility.InstantiatePrefab(cardAsset, canvasGO.transform);
         ODCard card = cardGO.GetComponent<ODCard>();
-        card.showDivider     = true;
+        card.showDivider = true;
         card.showCloseButton = false;
         card.SetTitle(TabLabels[0]); // SetTitle pushes the text immediately — Start()/Sync() never run in Edit mode
 
         RectTransform cardRT = cardGO.GetComponent<RectTransform>();
-        cardRT.anchorMin        = new Vector2(0.5f, 0f);
-        cardRT.anchorMax        = new Vector2(0.5f, 0f);
-        cardRT.pivot            = new Vector2(0.5f, 0f);
+        cardRT.anchorMin = new Vector2(0.5f, 0f);
+        cardRT.anchorMax = new Vector2(0.5f, 0f);
+        cardRT.pivot = new Vector2(0.5f, 0f);
         cardRT.anchoredPosition = new Vector2(0f, NavBarBottomOffset + NavBarHeight + CardToNavBarGap);
-        cardRT.sizeDelta        = new Vector2(620f, 0f); // height is driven by ContentSizeFitter; stays minimal since content is empty
+        cardRT.sizeDelta = new Vector2(620f, 0f); // height is driven by ContentSizeFitter; stays minimal since content is empty
 
         StyleCard(cardGO);
         FixTitleOrientation(cardGO);
@@ -130,20 +130,20 @@ public static class HomeNavScreenBuilder
         ODPopup popup = popupGO.GetComponent<ODPopup>();
 
         ProfileSectionController profileController = canvasGO.AddComponent<ProfileSectionController>();
-        profileController.menuOverlay       = profileMenuOverlay;
-        profileController.profileContent    = profileContent;
-        profileController.settingsContent   = settingsContent;
-        profileController.popup             = popup;
-        profileController.ghostButtonPrefab  = ghostAsset;
+        profileController.menuOverlay = profileMenuOverlay;
+        profileController.profileContent = profileContent;
+        profileController.settingsContent = settingsContent;
+        profileController.popup = popup;
+        profileController.ghostButtonPrefab = ghostAsset;
         profileController.dangerButtonPrefab = dangerAsset;
-        profileController.menuOverlayPrefab  = menuOverlayAsset;
+        profileController.menuOverlayPrefab = menuOverlayAsset;
 
         // ── Controller: syncs card title with selected tab, wires championship buttons ──
         HomeNavController controller = canvasGO.AddComponent<HomeNavController>();
-        controller.navBar              = navBar;
-        controller.homeCard            = card;
+        controller.navBar = navBar;
+        controller.homeCard = card;
         controller.championshipButtons = championshipButtons;
-        controller.profileArea         = profileArea;
+        controller.profileArea = profileArea;
 
         // ── WindowHandle — attached to the shared root so the nav bar and the
         // home card always move together as a single group. This component is
@@ -169,10 +169,10 @@ public static class HomeNavScreenBuilder
         GameObject row = new GameObject("ChampionshipButtons", typeof(RectTransform));
         row.transform.SetParent(contentArea, false);
         HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing               = 12f;
-        hlg.childAlignment        = TextAnchor.MiddleLeft;
-        hlg.childControlWidth     = false;
-        hlg.childControlHeight    = true;
+        hlg.spacing = 12f;
+        hlg.childAlignment = TextAnchor.MiddleLeft;
+        hlg.childControlWidth = false;
+        hlg.childControlHeight = true;
         hlg.childForceExpandWidth = false;
         row.AddComponent<LayoutElement>().preferredHeight = 56f;
         row.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, 56f);
@@ -201,11 +201,11 @@ public static class HomeNavScreenBuilder
         GameObject area = new GameObject("ProfileArea", typeof(RectTransform));
         area.transform.SetParent(contentArea, false);
         VerticalLayoutGroup areaVlg = area.AddComponent<VerticalLayoutGroup>();
-        areaVlg.spacing                = 16f;
-        areaVlg.childAlignment         = TextAnchor.UpperLeft;
-        areaVlg.childControlWidth      = true;
-        areaVlg.childControlHeight     = false;
-        areaVlg.childForceExpandWidth  = true;
+        areaVlg.spacing = 16f;
+        areaVlg.childAlignment = TextAnchor.UpperLeft;
+        areaVlg.childControlWidth = true;
+        areaVlg.childControlHeight = false;
+        areaVlg.childForceExpandWidth = true;
         areaVlg.childForceExpandHeight = false;
         area.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         area.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
@@ -214,8 +214,8 @@ public static class HomeNavScreenBuilder
         GameObject header = new GameObject("Header", typeof(RectTransform));
         header.transform.SetParent(area.transform, false);
         HorizontalLayoutGroup headerHlg = header.AddComponent<HorizontalLayoutGroup>();
-        headerHlg.childAlignment     = TextAnchor.MiddleRight;
-        headerHlg.childControlWidth  = false;
+        headerHlg.childAlignment = TextAnchor.MiddleRight;
+        headerHlg.childControlWidth = false;
         headerHlg.childControlHeight = true;
         header.AddComponent<LayoutElement>().preferredHeight = 48f;
         header.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, 48f);
@@ -228,11 +228,11 @@ public static class HomeNavScreenBuilder
         GameObject profileGO = new GameObject("ProfileContent", typeof(RectTransform));
         profileGO.transform.SetParent(area.transform, false);
         VerticalLayoutGroup profileVlg = profileGO.AddComponent<VerticalLayoutGroup>();
-        profileVlg.spacing                = 12f;
-        profileVlg.childAlignment         = TextAnchor.UpperLeft;
-        profileVlg.childControlWidth      = true;
-        profileVlg.childControlHeight     = false;
-        profileVlg.childForceExpandWidth  = true;
+        profileVlg.spacing = 12f;
+        profileVlg.childAlignment = TextAnchor.UpperLeft;
+        profileVlg.childControlWidth = true;
+        profileVlg.childControlHeight = false;
+        profileVlg.childForceExpandWidth = true;
         profileVlg.childForceExpandHeight = false;
         profileGO.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         profileContent = profileGO.GetComponent<RectTransform>();
@@ -242,11 +242,11 @@ public static class HomeNavScreenBuilder
         GameObject settingsGO = new GameObject("SettingsContent", typeof(RectTransform));
         settingsGO.transform.SetParent(area.transform, false);
         VerticalLayoutGroup settingsVlg = settingsGO.AddComponent<VerticalLayoutGroup>();
-        settingsVlg.spacing                = 12f;
-        settingsVlg.childAlignment         = TextAnchor.UpperLeft;
-        settingsVlg.childControlWidth      = true;
-        settingsVlg.childControlHeight     = false;
-        settingsVlg.childForceExpandWidth  = true;
+        settingsVlg.spacing = 12f;
+        settingsVlg.childAlignment = TextAnchor.UpperLeft;
+        settingsVlg.childControlWidth = true;
+        settingsVlg.childControlHeight = false;
+        settingsVlg.childForceExpandWidth = true;
         settingsVlg.childForceExpandHeight = false;
         settingsGO.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         settingsContent = settingsGO.GetComponent<RectTransform>();
@@ -324,7 +324,7 @@ public static class HomeNavScreenBuilder
     {
         Shadow shadow = go.GetComponent<Shadow>();
         if (shadow == null) shadow = go.AddComponent<Shadow>();
-        shadow.effectColor    = ShadowColor;
+        shadow.effectColor = ShadowColor;
         shadow.effectDistance = new Vector2(0f, -6f);
         shadow.useGraphicAlpha = true;
     }
@@ -351,8 +351,8 @@ public static class HomeNavScreenBuilder
         if (tmp != null)
         {
             tmp.enableWordWrapping = false;
-            tmp.overflowMode       = TextOverflowModes.Ellipsis;
-            tmp.alignment          = TextAlignmentOptions.MidlineLeft;
+            tmp.overflowMode = TextOverflowModes.Ellipsis;
+            tmp.alignment = TextAlignmentOptions.MidlineLeft;
         }
     }
 }

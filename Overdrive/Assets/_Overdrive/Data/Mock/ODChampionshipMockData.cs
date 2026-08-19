@@ -37,52 +37,52 @@ public struct ChampionshipCircuit
 {
     public string name;
     public string location;
-    public float  lengthKm;
-    public int    totalLaps;
+    public float lengthKm;
+    public int totalLaps;
 }
 
 [Serializable]
 public struct ChampionshipWeather
 {
     public string condition;
-    public int    trackTempC;
-    public int    airTempC;
-    public int    rainChancePercent;
+    public int trackTempC;
+    public int airTempC;
+    public int rainChancePercent;
 }
 
 [Serializable]
 public struct ChampionshipLiveEntry
 {
-    public int    position;
+    public int position;
     public string name;
     public string teamName;
     public string gap;
-    public int    lap;
+    public int lap;
     public string tyreCompound;
-    public Color  teamColor;
+    public Color teamColor;
 }
 
 [Serializable]
 public struct ChampionshipLiveGroup
 {
-    public string                     label;
+    public string label;
     public List<ChampionshipLiveEntry> entries;
 }
 
 [Serializable]
 public struct ChampionshipSession
 {
-    public string        name;
-    public DateTime      scheduledAt;
+    public string name;
+    public DateTime scheduledAt;
     public SessionStatus status;
 }
 
 [Serializable]
 public struct ChampionshipStandingEntry
 {
-    public int    position;
+    public int position;
     public string name;
-    public int    points;
+    public int points;
     /// <summary>Set for driver entries; empty for team entries (the team IS the entry).</summary>
     public string teamName;
 }
@@ -90,10 +90,10 @@ public struct ChampionshipStandingEntry
 [Serializable]
 public struct ChampionshipStandingTable
 {
-    public StandingType                     type;
+    public StandingType type;
     /// <summary>e.g. "Pilotes", "Equipes — Hypercar". Category() strips the type prefix.</summary>
-    public string                           label;
-    public List<ChampionshipStandingEntry>  entries;
+    public string label;
+    public List<ChampionshipStandingEntry> entries;
 
     /// <summary>
     /// Category this table belongs to, derived from label (e.g. "Pilotes — Hypercar" -> "Hypercar",
@@ -110,8 +110,8 @@ public struct ChampionshipStandingTable
 [Serializable]
 public struct ChampionshipNextEvent
 {
-    public string   name;
-    public string   location;
+    public string name;
+    public string location;
     public DateTime startsAt;
 }
 
@@ -130,19 +130,19 @@ public struct ChampionshipReplays
 [Serializable]
 public class ChampionshipData
 {
-    public string           id;
-    public string           name;
-    public string           headline;
-    public Color            accentColor;
+    public string id;
+    public string name;
+    public string headline;
+    public Color accentColor;
     public ChampionshipState state;
 
-    public ChampionshipCircuit?         circuit;
-    public ChampionshipWeather?         weather;
-    public List<ChampionshipLiveGroup>  liveGroups;
+    public ChampionshipCircuit? circuit;
+    public ChampionshipWeather? weather;
+    public List<ChampionshipLiveGroup> liveGroups;
     public List<ChampionshipStandingTable> standings;
-    public List<ChampionshipSession>    schedule;
-    public ChampionshipNextEvent?       nextEvent;
-    public ChampionshipReplays          replays;
+    public List<ChampionshipSession> schedule;
+    public ChampionshipNextEvent? nextEvent;
+    public ChampionshipReplays replays;
 }
 
 public static class ODChampionshipMockData
@@ -155,18 +155,24 @@ public static class ODChampionshipMockData
 
     public static ChampionshipData Formula1Mock => new ChampionshipData
     {
-        id          = "formula_1",
-        name        = "Formula 1",
-        headline    = "Course",
+        id = "formula_1",
+        name = "Formula 1",
+        headline = "Course",
         accentColor = Hex(0xE8, 0x00, 0x00),
-        state       = ChampionshipState.LiveSession,
+        state = ChampionshipState.LiveSession,
         circuit = new ChampionshipCircuit
         {
-            name = "Circuit de Monaco", location = "Monaco", lengthKm = 3.337f, totalLaps = 78,
+            name = "Circuit de Monaco",
+            location = "Monaco",
+            lengthKm = 3.337f,
+            totalLaps = 78,
         },
         weather = new ChampionshipWeather
         {
-            condition = "Ensoleille", trackTempC = 38, airTempC = 24, rainChancePercent = 0,
+            condition = "Ensoleille",
+            trackTempC = 38,
+            airTempC = 24,
+            rainChancePercent = 0,
         },
         liveGroups = new List<ChampionshipLiveGroup>
         {
@@ -234,14 +240,15 @@ public static class ODChampionshipMockData
 
     public static ChampionshipData WecMock => new ChampionshipData
     {
-        id          = "wec",
-        name        = "WEC",
-        headline    = "World Endurance",
+        id = "wec",
+        name = "WEC",
+        headline = "World Endurance",
         accentColor = Hex(0x4A, 0x90, 0xD9),
-        state       = ChampionshipState.OffSeason,
+        state = ChampionshipState.OffSeason,
         nextEvent = new ChampionshipNextEvent
         {
-            name = "24 Heures du Mans", location = "Circuit de la Sarthe · France",
+            name = "24 Heures du Mans",
+            location = "Circuit de la Sarthe · France",
             startsAt = new DateTime(2026, 6, 5, 16, 0, 0),
         },
         standings = new List<ChampionshipStandingTable>
@@ -328,19 +335,24 @@ public static class ODChampionshipMockData
 
     public static ChampionshipData MotoGpMock => new ChampionshipData
     {
-        id          = "motogp",
-        name        = "MotoGP",
-        headline    = "Gran Premio d'Italia",
+        id = "motogp",
+        name = "MotoGP",
+        headline = "Gran Premio d'Italia",
         accentColor = Hex(0xE8, 0x77, 0x22),
-        state       = ChampionshipState.EventWeekend,
+        state = ChampionshipState.EventWeekend,
         circuit = new ChampionshipCircuit
         {
-            name = "Autodromo del Mugello", location = "Scarperia e San Piero · Italie",
-            lengthKm = 5.245f, totalLaps = 23,
+            name = "Autodromo del Mugello",
+            location = "Scarperia e San Piero · Italie",
+            lengthKm = 5.245f,
+            totalLaps = 23,
         },
         weather = new ChampionshipWeather
         {
-            condition = "Nuageux", trackTempC = 28, airTempC = 18, rainChancePercent = 10,
+            condition = "Nuageux",
+            trackTempC = 28,
+            airTempC = 18,
+            rainChancePercent = 10,
         },
         schedule = new List<ChampionshipSession>
         {
@@ -383,9 +395,9 @@ public static class ODChampionshipMockData
         switch (id)
         {
             case "formula_1": return "F1";
-            case "wec":       return "WEC";
-            case "motogp":    return "MotoGP";
-            default:          return id;
+            case "wec": return "WEC";
+            case "motogp": return "MotoGP";
+            default: return id;
         }
     }
 }

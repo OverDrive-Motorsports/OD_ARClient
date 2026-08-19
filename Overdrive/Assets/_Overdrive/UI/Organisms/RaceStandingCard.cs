@@ -13,10 +13,10 @@ public class RaceStandingCard : MonoBehaviour
     public TextMeshProUGUI rankText;
     public TextMeshProUGUI codeText;
     public TextMeshProUGUI gapText;
-    public Image           teamDot;
+    public Image teamDot;
 
     private RectTransform _rt;
-    private Coroutine     _move;
+    private Coroutine _move;
 
     private void Awake() { _rt = GetComponent<RectTransform>(); }
 
@@ -24,8 +24,8 @@ public class RaceStandingCard : MonoBehaviour
     {
         if (rankText != null) rankText.text = rank.ToString();
         if (codeText != null) codeText.text = code;
-        if (gapText  != null) gapText.text  = gap;
-        if (teamDot  != null) teamDot.color = teamColor;
+        if (gapText != null) gapText.text = gap;
+        if (teamDot != null) teamDot.color = teamColor;
     }
 
     public void SetYInstant(float y)
@@ -45,7 +45,7 @@ public class RaceStandingCard : MonoBehaviour
     {
         if (_rt == null) _rt = GetComponent<RectTransform>();
         Vector2 start = _rt.anchoredPosition;
-        Vector2 end   = new Vector2(start.x, targetY);
+        Vector2 end = new Vector2(start.x, targetY);
 
         for (float e = 0f; e < duration; e += Time.deltaTime)
         {

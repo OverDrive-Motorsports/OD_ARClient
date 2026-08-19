@@ -20,9 +20,9 @@ public class SearchController : MonoBehaviour
     {
         public string title;
         public string subtitle;
-        public Kind   kind;
-        public Color  accent;
-        public Entry(string t, string s, Kind k, Color c) { title=t; subtitle=s; kind=k; accent=c; }
+        public Kind kind;
+        public Color accent;
+        public Entry(string t, string s, Kind k, Color c) { title = t; subtitle = s; kind = k; accent = c; }
     }
 
     // ── palette — pulled from UITheme.Instance in Start() via PullTheme() so
@@ -40,7 +40,7 @@ public class SearchController : MonoBehaviour
     static Color Merc;
     static Color McLaren;
     // Aston/Neutral aren't in UITheme (only the 4 teams already used elsewhere are) — literals stay.
-    static readonly Color Aston   = new Color(0.00f, 0.45f, 0.40f, 1f);
+    static readonly Color Aston = new Color(0.00f, 0.45f, 0.40f, 1f);
     static readonly Color Neutral = new Color(0.55f, 0.55f, 0.60f, 1f);
 
     static void PullTheme()
@@ -48,33 +48,33 @@ public class SearchController : MonoBehaviour
         UITheme theme = UITheme.Instance;
         if (theme == null) return;
 
-        RowBg     = theme.panelBackgroundAlt;
-        RowHover  = theme.surfaceColor;
-        Gold      = theme.accentGold;
-        Txt       = theme.textPrimary;
-        Sub       = theme.textSecondary;
-        ChipOn    = theme.accentGold;
-        ChipOff   = theme.panelBackground;
+        RowBg = theme.panelBackgroundAlt;
+        RowHover = theme.surfaceColor;
+        Gold = theme.accentGold;
+        Txt = theme.textPrimary;
+        Sub = theme.textSecondary;
+        ChipOn = theme.accentGold;
+        ChipOff = theme.panelBackground;
 
         Ferrari = theme.teamFerrari;
         RedBull = theme.teamRedBull;
-        Merc    = theme.teamMercedes;
+        Merc = theme.teamMercedes;
         McLaren = theme.teamMcLaren;
     }
 
     // ── wired at runtime (auto-found) ───────────────────────────────────────
     private TMP_InputField _input;
-    private GameObject      _overlay;
-    private CanvasGroup     _overlayGroup;
-    private Coroutine       _overlayRoutine;
-    private GameObject      _emptyState;
-    private GameObject      _resultsScroll;
-    private Transform       _resultsContent;
-    private Transform       _recentContent;
-    private Transform       _suggestContent;
+    private GameObject _overlay;
+    private CanvasGroup _overlayGroup;
+    private Coroutine _overlayRoutine;
+    private GameObject _emptyState;
+    private GameObject _resultsScroll;
+    private Transform _resultsContent;
+    private Transform _recentContent;
+    private Transform _suggestContent;
     private TextMeshProUGUI _noResultsLabel;
 
-    private readonly Button[]          _chips      = new Button[6];
+    private readonly Button[] _chips = new Button[6];
     private readonly TextMeshProUGUI[] _chipLabels = new TextMeshProUGUI[6];
     private readonly string[] _chipNames = { "All", "Races", "Drivers", "Teams", "Circuits", "Seasons" };
 
@@ -160,7 +160,7 @@ public class SearchController : MonoBehaviour
         string q = _input != null ? _input.text.Trim() : "";
 
         bool empty = string.IsNullOrEmpty(q);
-        if (_emptyState != null)    _emptyState.SetActive(empty);
+        if (_emptyState != null) _emptyState.SetActive(empty);
         if (_resultsScroll != null) _resultsScroll.SetActive(!empty);
 
         if (empty) { PopulateRecents(); return; }
@@ -210,7 +210,7 @@ public class SearchController : MonoBehaviour
     private void BuildResultRow(Transform parent, Entry e)
     {
         var row = NewGO("Row_" + e.title, parent);
-        var bg  = Rounded(row, RowBg, 12f);
+        var bg = Rounded(row, RowBg, 12f);
         bg.raycastTarget = true;
         row.AddComponent<LayoutElement>().preferredHeight = 56f;
 
@@ -283,33 +283,33 @@ public class SearchController : MonoBehaviour
     private void BuildDataset()
     {
         // Races
-        _data.Add(new Entry("Monaco GP 2024",     "Round 8 · Monte Carlo",   Kind.Race, Ferrari));
-        _data.Add(new Entry("Bahrain GP 2024",    "Round 1 · Sakhir",        Kind.Race, RedBull));
-        _data.Add(new Entry("Japan GP 2024",      "Round 4 · Suzuka",        Kind.Race, RedBull));
-        _data.Add(new Entry("Silverstone 2023",   "British GP · Round 10",   Kind.Race, McLaren));
-        _data.Add(new Entry("Las Vegas GP 2023",  "Round 21 · Strip Circuit",Kind.Race, Merc));
-        _data.Add(new Entry("Miami GP 2024",      "Round 6 · Miami",         Kind.Race, McLaren));
+        _data.Add(new Entry("Monaco GP 2024", "Round 8 · Monte Carlo", Kind.Race, Ferrari));
+        _data.Add(new Entry("Bahrain GP 2024", "Round 1 · Sakhir", Kind.Race, RedBull));
+        _data.Add(new Entry("Japan GP 2024", "Round 4 · Suzuka", Kind.Race, RedBull));
+        _data.Add(new Entry("Silverstone 2023", "British GP · Round 10", Kind.Race, McLaren));
+        _data.Add(new Entry("Las Vegas GP 2023", "Round 21 · Strip Circuit", Kind.Race, Merc));
+        _data.Add(new Entry("Miami GP 2024", "Round 6 · Miami", Kind.Race, McLaren));
 
         // Drivers
-        _data.Add(new Entry("Max Verstappen",  "Red Bull Racing · #1",  Kind.Driver, RedBull));
-        _data.Add(new Entry("Lewis Hamilton",  "Mercedes · #44",        Kind.Driver, Merc));
-        _data.Add(new Entry("Charles Leclerc", "Ferrari · #16",         Kind.Driver, Ferrari));
-        _data.Add(new Entry("Lando Norris",    "McLaren · #4",          Kind.Driver, McLaren));
-        _data.Add(new Entry("Fernando Alonso", "Aston Martin · #14",    Kind.Driver, Aston));
-        _data.Add(new Entry("Carlos Sainz",    "Ferrari · #55",         Kind.Driver, Ferrari));
+        _data.Add(new Entry("Max Verstappen", "Red Bull Racing · #1", Kind.Driver, RedBull));
+        _data.Add(new Entry("Lewis Hamilton", "Mercedes · #44", Kind.Driver, Merc));
+        _data.Add(new Entry("Charles Leclerc", "Ferrari · #16", Kind.Driver, Ferrari));
+        _data.Add(new Entry("Lando Norris", "McLaren · #4", Kind.Driver, McLaren));
+        _data.Add(new Entry("Fernando Alonso", "Aston Martin · #14", Kind.Driver, Aston));
+        _data.Add(new Entry("Carlos Sainz", "Ferrari · #55", Kind.Driver, Ferrari));
 
         // Teams
-        _data.Add(new Entry("Red Bull Racing", "Constructor",  Kind.Team, RedBull));
-        _data.Add(new Entry("Ferrari",         "Constructor",  Kind.Team, Ferrari));
-        _data.Add(new Entry("Mercedes",        "Constructor",  Kind.Team, Merc));
-        _data.Add(new Entry("McLaren",         "Constructor",  Kind.Team, McLaren));
-        _data.Add(new Entry("Aston Martin",    "Constructor",  Kind.Team, Aston));
+        _data.Add(new Entry("Red Bull Racing", "Constructor", Kind.Team, RedBull));
+        _data.Add(new Entry("Ferrari", "Constructor", Kind.Team, Ferrari));
+        _data.Add(new Entry("Mercedes", "Constructor", Kind.Team, Merc));
+        _data.Add(new Entry("McLaren", "Constructor", Kind.Team, McLaren));
+        _data.Add(new Entry("Aston Martin", "Constructor", Kind.Team, Aston));
 
         // Circuits
-        _data.Add(new Entry("Circuit de Monaco",   "Monte Carlo · 3.337 km", Kind.Circuit, Neutral));
-        _data.Add(new Entry("Spa-Francorchamps",   "Belgium · 7.004 km",     Kind.Circuit, Neutral));
-        _data.Add(new Entry("Suzuka Circuit",      "Japan · 5.807 km",       Kind.Circuit, Neutral));
-        _data.Add(new Entry("Silverstone Circuit", "UK · 5.891 km",          Kind.Circuit, Neutral));
+        _data.Add(new Entry("Circuit de Monaco", "Monte Carlo · 3.337 km", Kind.Circuit, Neutral));
+        _data.Add(new Entry("Spa-Francorchamps", "Belgium · 7.004 km", Kind.Circuit, Neutral));
+        _data.Add(new Entry("Suzuka Circuit", "Japan · 5.807 km", Kind.Circuit, Neutral));
+        _data.Add(new Entry("Silverstone Circuit", "UK · 5.891 km", Kind.Circuit, Neutral));
 
         // Seasons
         _data.Add(new Entry("2024 Season", "24 races", Kind.Season, Gold));
@@ -328,10 +328,10 @@ public class SearchController : MonoBehaviour
         _overlayGroup = _overlay.GetComponent<CanvasGroup>();
         if (_overlayGroup == null) _overlayGroup = _overlay.AddComponent<CanvasGroup>();
 
-        _emptyState     = overlayT.Find("EmptyState")?.gameObject;
-        _resultsScroll  = overlayT.Find("Results")?.gameObject;
+        _emptyState = overlayT.Find("EmptyState")?.gameObject;
+        _resultsScroll = overlayT.Find("Results")?.gameObject;
         _resultsContent = overlayT.Find("Results/Viewport/Content");
-        _recentContent  = overlayT.Find("EmptyState/RecentList");
+        _recentContent = overlayT.Find("EmptyState/RecentList");
         _suggestContent = overlayT.Find("EmptyState/Suggestions");
         _noResultsLabel = overlayT.Find("Results/NoResults")?.GetComponent<TextMeshProUGUI>();
 
@@ -340,7 +340,7 @@ public class SearchController : MonoBehaviour
             var c = overlayT.Find("Chips/Chip_" + _chipNames[i]);
             if (c != null)
             {
-                _chips[i]      = c.GetComponent<Button>();
+                _chips[i] = c.GetComponent<Button>();
                 _chipLabels[i] = c.Find("Label")?.GetComponent<TextMeshProUGUI>();
             }
         }
@@ -403,5 +403,5 @@ public class RowHoverTint : MonoBehaviour,
     private Graphic _g; private Color _normal, _hover;
     public void Init(Graphic g, Color normal, Color hover) { _g = g; _normal = normal; _hover = hover; }
     public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData _) { if (_g) _g.color = _hover; }
-    public void OnPointerExit (UnityEngine.EventSystems.PointerEventData _) { if (_g) _g.color = _normal; }
+    public void OnPointerExit(UnityEngine.EventSystems.PointerEventData _) { if (_g) _g.color = _normal; }
 }

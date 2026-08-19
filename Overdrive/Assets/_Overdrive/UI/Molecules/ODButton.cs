@@ -38,9 +38,9 @@ public class ODButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 
     [Header("References")]
     public ODBackground background;
-    public ODLabel      label;
+    public ODLabel label;
     /// <summary>Optional icon shown alongside the label. Disabled by default in the prefab.</summary>
-    public ODIcon       icon;
+    public ODIcon icon;
 
     [Header("Events")]
     public UnityEvent OnClick;
@@ -51,8 +51,8 @@ public class ODButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         _canvasGroup = GetComponent<CanvasGroup>();
         if (background == null) background = GetComponentInChildren<ODBackground>();
-        if (label == null)      label      = GetComponentInChildren<ODLabel>();
-        if (icon == null)       icon       = GetComponentInChildren<ODIcon>(true);
+        if (label == null) label = GetComponentInChildren<ODLabel>();
+        if (icon == null) icon = GetComponentInChildren<ODIcon>(true);
 
         Apply();
     }
@@ -63,15 +63,15 @@ public class ODButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         UITheme theme = UITheme.Instance;
         if (theme == null || background == null) return;
 
-        Image           bgImg   = background.GetComponent<Image>();
-        TextMeshProUGUI txt     = label != null ? label.GetComponent<TextMeshProUGUI>() : null;
-        Outline         outline = background.GetComponent<Outline>();
+        Image bgImg = background.GetComponent<Image>();
+        TextMeshProUGUI txt = label != null ? label.GetComponent<TextMeshProUGUI>() : null;
+        Outline outline = background.GetComponent<Outline>();
 
         switch (buttonStyle)
         {
             case ButtonStyle.Primary:
                 bgImg.color = theme.accentGold;
-                if (txt != null)     txt.color       = Color.white;
+                if (txt != null) txt.color = Color.white;
                 if (outline != null) outline.enabled = false;
                 break;
 
@@ -80,14 +80,14 @@ public class ODButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
                 if (txt != null) txt.color = theme.textPrimary;
                 // Add Outline lazily so the prefab doesn't require one pre-attached
                 if (outline == null) outline = background.gameObject.AddComponent<Outline>();
-                outline.effectColor    = theme.borderColor;
+                outline.effectColor = theme.borderColor;
                 outline.effectDistance = new Vector2(theme.borderWidth, -theme.borderWidth);
-                outline.enabled        = true;
+                outline.enabled = true;
                 break;
 
             case ButtonStyle.Danger:
                 bgImg.color = theme.dangerColor;
-                if (txt != null)     txt.color       = Color.white;
+                if (txt != null) txt.color = Color.white;
                 if (outline != null) outline.enabled = false;
                 break;
         }
@@ -133,9 +133,9 @@ public class ODButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     private IEnumerator ClickPunch()
     {
         Vector3 original = transform.localScale;
-        Vector3 pressed  = original * 0.96f;
-        float   half     = 0.05f;
-        float   elapsed  = 0f;
+        Vector3 pressed = original * 0.96f;
+        float half = 0.05f;
+        float elapsed = 0f;
 
         while (elapsed < half)
         {

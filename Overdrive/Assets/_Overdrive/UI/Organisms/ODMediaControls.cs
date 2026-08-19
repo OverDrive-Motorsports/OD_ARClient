@@ -21,28 +21,28 @@ using TMPro;
 public class ODMediaControls : MonoBehaviour
 {
     [Header("References — wired by ODUIBuilder")]
-    public ODButton      rewindBtn;
-    public ODButton      playPauseBtn;
-    public ODButton      forwardBtn;
-    public ODLiveBadge   liveBadge;
-    public Slider        progressSlider;
+    public ODButton rewindBtn;
+    public ODButton playPauseBtn;
+    public ODButton forwardBtn;
+    public ODLiveBadge liveBadge;
+    public Slider progressSlider;
     /// <summary>Background Image of the pill. Tinted with panelBackground at Start.</summary>
-    public Image         background;
+    public Image background;
 
     [Header("State")]
-    public bool  isPlaying = false;
-    public bool  isLive    = false;
+    public bool isPlaying = false;
+    public bool isLive = false;
     [Range(0f, 1f)]
-    public float progress  = 0f;
+    public float progress = 0f;
 
     [Header("Events")]
     /// <summary>Fires when the user moves the progress slider. Value is normalized 0–1.</summary>
     public UnityEvent<float> OnSeek;
 
     // Unicode symbols used instead of icon sprites to keep the build asset-free
-    private static readonly string PlayIcon    = "▶";
-    private static readonly string PauseIcon   = "⏸";
-    private static readonly string RewindIcon  = "↺";
+    private static readonly string PlayIcon = "▶";
+    private static readonly string PauseIcon = "⏸";
+    private static readonly string RewindIcon = "↺";
     private static readonly string ForwardIcon = "↻";
 
     private void Start()
@@ -55,7 +55,7 @@ public class ODMediaControls : MonoBehaviour
     private void Sync()
     {
         UpdatePlayPauseIcon();
-        if (liveBadge      != null) liveBadge.SetLive(isLive);
+        if (liveBadge != null) liveBadge.SetLive(isLive);
         if (progressSlider != null) progressSlider.value = progress;
 
         UITheme theme = UITheme.Instance;

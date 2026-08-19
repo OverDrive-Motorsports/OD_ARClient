@@ -21,18 +21,18 @@ using UnityEngine;
 public class HomeNavController : MonoBehaviour
 {
     private const int ChampionshipsTabIndex = 1;
-    private const int ProfileTabIndex       = 4;
+    private const int ProfileTabIndex = 4;
 
     [Header("References — wired by HomeNavBuilder")]
-    public ODNavBar   navBar;
-    public ODCard     homeCard;
+    public ODNavBar navBar;
+    public ODCard homeCard;
     public GameObject championshipButtons;
     public GameObject profileArea;
 
     private CanvasGroup _championshipGroup;
     private CanvasGroup _profileGroup;
-    private Coroutine   _championshipRoutine;
-    private Coroutine   _profileRoutine;
+    private Coroutine _championshipRoutine;
+    private Coroutine _profileRoutine;
 
     private void Awake()
     {
@@ -43,7 +43,7 @@ public class HomeNavController : MonoBehaviour
         if (canvas != null) canvas.worldCamera = Camera.main;
 
         if (championshipButtons != null) _championshipGroup = GetOrAddCanvasGroup(championshipButtons);
-        if (profileArea != null)         _profileGroup      = GetOrAddCanvasGroup(profileArea);
+        if (profileArea != null) _profileGroup = GetOrAddCanvasGroup(profileArea);
     }
 
     private static CanvasGroup GetOrAddCanvasGroup(GameObject go)
