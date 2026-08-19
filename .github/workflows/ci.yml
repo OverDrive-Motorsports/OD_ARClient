@@ -61,6 +61,8 @@ jobs:
   test:
     name: Test (${{ matrix.testMode }})
     runs-on: ubuntu-latest
+    # Skips cleanly (not red) until UNITY_LICENSE is set as a repo secret.
+    if: ${{ secrets.UNITY_LICENSE != '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -86,6 +88,8 @@ jobs:
   build-android:
     name: Build (Android / Quest)
     runs-on: ubuntu-latest
+    # Skips cleanly (not red) until UNITY_LICENSE is set as a repo secret.
+    if: ${{ secrets.UNITY_LICENSE != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
