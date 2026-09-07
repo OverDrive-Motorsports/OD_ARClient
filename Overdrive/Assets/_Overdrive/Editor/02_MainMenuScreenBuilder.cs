@@ -31,16 +31,16 @@ public static class MainMenuScreenBuilder
         UITheme fallback = ScriptableObject.CreateInstance<UITheme>();
         if (theme == null) theme = fallback;
 
-        BgColor          = theme.panelBackgroundAlt;
-        SidebarColor     = theme.panelBackground;
+        BgColor = theme.panelBackgroundAlt;
+        SidebarColor = theme.panelBackground;
         ContentAreaColor = theme.panelBackgroundAlt;
-        SearchBarColor   = theme.surfaceColor;
-        HoverOverlay     = theme.hoverOverlay;
-        PressedOverlay   = theme.pressedOverlay;
-        GoldColor        = theme.accentGold;
-        TextColor        = theme.textPrimary;
-        SubTextColor     = theme.textSecondary;
-        CornerRadius     = theme.cornerRadius;
+        SearchBarColor = theme.surfaceColor;
+        HoverOverlay = theme.hoverOverlay;
+        PressedOverlay = theme.pressedOverlay;
+        GoldColor = theme.accentGold;
+        TextColor = theme.textPrimary;
+        SubTextColor = theme.textSecondary;
+        CornerRadius = theme.cornerRadius;
 
         Object.DestroyImmediate(fallback);
     }
@@ -218,7 +218,7 @@ public static class MainMenuScreenBuilder
         {
             RoundedImage rounded = go.AddComponent<RoundedImage>();
             rounded.cornerRadius = radius;
-            rounded.color        = color;
+            rounded.color = color;
         }
         else
         {

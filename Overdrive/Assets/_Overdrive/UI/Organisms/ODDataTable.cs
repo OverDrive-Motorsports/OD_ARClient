@@ -23,15 +23,15 @@ using TMPro;
 public class ODDataTable : MonoBehaviour
 {
     [Header("References — wired by ODUIBuilder")]
-    public ODBackground  background;
-    public ODGoldBorder  goldBorder;
+    public ODBackground background;
+    public ODGoldBorder goldBorder;
     /// <summary>RectTransform of the fixed header row (not scrollable).</summary>
     public RectTransform headerRow;
     /// <summary>RectTransform of the scrollable rows container with a VerticalLayoutGroup.</summary>
     public RectTransform rowsContainer;
 
-    private readonly List<ODTableColumn>            _columns  = new List<ODTableColumn>();
-    private readonly Dictionary<string, ODTableRow> _rowMap   = new Dictionary<string, ODTableRow>();
+    private readonly List<ODTableColumn> _columns = new List<ODTableColumn>();
+    private readonly Dictionary<string, ODTableRow> _rowMap = new Dictionary<string, ODTableRow>();
     private int _rowCounter = 0;
 
     // ── Public API ────────────────────────────────────────────────────────────────
@@ -71,7 +71,7 @@ public class ODDataTable : MonoBehaviour
         var go = new GameObject(rowId, typeof(RectTransform));
         go.transform.SetParent(rowsContainer, false);
 
-        var rt       = go.GetComponent<RectTransform>();
+        var rt = go.GetComponent<RectTransform>();
         rt.sizeDelta = new Vector2(0f, 44f);
         // LayoutElement.preferredHeight lets the parent VLG+CSF chain measure this row correctly
         go.AddComponent<LayoutElement>().preferredHeight = 44f;
@@ -79,39 +79,39 @@ public class ODDataTable : MonoBehaviour
         // Background — absolute positioned so it doesn't compete with the HLG cell layout
         var bgGO = new GameObject("Background", typeof(RectTransform));
         bgGO.transform.SetParent(go.transform, false);
-        var bgRT       = bgGO.GetComponent<RectTransform>();
+        var bgRT = bgGO.GetComponent<RectTransform>();
         bgRT.anchorMin = Vector2.zero;
         bgRT.anchorMax = Vector2.one;
         bgRT.offsetMin = bgRT.offsetMax = Vector2.zero;
-        var bgImg      = bgGO.AddComponent<Image>();
-        bgImg.color    = Color.clear;
+        var bgImg = bgGO.AddComponent<Image>();
+        bgImg.color = Color.clear;
         bgGO.AddComponent<LayoutElement>().ignoreLayout = true;
 
         // AccentBorder — 3px left-edge strip, visible only when row is highlighted
         var abGO = new GameObject("AccentBorder", typeof(RectTransform));
         abGO.transform.SetParent(go.transform, false);
-        var abRT        = abGO.GetComponent<RectTransform>();
-        abRT.anchorMin  = new Vector2(0f, 0f);
-        abRT.anchorMax  = new Vector2(0f, 1f);
-        abRT.sizeDelta  = new Vector2(3f, 0f);
-        abRT.offsetMin  = abRT.offsetMax = Vector2.zero;
-        var abImg       = abGO.AddComponent<Image>();
-        UITheme theme   = UITheme.Instance;
-        abImg.color     = theme != null ? theme.accentGold : Color.yellow;
+        var abRT = abGO.GetComponent<RectTransform>();
+        abRT.anchorMin = new Vector2(0f, 0f);
+        abRT.anchorMax = new Vector2(0f, 1f);
+        abRT.sizeDelta = new Vector2(3f, 0f);
+        abRT.offsetMin = abRT.offsetMax = Vector2.zero;
+        var abImg = abGO.AddComponent<Image>();
+        UITheme theme = UITheme.Instance;
+        abImg.color = theme != null ? theme.accentGold : Color.yellow;
         abGO.AddComponent<LayoutElement>().ignoreLayout = true;
         abGO.SetActive(false);
 
         // HLG added before ODTableRow so [RequireComponent] on ODTableRow finds it already present
         var hlg = go.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing                = 0f;
+        hlg.spacing = 0f;
         hlg.childForceExpandHeight = true;
-        hlg.childForceExpandWidth  = false;
-        hlg.padding                = new RectOffset(12, 12, 0, 0);
+        hlg.childForceExpandWidth = false;
+        hlg.padding = new RectOffset(12, 12, 0, 0);
 
         go.AddComponent<CanvasGroup>();
 
-        var row          = go.AddComponent<ODTableRow>();
-        row.bgImage      = bgImg;
+        var row = go.AddComponent<ODTableRow>();
+        row.bgImage = bgImg;
         row.accentBorder = abImg;
         row.Setup(_columns, values);
 
@@ -168,8 +168,8 @@ public class ODDataTable : MonoBehaviour
         HorizontalLayoutGroup hlg = headerRow.GetComponent<HorizontalLayoutGroup>();
         if (hlg == null) hlg = headerRow.gameObject.AddComponent<HorizontalLayoutGroup>();
         hlg.childForceExpandHeight = true;
-        hlg.childForceExpandWidth  = false;
-        hlg.padding                = new RectOffset(12, 12, 0, 0);
+        hlg.childForceExpandWidth = false;
+        hlg.padding = new RectOffset(12, 12, 0, 0);
 
         foreach (ODTableColumn col in _columns)
         {
@@ -178,15 +178,15 @@ public class ODDataTable : MonoBehaviour
 
             cellGO.AddComponent<LayoutElement>().flexibleWidth = col.flexWidth;
 
-            var tmp      = cellGO.AddComponent<TextMeshProUGUI>();
-            tmp.text      = col.header;
+            var tmp = cellGO.AddComponent<TextMeshProUGUI>();
+            tmp.text = col.header;
             tmp.fontStyle = FontStyles.Bold;
             tmp.alignment = col.alignment;
             if (theme != null)
             {
                 tmp.fontSize = theme.captionSize;
                 // Header labels use secondary color to distinguish them visually from data cells
-                tmp.color    = theme.textSecondary;
+                tmp.color = theme.textSecondary;
             }
         }
     }

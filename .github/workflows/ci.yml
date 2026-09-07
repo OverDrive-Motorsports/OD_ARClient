@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  UNITY_PROJECT_PATH: Overdrive
+
+jobs:
+  secrets-scan:
+    name: Secrets scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+
+  lint:
+    name: Lint & format (C#)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Generate lint project
+        # The real .csproj files are Unity-generated and gitignored, so we
+        # build a throwaway project that globs the same sources purely to
+        # give `dotnet format` something to resolve against .editorconfig.
+        run: |
+          cat > "${UNITY_PROJECT_PATH}/Lint.csproj" <<'EOF'
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <TargetFramework>netstandard2.1</TargetFramework>
+              <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+              <NoWarn>CS0246;CS0234;CS0103</NoWarn>
+            </PropertyGroup>
+            <ItemGroup>
+              <Compile Include="Assets/**/*.cs" Exclude="Assets/**/ThirdParty/**/*.cs" />
+            </ItemGroup>
+          </Project>
+          EOF
+
+      - name: dotnet format --verify-no-changes
+        working-directory: ${{ env.UNITY_PROJECT_PATH }}
+        run: dotnet format Lint.csproj --verify-no-changes --verbosity diagnostic
+
+  test:
+    name: Test (${{ matrix.testMode }})
+    runs-on: ubuntu-latest
+    # Skips cleanly (not red) until UNITY_CI_ENABLED repo variable is set to 'true'.
+    if: ${{ vars.UNITY_CI_ENABLED == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        testMode: [ EditMode, PlayMode ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Run tests
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ env.UNITY_PROJECT_PATH }}
+          testMode: ${{ matrix.testMode }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: ${{ matrix.testMode }} test results
+
+  build-android:
+    name: Build (Android / Quest)
+    runs-on: ubuntu-latest
+    # Skips cleanly (not red) until UNITY_CI_ENABLED repo variable is set to 'true'.
+    if: ${{ vars.UNITY_CI_ENABLED == 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Build
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ env.UNITY_PROJECT_PATH }}
+          targetPlatform: Android
+          buildName: Overdrive-Quest

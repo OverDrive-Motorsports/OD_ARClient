@@ -12,42 +12,42 @@ using Oculus.Interaction;
 public class WindowHandle : MonoBehaviour
 {
     [Header("Pill Appearance")]
-    public float pillWidth     = 0.12f;   // world-space metres
+    public float pillWidth = 0.12f;   // world-space metres
     public float pillThickness = 0.014f;
-    public float belowOffset   = 0.022f;
+    public float belowOffset = 0.022f;
 
-    public Color idleColor  = new Color(1f,    1f,    1f,    0.85f);
+    public Color idleColor = new Color(1f, 1f, 1f, 0.85f);
     public Color hoverColor = new Color(0.85f, 0.70f, 0.20f, 1f);
-    public Color grabColor  = new Color(1f,    0.85f, 0.35f, 1f);
+    public Color grabColor = new Color(1f, 0.85f, 0.35f, 1f);
 
     [Header("Detection")]
     [Tooltip("Radius (m) around the pill the ray must pass within to grab")]
-    public float rayHoverRadius  = 0.06f;
+    public float rayHoverRadius = 0.06f;
     [Tooltip("Fingertip proximity grab radius (m)")]
     public float proximityRadius = 0.07f;
 
     // ── runtime ───────────────────────────────────────────────────────────────
     private Transform _pill;
-    private Material  _pillMat;
+    private Material _pillMat;
 
-    private bool         _grabbed;
+    private bool _grabbed;
     private RayInteractor _grabRay;
-    private float        _grabDist;
-    private Vector3      _grabOffset;     // canvas pos - ray hit point
+    private float _grabDist;
+    private Vector3 _grabOffset;     // canvas pos - ray hit point
 
     // proximity grab
-    private bool    _proxGrab;
+    private bool _proxGrab;
     private OVRHand _proxHand;
     private Vector3 _proxStartFinger, _proxStartCanvas;
 
     private RayInteractor[] _rays;
-    private OVRHand[]       _hands;
+    private OVRHand[] _hands;
 
     // ── lifecycle ─────────────────────────────────────────────────────────────
     private void Start()
     {
         BuildPill();
-        _rays  = FindObjectsByType<RayInteractor>(FindObjectsSortMode.None);
+        _rays = FindObjectsByType<RayInteractor>(FindObjectsSortMode.None);
         _hands = FindObjectsByType<OVRHand>(FindObjectsSortMode.None);
     }
 
@@ -58,14 +58,14 @@ public class WindowHandle : MonoBehaviour
             _rays = FindObjectsByType<RayInteractor>(FindObjectsSortMode.None);
 
         if (_grabbed) UpdateDrag();
-        else          CheckGrabStart();
+        else CheckGrabStart();
     }
 
     // ── pill ────────────────────────────────────────────────────────────────────
     private void BuildPill()
     {
         var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        go.name  = "WindowHandlePill";
+        go.name = "WindowHandlePill";
         go.layer = 2; // Ignore Raycast → ISDK ray passes through, stays visible
 
         var col = go.GetComponent<Collider>();
@@ -73,14 +73,14 @@ public class WindowHandle : MonoBehaviour
 
         go.transform.SetParent(transform, false);
 
-        float inv  = 1f / Mathf.Max(transform.lossyScale.x, 0.0001f);
+        float inv = 1f / Mathf.Max(transform.lossyScale.x, 0.0001f);
         float halfH = GetComponent<RectTransform>().rect.height * 0.5f;
 
         go.transform.localPosition = new Vector3(0f, -halfH - belowOffset * inv, 0f);
         go.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
-        go.transform.localScale    = new Vector3(
+        go.transform.localScale = new Vector3(
             pillThickness * inv * 0.5f,
-            pillWidth     * inv * 0.5f,
+            pillWidth * inv * 0.5f,
             pillThickness * inv * 0.5f);
 
         var shader = Shader.Find("Universal Render Pipeline/Unlit");
@@ -114,10 +114,10 @@ public class WindowHandle : MonoBehaviour
                 if (pinch)
                 {
                     Vector3 hitPoint = o + d.normalized * hit;
-                    _grabbed   = true;
-                    _proxGrab  = false;
-                    _grabRay   = ray;
-                    _grabDist  = hit;
+                    _grabbed = true;
+                    _proxGrab = false;
+                    _grabRay = ray;
+                    _grabDist = hit;
                     _grabOffset = transform.position - hitPoint;
                     SetColor(grabColor);
                     return;
@@ -192,7 +192,7 @@ public class WindowHandle : MonoBehaviour
     private void EndGrab()
     {
         _grabbed = false; _proxGrab = false;
-        _grabRay = null;  _proxHand = null;
+        _grabRay = null; _proxHand = null;
         SetColor(idleColor);
     }
 

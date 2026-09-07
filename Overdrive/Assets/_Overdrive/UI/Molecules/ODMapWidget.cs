@@ -18,8 +18,8 @@ public class ODMapWidget : MonoBehaviour
 {
     [Header("References — wired by builder")]
     public ODBackground background;
-    public ODLabel      placeholderLabel;
-    public ODLabel      locationLabel;
+    public ODLabel placeholderLabel;
+    public ODLabel locationLabel;
 
     /// <summary>Updates the location line shown under the "Carte" placeholder.</summary>
     public void SetLocation(string location)

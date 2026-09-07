@@ -32,11 +32,11 @@ public static class SearchPanelScreenBuilder
         if (theme == null) theme = fallback;
 
         Overlay = theme.panelBackgroundAlt;
-        Field   = theme.surfaceColor;
+        Field = theme.surfaceColor;
         ChipOff = theme.panelBackground;
-        Gold    = theme.accentGold;
-        Txt     = theme.textPrimary;
-        Sub     = theme.textSecondary;
+        Gold = theme.accentGold;
+        Txt = theme.textPrimary;
+        Sub = theme.textSecondary;
 
         Object.DestroyImmediate(fallback);
     }
@@ -103,16 +103,16 @@ public static class SearchPanelScreenBuilder
 
         // InputField
         var inputField = barGO.AddComponent<TMP_InputField>();
-        inputField.targetGraphic   = bg;
-        inputField.textViewport    = ar;
-        inputField.textComponent   = textComp.GetComponent<TextMeshProUGUI>();
-        inputField.placeholder     = placeholder.GetComponent<TextMeshProUGUI>();
-        inputField.fontAsset       = textComp.GetComponent<TextMeshProUGUI>().font;
-        inputField.pointSize       = 16f;
-        inputField.lineType        = TMP_InputField.LineType.SingleLine;
+        inputField.targetGraphic = bg;
+        inputField.textViewport = ar;
+        inputField.textComponent = textComp.GetComponent<TextMeshProUGUI>();
+        inputField.placeholder = placeholder.GetComponent<TextMeshProUGUI>();
+        inputField.fontAsset = textComp.GetComponent<TextMeshProUGUI>().font;
+        inputField.pointSize = 16f;
+        inputField.lineType = TMP_InputField.LineType.SingleLine;
         inputField.customCaretColor = true;
-        inputField.caretColor      = Gold;
-        inputField.selectionColor  = new Color(Gold.r, Gold.g, Gold.b, 0.35f);
+        inputField.caretColor = Gold;
+        inputField.selectionColor = new Color(Gold.r, Gold.g, Gold.b, 0.35f);
     }
 
     // ── Overlay ───────────────────────────────────────────────────────────────

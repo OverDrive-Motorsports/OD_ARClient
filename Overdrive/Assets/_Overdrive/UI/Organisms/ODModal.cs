@@ -20,13 +20,13 @@ using UnityEngine.UI;
 public class ODModal : MonoBehaviour
 {
     [Header("Content")]
-    public string title             = "Modal Title";
+    public string title = "Modal Title";
     /// <summary>When true, tapping anywhere on the dim overlay closes the modal.</summary>
-    public bool   closeOnOverlayTap = true;
+    public bool closeOnOverlayTap = true;
 
     [Header("References — wired by ODUIBuilder")]
     /// <summary>Full-screen semi-transparent Image that dims the scene behind the modal.</summary>
-    public Image  overlay;
+    public Image overlay;
     public ODCard card;
 
     private CanvasGroup _cardGroup;

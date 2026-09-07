@@ -35,12 +35,12 @@ public class ODBadge : MonoBehaviour
 
     [Header("References")]
     public ODBackground background;
-    public ODLabel      label;
+    public ODLabel label;
 
     private void Start()
     {
         if (background == null) background = GetComponentInChildren<ODBackground>();
-        if (label == null)      label      = GetComponentInChildren<ODLabel>();
+        if (label == null) label = GetComponentInChildren<ODLabel>();
         Apply();
     }
 
@@ -50,8 +50,8 @@ public class ODBadge : MonoBehaviour
         UITheme theme = UITheme.Instance;
         if (theme == null) return;
 
-        Image           bgImg = background != null ? background.GetComponent<Image>() : null;
-        TextMeshProUGUI txt   = label      != null ? label.GetComponent<TextMeshProUGUI>() : null;
+        Image bgImg = background != null ? background.GetComponent<Image>() : null;
+        TextMeshProUGUI txt = label != null ? label.GetComponent<TextMeshProUGUI>() : null;
 
         switch (variant)
         {
@@ -82,7 +82,7 @@ public class ODBadge : MonoBehaviour
 
     private static void SetColors(Image bg, TextMeshProUGUI txt, Color bgColor, Color textColor)
     {
-        if (bg  != null) bg.color  = bgColor;
+        if (bg != null) bg.color = bgColor;
         if (txt != null) txt.color = textColor;
     }
 

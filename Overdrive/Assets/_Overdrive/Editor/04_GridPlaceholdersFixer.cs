@@ -55,7 +55,7 @@ public static class GridPlaceholdersFixer
     static void EnhanceItem(GameObject item, int idx)
     {
         Color accent = accentColors[idx % accentColors.Length];
-        string race  = raceNames[idx % raceNames.Length];
+        string race = raceNames[idx % raceNames.Length];
 
         // ── Thumbnail (fill entire item) ──────────────────────────────────
         Transform thumbT = item.transform.Find("Thumbnail");
@@ -79,22 +79,22 @@ public static class GridPlaceholdersFixer
         RectTransform playRT = EnsureRect(playGO);
         playRT.anchorMin = new Vector2(0.5f, 0.5f);
         playRT.anchorMax = new Vector2(0.5f, 0.5f);
-        playRT.pivot     = new Vector2(0.5f, 0.5f);
+        playRT.pivot = new Vector2(0.5f, 0.5f);
         playRT.anchoredPosition = Vector2.zero;
         playRT.sizeDelta = new Vector2(80f, 80f);
 
         TextMeshProUGUI playTxt = GetOrAddTMP(playGO);
-        playTxt.text      = "▶";
-        playTxt.fontSize  = 48f;
+        playTxt.text = "▶";
+        playTxt.fontSize = 48f;
         playTxt.alignment = TextAlignmentOptions.Center;
-        playTxt.color     = new Color(1f, 1f, 1f, 0.85f);
+        playTxt.color = new Color(1f, 1f, 1f, 0.85f);
 
         // ── Bottom bar ────────────────────────────────────────────────────
         GameObject barGO = GetOrCreate("BottomBar", item.transform);
         RectTransform barRT = EnsureRect(barGO);
         barRT.anchorMin = new Vector2(0f, 0f);
         barRT.anchorMax = new Vector2(1f, 0f);
-        barRT.pivot     = new Vector2(0.5f, 0f);
+        barRT.pivot = new Vector2(0.5f, 0f);
         barRT.anchoredPosition = Vector2.zero;
         barRT.sizeDelta = new Vector2(0f, 48f);
 
@@ -110,11 +110,11 @@ public static class GridPlaceholdersFixer
         labelRT.offsetMax = Vector2.zero;
 
         TextMeshProUGUI labelTxt = GetOrAddTMP(labelGO);
-        labelTxt.text      = race;
-        labelTxt.fontSize  = 18f;
+        labelTxt.text = race;
+        labelTxt.fontSize = 18f;
         labelTxt.fontStyle = FontStyles.Bold;
         labelTxt.alignment = TextAlignmentOptions.MidlineLeft;
-        labelTxt.color     = Color.white;
+        labelTxt.color = Color.white;
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────

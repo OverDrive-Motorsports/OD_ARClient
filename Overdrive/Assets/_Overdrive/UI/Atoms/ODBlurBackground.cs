@@ -24,8 +24,8 @@ public class ODBlurBackground : MonoBehaviour
     /// <summary>When true, triggers a blur capture automatically every time the GameObject is enabled.</summary>
     public bool autoRefreshOnEnable = true;
 
-    private RawImage   _rawImage;
-    private Texture2D  _blurTex;
+    private RawImage _rawImage;
+    private Texture2D _blurTex;
 
     // Fallback tint applied when Camera.main is not available (e.g. Edit mode, no scene camera)
     private static readonly Color FallbackTint = new Color(0.949f, 0.949f, 0.969f, 0.60f);
@@ -73,13 +73,13 @@ public class ODBlurBackground : MonoBehaviour
         {
             // Graceful degradation: flat tinted panel so the UI is still readable
             _rawImage.texture = null;
-            _rawImage.color   = FallbackTint;
+            _rawImage.color = FallbackTint;
             return;
         }
 
         int pixelRadius = BlurRadius();
         // Half-resolution is sufficient — blur masks fine detail anyway
-        int w = Screen.width  / 2;
+        int w = Screen.width / 2;
         int h = Screen.height / 2;
 
         // Reuse existing texture when dimensions haven't changed to avoid per-frame allocations
@@ -103,7 +103,7 @@ public class ODBlurBackground : MonoBehaviour
         Color tint = theme != null ? theme.panelBackground : FallbackTint;
 
         _rawImage.texture = _blurTex;
-        _rawImage.color   = tint;
+        _rawImage.color = tint;
     }
 
     /// <summary>Maps UITheme.panelBlurAmount (0–100) to a pixel radius on the half-res texture.</summary>

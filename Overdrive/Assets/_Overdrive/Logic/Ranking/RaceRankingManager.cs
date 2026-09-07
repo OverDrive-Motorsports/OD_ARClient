@@ -11,19 +11,19 @@ using TMPro;
 public class RaceRankingManager : MonoBehaviour
 {
     [Header("References (wired by builder)")]
-    public GameObject      cardTemplate;
-    public RectTransform   container;
+    public GameObject cardTemplate;
+    public RectTransform container;
     public TextMeshProUGUI lapText;
 
     [Header("Layout")]
-    public float rowHeight  = 56f;
+    public float rowHeight = 56f;
     public float rowSpacing = 8f;
 
     [Header("Simulation")]
-    public int   totalLaps    = 54;
-    public float lapDuration  = 9f;
-    public float overtakeMin  = 2.0f;
-    public float overtakeMax  = 4.5f;
+    public int totalLaps = 54;
+    public float lapDuration = 9f;
+    public float overtakeMin = 2.0f;
+    public float overtakeMax = 4.5f;
     public float moveDuration = 0.5f;
 
     // ── mock data ─────────────────────────────────────────────────────────────
@@ -33,12 +33,12 @@ public class RaceRankingManager : MonoBehaviour
     };
 
     static readonly Color Mercedes = new Color(0.00f, 0.82f, 0.74f, 1f);
-    static readonly Color Ferrari  = new Color(0.90f, 0.05f, 0.05f, 1f);
-    static readonly Color RedBull  = new Color(0.14f, 0.25f, 0.62f, 1f);
-    static readonly Color McLaren  = new Color(1.00f, 0.53f, 0.00f, 1f);
+    static readonly Color Ferrari = new Color(0.90f, 0.05f, 0.05f, 1f);
+    static readonly Color RedBull = new Color(0.14f, 0.25f, 0.62f, 1f);
+    static readonly Color McLaren = new Color(1.00f, 0.53f, 0.00f, 1f);
     static readonly Color Williams = new Color(0.00f, 0.45f, 0.85f, 1f);
-    static readonly Color Alpine   = new Color(0.95f, 0.45f, 0.75f, 1f);
-    static readonly Color Aston    = new Color(0.00f, 0.48f, 0.42f, 1f);
+    static readonly Color Alpine = new Color(0.95f, 0.45f, 0.75f, 1f);
+    static readonly Color Aston = new Color(0.00f, 0.48f, 0.42f, 1f);
 
     static readonly Color[] Teams = {
         Mercedes, Ferrari,  Mercedes, Williams, Mercedes,
@@ -50,13 +50,13 @@ public class RaceRankingManager : MonoBehaviour
     private class Driver
     {
         public string code;
-        public Color  team;
-        public float  gap;
+        public Color team;
+        public float gap;
         public RaceStandingCard card;
     }
 
     private readonly List<Driver> _order = new List<Driver>();
-    private int  _lap = 1;
+    private int _lap = 1;
     private bool _spawned;
 
     // ── OnEnable so the simulation restarts every time the widget is shown ───
@@ -90,7 +90,7 @@ public class RaceRankingManager : MonoBehaviour
             {
                 code = Codes[i],
                 team = Teams[i % Teams.Length],
-                gap  = Random.Range(0.3f, 4.5f),
+                gap = Random.Range(0.3f, 4.5f),
                 card = go.GetComponent<RaceStandingCard>()
             };
             _order.Add(d);
@@ -121,7 +121,7 @@ public class RaceRankingManager : MonoBehaviour
 
             int from = Random.Range(1, _order.Count);
             int jump = Random.Range(1, Mathf.Min(3, from) + 1);
-            int to   = from - jump;
+            int to = from - jump;
 
             var d = _order[from];
             _order.RemoveAt(from);
@@ -148,7 +148,7 @@ public class RaceRankingManager : MonoBehaviour
             d.card.Set(i + 1, d.code, d.team, gap);
 
             if (instant) d.card.SetYInstant(SlotY(i));
-            else         d.card.MoveToY(SlotY(i), moveDuration);
+            else d.card.MoveToY(SlotY(i), moveDuration);
         }
     }
 

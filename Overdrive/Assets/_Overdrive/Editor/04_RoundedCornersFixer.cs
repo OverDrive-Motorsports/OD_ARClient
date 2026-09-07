@@ -19,9 +19,9 @@ public static class RoundedCornersFixer
     public static void Apply()
     {
         // Panel + search bar + sidebar (decorative, not clickable)
-        Round(ROOT,                       radius: 36f, raycast: false);
-        Round(ROOT + "/SearchBar",        radius: 20f, raycast: false);
-        Round(ROOT + "/Body/Sidebar",     radius: 26f, raycast: false);
+        Round(ROOT, radius: 36f, raycast: false);
+        Round(ROOT + "/SearchBar", radius: 20f, raycast: false);
+        Round(ROOT + "/Body/Sidebar", radius: 26f, raycast: false);
         Round(ROOT + "/Body/ContentArea", radius: 24f, raycast: false);
 
         // Nav buttons → rounded pill highlight (must stay clickable)
@@ -45,8 +45,8 @@ public static class RoundedCornersFixer
         var existing = go.GetComponent<RoundedImage>();
         if (existing != null)
         {
-            existing.cornerRadius   = radius;
-            existing.raycastTarget  = raycast;
+            existing.cornerRadius = radius;
+            existing.raycastTarget = raycast;
             EditorUtility.SetDirty(go);
             return;
         }
@@ -55,16 +55,16 @@ public static class RoundedCornersFixer
         if (img == null) { Debug.LogWarning("[RoundedCorners] No Image on: " + path); return; }
 
         // Capture state before destroying
-        Color  col    = img.color;
+        Color col = img.color;
         Sprite sprite = img.sprite;
-        var    btn    = go.GetComponent<Button>();
+        var btn = go.GetComponent<Button>();
 
         Object.DestroyImmediate(img);
 
-        RoundedImage r  = go.AddComponent<RoundedImage>();
-        r.color         = col;
-        r.sprite        = sprite;
-        r.cornerRadius  = radius;
+        RoundedImage r = go.AddComponent<RoundedImage>();
+        r.color = col;
+        r.sprite = sprite;
+        r.cornerRadius = radius;
         r.cornerSegments = 12;
         r.raycastTarget = raycast;
 

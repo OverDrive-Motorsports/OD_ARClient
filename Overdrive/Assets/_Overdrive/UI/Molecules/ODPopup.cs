@@ -72,7 +72,7 @@ public class ODPopup : MonoBehaviour
         GameObject go = new GameObject("Message", typeof(RectTransform));
         go.transform.SetParent(modal.card.contentArea, false);
         TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
-        tmp.text      = text;
+        tmp.text = text;
         tmp.alignment = TextAlignmentOptions.MidlineLeft;
         ODLabel lbl = go.AddComponent<ODLabel>();
         lbl.textStyle = ODLabel.TextStyle.Body;
@@ -84,14 +84,14 @@ public class ODPopup : MonoBehaviour
         GameObject wrapper = new GameObject(label + "Field", typeof(RectTransform));
         wrapper.transform.SetParent(modal.card.contentArea, false);
         VerticalLayoutGroup vlg = wrapper.AddComponent<VerticalLayoutGroup>();
-        vlg.spacing           = 4f;
+        vlg.spacing = 4f;
         vlg.childControlWidth = true;
         wrapper.AddComponent<LayoutElement>().preferredHeight = 74f;
 
         GameObject labelGO = new GameObject("Label", typeof(RectTransform));
         labelGO.transform.SetParent(wrapper.transform, false);
         TextMeshProUGUI labelTmp = labelGO.AddComponent<TextMeshProUGUI>();
-        labelTmp.text      = label;
+        labelTmp.text = label;
         labelTmp.alignment = TextAlignmentOptions.MidlineLeft;
         ODLabel labelLbl = labelGO.AddComponent<ODLabel>();
         labelLbl.textStyle = ODLabel.TextStyle.Caption;
@@ -109,10 +109,10 @@ public class ODPopup : MonoBehaviour
         GameObject row = new GameObject("ButtonRow", typeof(RectTransform));
         row.transform.SetParent(modal.card.contentArea, false);
         HorizontalLayoutGroup hlg = row.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing               = 12f;
-        hlg.childAlignment        = TextAnchor.MiddleRight;
-        hlg.childControlWidth     = false;
-        hlg.childControlHeight    = true;
+        hlg.spacing = 12f;
+        hlg.childAlignment = TextAnchor.MiddleRight;
+        hlg.childControlWidth = false;
+        hlg.childControlHeight = true;
         hlg.childForceExpandWidth = false;
         row.AddComponent<LayoutElement>().preferredHeight = 56f;
 

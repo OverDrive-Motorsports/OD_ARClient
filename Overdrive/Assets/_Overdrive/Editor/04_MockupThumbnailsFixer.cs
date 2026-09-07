@@ -39,8 +39,8 @@ public static class MockupThumbnailsFixer
         if (theme == null) return;
 
         CardBg = theme.panelBackgroundAlt;
-        BarBg  = Color.Lerp(theme.panelBackground, Color.black, 0.3f);
-        Txt    = theme.textPrimary;
+        BarBg = Color.Lerp(theme.panelBackground, Color.black, 0.3f);
+        Txt = theme.textPrimary;
     }
 
     public static void Apply()
@@ -76,12 +76,12 @@ public static class MockupThumbnailsFixer
         var layout = grid.GetComponent<UnityEngine.UI.GridLayoutGroup>();
         if (layout != null)
         {
-            layout.constraint      = UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount;
+            layout.constraint = UnityEngine.UI.GridLayoutGroup.Constraint.FixedColumnCount;
             layout.constraintCount = 2;
-            layout.cellSize        = new Vector2(562f, 316f);   // 16:9 cells
-            layout.spacing         = new Vector2(16f, 16f);
-            layout.padding         = new RectOffset(8, 8, 8, 8);
-            layout.childAlignment  = TextAnchor.UpperCenter;
+            layout.cellSize = new Vector2(562f, 316f);   // 16:9 cells
+            layout.spacing = new Vector2(16f, 16f);
+            layout.padding = new RectOffset(8, 8, 8, 8);
+            layout.childAlignment = TextAnchor.UpperCenter;
         }
 
         // ── 3. Clear existing grid items ──────────────────────────────────────
@@ -112,9 +112,9 @@ public static class MockupThumbnailsFixer
         var btn = go.AddComponent<Button>();
         btn.targetGraphic = bg;
         var cb = btn.colors;
-        cb.normalColor      = CardBg;
+        cb.normalColor = CardBg;
         cb.highlightedColor = new Color(0.32f, 0.28f, 0.22f, 1f);
-        cb.pressedColor     = new Color(0.18f, 0.15f, 0.12f, 1f);
+        cb.pressedColor = new Color(0.18f, 0.15f, 0.12f, 1f);
         btn.colors = cb;
 
         var item = go.AddComponent<ContentGridItem>();
@@ -168,7 +168,7 @@ public static class MockupThumbnailsFixer
         lTxt.raycastTarget = false;
 
         // wire the runtime component
-        item.thumbnail  = thImg;
+        item.thumbnail = thImg;
         item.titleLabel = lTxt;
     }
 }

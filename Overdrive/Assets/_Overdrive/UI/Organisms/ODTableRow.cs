@@ -31,9 +31,9 @@ public class ODTableRow : MonoBehaviour
     /// <summary>Left-edge accent strip shown only when this row is highlighted.</summary>
     public Image accentBorder;
 
-    private readonly List<string>          _columnIds = new List<string>();
-    private readonly List<TextMeshProUGUI> _cells     = new List<TextMeshProUGUI>();
-    private readonly List<GameObject>      _cellGOs   = new List<GameObject>(); // tracked for cleanup on re-Setup
+    private readonly List<string> _columnIds = new List<string>();
+    private readonly List<TextMeshProUGUI> _cells = new List<TextMeshProUGUI>();
+    private readonly List<GameObject> _cellGOs = new List<GameObject>(); // tracked for cleanup on re-Setup
 
     private CanvasGroup _canvasGroup;
 
@@ -62,26 +62,26 @@ public class ODTableRow : MonoBehaviour
         HorizontalLayoutGroup hlg = GetComponent<HorizontalLayoutGroup>();
         if (hlg != null)
         {
-            hlg.spacing                = 0f;
+            hlg.spacing = 0f;
             hlg.childForceExpandHeight = true;
-            hlg.childForceExpandWidth  = false;
-            hlg.childAlignment         = TextAnchor.MiddleLeft;
-            hlg.padding                = new RectOffset(12, 12, 0, 0);
+            hlg.childForceExpandWidth = false;
+            hlg.childAlignment = TextAnchor.MiddleLeft;
+            hlg.padding = new RectOffset(12, 12, 0, 0);
         }
 
         for (int i = 0; i < columns.Count; i++)
         {
             ODTableColumn col = columns[i];
-            string        val = (i < values.Count) ? values[i] : string.Empty;
+            string val = (i < values.Count) ? values[i] : string.Empty;
 
             var cellGO = new GameObject(col.columnId + "_cell", typeof(RectTransform));
             cellGO.transform.SetParent(transform, false);
 
-            var le           = cellGO.AddComponent<LayoutElement>();
+            var le = cellGO.AddComponent<LayoutElement>();
             le.flexibleWidth = col.flexWidth;
 
-            var tmp       = cellGO.AddComponent<TextMeshProUGUI>();
-            tmp.text      = val;
+            var tmp = cellGO.AddComponent<TextMeshProUGUI>();
+            tmp.text = val;
             tmp.alignment = col.alignment;
 
             if (theme != null)

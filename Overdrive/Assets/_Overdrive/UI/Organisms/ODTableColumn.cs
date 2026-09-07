@@ -46,8 +46,8 @@ public class ODTableColumn
     // The bool+Color pair is the standard workaround for optional serialized color overrides.
     /// <summary>When true, customColor overrides the default cell text color for this column.</summary>
     [Tooltip("When true, customColor overrides the default cell text color.")]
-    public bool  useCustomColor = false;
-    public Color customColor    = Color.white;
+    public bool useCustomColor = false;
+    public Color customColor = Color.white;
 
     /// <summary>Returns the custom color when useCustomColor is set, or null to fall back to theme defaults.</summary>
     public Color? GetCustomColor() => useCustomColor ? (Color?)customColor : null;

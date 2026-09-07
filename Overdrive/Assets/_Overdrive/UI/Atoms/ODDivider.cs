@@ -31,7 +31,7 @@ public class ODDivider : MonoBehaviour
             RectTransform rt = GetComponent<RectTransform>();
             rt.anchorMin = new Vector2(0f, 0.5f);
             rt.anchorMax = new Vector2(1f, 0.5f);
-            rt.pivot     = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(0f, 2f);
         }
     }

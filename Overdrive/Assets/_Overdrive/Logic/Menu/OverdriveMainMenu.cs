@@ -16,19 +16,19 @@ public class OverdriveMainMenu : MonoBehaviour
     public Button settingsButton;
 
     [Header("Category (auto-found if empty)")]
-    public Button          categoryButton;
+    public Button categoryButton;
     public TextMeshProUGUI categoryLabel;
 
     [Header("Nav Style")]
-    public Color activeNavColor    = new Color(0.22f, 0.19f, 0.15f, 1f);
-    public Color inactiveNavColor  = Color.clear;
-    public Color activeTextColor   = new Color(0.85f, 0.70f, 0.20f, 1f); // gold
+    public Color activeNavColor = new Color(0.22f, 0.19f, 0.15f, 1f);
+    public Color inactiveNavColor = Color.clear;
+    public Color activeTextColor = new Color(0.85f, 0.70f, 0.20f, 1f); // gold
     public Color inactiveTextColor = new Color(0.90f, 0.88f, 0.84f, 1f);
 
     // ── private ──────────────────────────────────────────────────────────────
-    private Button[]     _navButtons;
+    private Button[] _navButtons;
     private GameObject[] _panels;
-    private int          _currentCat = 0;
+    private int _currentCat = 0;
 
     private static readonly string[] Categories = { "F1  ▾", "MotoGP  ▾", "IndyCar  ▾", "F2  ▾" };
 
@@ -49,9 +49,9 @@ public class OverdriveMainMenu : MonoBehaviour
         };
 
         // Wire nav clicks
-        racesButton?   .onClick.AddListener(() => SelectNav(0));
+        racesButton?.onClick.AddListener(() => SelectNav(0));
         rankingsButton?.onClick.AddListener(() => SelectNav(1));
-        profileButton? .onClick.AddListener(() => SelectNav(2));
+        profileButton?.onClick.AddListener(() => SelectNav(2));
         settingsButton?.onClick.AddListener(() => SelectNav(3));
 
         // Wire category click
@@ -76,12 +76,12 @@ public class OverdriveMainMenu : MonoBehaviour
             if (img) img.color = Color.white;
 
             var cb = _navButtons[i].colors;
-            cb.normalColor      = active ? activeNavColor : Color.clear;
+            cb.normalColor = active ? activeNavColor : Color.clear;
             cb.highlightedColor = new Color(0.30f, 0.26f, 0.21f, 1f);
-            cb.pressedColor     = new Color(0.38f, 0.32f, 0.24f, 1f);
-            cb.selectedColor    = cb.normalColor;
-            cb.colorMultiplier  = 1f;
-            cb.fadeDuration     = 0.1f;
+            cb.pressedColor = new Color(0.38f, 0.32f, 0.24f, 1f);
+            cb.selectedColor = cb.normalColor;
+            cb.colorMultiplier = 1f;
+            cb.fadeDuration = 0.1f;
             _navButtons[i].colors = cb;
 
             var lbl = _navButtons[i].transform.Find("Label")
@@ -110,16 +110,16 @@ public class OverdriveMainMenu : MonoBehaviour
     {
         // Nav buttons
         // Explicit null checks — never ?? with Unity objects (fake-null)
-        if (racesButton    == null) racesButton    = FindButton("Body/Sidebar/Nav_Races");
+        if (racesButton == null) racesButton = FindButton("Body/Sidebar/Nav_Races");
         if (rankingsButton == null) rankingsButton = FindButton("Body/Sidebar/Nav_Rankings");
-        if (profileButton  == null) profileButton  = FindButton("Body/Sidebar/Nav_Profile");
+        if (profileButton == null) profileButton = FindButton("Body/Sidebar/Nav_Profile");
         if (settingsButton == null) settingsButton = FindButton("Body/Sidebar/Nav_Settings");
 
         // Category label
         var catT = FindChildTransform("Body/ContentArea/CategoryLabel");
         if (catT != null)
         {
-            if (categoryLabel  == null) categoryLabel  = catT.GetComponent<TextMeshProUGUI>();
+            if (categoryLabel == null) categoryLabel = catT.GetComponent<TextMeshProUGUI>();
             if (categoryButton == null)
             {
                 categoryButton = catT.GetComponent<Button>();
@@ -176,10 +176,10 @@ public class OverdriveMainMenu : MonoBehaviour
         tRT.anchorMin = Vector2.zero; tRT.anchorMax = Vector2.one;
         tRT.offsetMin = tRT.offsetMax = Vector2.zero;
         var tmp = textGO.AddComponent<TMPro.TextMeshProUGUI>();
-        tmp.text      = label + "\n<size=60%>Coming soon</size>";
-        tmp.fontSize  = 32f;
+        tmp.text = label + "\n<size=60%>Coming soon</size>";
+        tmp.fontSize = 32f;
         tmp.alignment = TMPro.TextAlignmentOptions.Center;
-        tmp.color     = new Color(0.90f, 0.88f, 0.84f, 0.6f);
+        tmp.color = new Color(0.90f, 0.88f, 0.84f, 0.6f);
 
         go.SetActive(false);
         return go;

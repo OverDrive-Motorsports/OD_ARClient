@@ -23,10 +23,10 @@ using TMPro;
 /// </summary>
 public class ODStandingsWidget : MonoBehaviour
 {
-    public ODLabel   categoryLabel;
+    public ODLabel categoryLabel;
     public GameObject toggleRow;
-    public ODButton  driversToggleBtn;
-    public ODButton  teamsToggleBtn;
+    public ODButton driversToggleBtn;
+    public ODButton teamsToggleBtn;
     public ODDataTable table;
 
     private ChampionshipStandingTable? _drivers;
@@ -38,11 +38,11 @@ public class ODStandingsWidget : MonoBehaviour
         GameObject root = new GameObject("StandingsWidget", typeof(RectTransform));
         root.transform.SetParent(parent, false);
         VerticalLayoutGroup vlg = root.AddComponent<VerticalLayoutGroup>();
-        vlg.spacing                = 8f;
-        vlg.childAlignment         = TextAnchor.UpperLeft;
-        vlg.childControlWidth      = true;
-        vlg.childControlHeight     = false;
-        vlg.childForceExpandWidth  = true;
+        vlg.spacing = 8f;
+        vlg.childAlignment = TextAnchor.UpperLeft;
+        vlg.childControlWidth = true;
+        vlg.childControlHeight = false;
+        vlg.childForceExpandWidth = true;
         vlg.childForceExpandHeight = false;
         root.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         root.GetComponent<RectTransform>().sizeDelta = Vector2.zero;
@@ -53,7 +53,7 @@ public class ODStandingsWidget : MonoBehaviour
         GameObject catGO = new GameObject("CategoryLabel", typeof(RectTransform));
         catGO.transform.SetParent(root.transform, false);
         TextMeshProUGUI catTmp = catGO.AddComponent<TextMeshProUGUI>();
-        catTmp.alignment          = TextAlignmentOptions.MidlineLeft;
+        catTmp.alignment = TextAlignmentOptions.MidlineLeft;
         catTmp.enableWordWrapping = false;
         ODLabel catLbl = catGO.AddComponent<ODLabel>();
         catLbl.textStyle = ODLabel.TextStyle.H2;
@@ -64,9 +64,9 @@ public class ODStandingsWidget : MonoBehaviour
         GameObject toggleGO = new GameObject("Toggle", typeof(RectTransform));
         toggleGO.transform.SetParent(root.transform, false);
         HorizontalLayoutGroup hlg = toggleGO.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing            = 8f;
-        hlg.childAlignment     = TextAnchor.MiddleLeft;
-        hlg.childControlWidth  = false;
+        hlg.spacing = 8f;
+        hlg.childAlignment = TextAnchor.MiddleLeft;
+        hlg.childControlWidth = false;
         hlg.childControlHeight = true;
         toggleGO.AddComponent<LayoutElement>().preferredHeight = 48f;
         widget.toggleRow = toggleGO;
@@ -98,15 +98,15 @@ public class ODStandingsWidget : MonoBehaviour
     public void Setup(string category, ChampionshipStandingTable? drivers, ChampionshipStandingTable? teams)
     {
         _drivers = drivers;
-        _teams   = teams;
+        _teams = teams;
 
         categoryLabel?.SetText(string.IsNullOrEmpty(category) ? "Classement" : category);
 
         bool hasBoth = drivers.HasValue && teams.HasValue;
         if (toggleRow != null) toggleRow.SetActive(hasBoth);
 
-        if (drivers.HasValue)      ShowType(StandingType.Drivers);
-        else if (teams.HasValue)   ShowType(StandingType.Teams);
+        if (drivers.HasValue) ShowType(StandingType.Drivers);
+        else if (teams.HasValue) ShowType(StandingType.Teams);
     }
 
     private void ShowType(StandingType type)

@@ -39,21 +39,21 @@ public static class VideoPlayerScreenBuilder
         UITheme fallback = ScriptableObject.CreateInstance<UITheme>();
         if (theme == null) theme = fallback;
 
-        Glass        = theme.panelBackground;
-        GlassSoft    = theme.panelBackgroundAlt;
-        Track        = Color.Lerp(Glass, Color.white, 0.2f);
-        Gold         = theme.accentGold;
-        Txt          = theme.textPrimary;
+        Glass = theme.panelBackground;
+        GlassSoft = theme.panelBackgroundAlt;
+        Track = Color.Lerp(Glass, Color.white, 0.2f);
+        Gold = theme.accentGold;
+        Txt = theme.textPrimary;
         TxtSecondary = theme.textSecondary;
         // Button ColorTint replaces the graphic's color outright, so hover/press
         // need solid tones (not the low-alpha hoverOverlay/pressedOverlay tokens).
         ButtonHighlight = Color.Lerp(GlassSoft, Color.white, 0.10f);
-        ButtonPressed   = Color.Lerp(GlassSoft, Gold, 0.20f);
+        ButtonPressed = Color.Lerp(GlassSoft, Gold, 0.20f);
 
         Object.DestroyImmediate(fallback);
     }
 
-    const string RT_PATH   = "Assets/_Overdrive/DevAssets/VideoRenderTexture.renderTexture";
+    const string RT_PATH = "Assets/_Overdrive/DevAssets/VideoRenderTexture.renderTexture";
     const string VIDEO_DIR = "Assets/_Overdrive/DevAssets/Video";
 
     public static void Build()
@@ -104,12 +104,12 @@ public static class VideoPlayerScreenBuilder
 
         // ── VideoPlayer component + surface ───────────────────────────────────
         var vp = root.AddComponent<VideoPlayer>();
-        vp.playOnAwake      = false;
-        vp.renderMode       = VideoRenderMode.RenderTexture;
-        vp.targetTexture    = rt;
-        vp.audioOutputMode  = VideoAudioOutputMode.Direct;
-        vp.isLooping        = false;
-        vp.clip             = clip;
+        vp.playOnAwake = false;
+        vp.renderMode = VideoRenderMode.RenderTexture;
+        vp.targetTexture = rt;
+        vp.audioOutputMode = VideoAudioOutputMode.Direct;
+        vp.isLooping = false;
+        vp.clip = clip;
 
         var videoGO = NewGO("VideoSurface", root.transform);
         var vRT = videoGO.GetComponent<RectTransform>();
@@ -144,9 +144,9 @@ public static class VideoPlayerScreenBuilder
 
         // ── Transport row ─────────────────────────────────────────────────────
         float rowY = scrubY - 40f;
-        var rew  = TransportButton(root.transform, "Rewind10",  new Vector2(-140f, rowY), "⏴ 10s");
-        var play = TransportButton(root.transform, "PlayPause", new Vector2(   0f, rowY), "❚❚", big: true);
-        var fwd  = TransportButton(root.transform, "Forward10", new Vector2( 140f, rowY), "10s ⏵");
+        var rew = TransportButton(root.transform, "Rewind10", new Vector2(-140f, rowY), "⏴ 10s");
+        var play = TransportButton(root.transform, "PlayPause", new Vector2(0f, rowY), "❚❚", big: true);
+        var fwd = TransportButton(root.transform, "Forward10", new Vector2(140f, rowY), "10s ⏵");
 
         // Time label (right side of the transport row)
         var time = Label(root.transform, "TimeLabel", "0:00 / 0:00", 17f, FontStyles.Normal,
@@ -157,11 +157,11 @@ public static class VideoPlayerScreenBuilder
 
         // ── Controller wiring ─────────────────────────────────────────────────
         var ctrl = root.AddComponent<VideoPlayerController>();
-        ctrl.videoPlayer    = vp;
-        ctrl.scrubSlider    = slider;
+        ctrl.videoPlayer = vp;
+        ctrl.scrubSlider = slider;
         ctrl.playPauseLabel = play.transform.Find("Label").GetComponent<TextMeshProUGUI>();
-        ctrl.timeLabel      = time.GetComponent<TextMeshProUGUI>();
-        ctrl.titleLabel     = title.GetComponent<TextMeshProUGUI>();
+        ctrl.timeLabel = time.GetComponent<TextMeshProUGUI>();
+        ctrl.titleLabel = title.GetComponent<TextMeshProUGUI>();
         var menuGO = GameObject.Find("OverdriveMenuCanvas");
         if (menuGO != null) ctrl.menuCanvas = menuGO.GetComponent<Canvas>();
 
@@ -245,7 +245,7 @@ public static class VideoPlayerScreenBuilder
 
         var cb = btn.colors;
         cb.highlightedColor = ButtonHighlight;
-        cb.pressedColor     = ButtonPressed;
+        cb.pressedColor = ButtonPressed;
         btn.colors = cb;
 
         Label(go.transform, "Label", txt, big ? 26f : 18f, FontStyles.Bold, Txt, TextAlignmentOptions.Center, stretch: true);

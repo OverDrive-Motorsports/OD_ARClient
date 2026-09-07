@@ -40,23 +40,23 @@ public class ODTelemetryCell : MonoBehaviour
 
         if (labelText != null)
         {
-            labelText.text      = label;
+            labelText.text = label;
             labelText.fontStyle = FontStyles.Normal;
             if (theme != null)
             {
                 labelText.fontSize = theme.captionSize;
-                labelText.color    = theme.textSecondary;
+                labelText.color = theme.textSecondary;
             }
         }
 
         if (valueText != null)
         {
-            valueText.text      = value;
+            valueText.text = value;
             valueText.fontStyle = FontStyles.Bold;
             if (theme != null)
             {
                 valueText.fontSize = theme.h2Size;
-                valueText.color    = theme.textPrimary;
+                valueText.color = theme.textPrimary;
             }
         }
     }
@@ -86,21 +86,21 @@ public class ODTelemetryCell : MonoBehaviour
     {
         if (valueText == null) yield break;
 
-        const float duration   = 0.18f;
-        const float peakScale  = 1.15f;
-        float       elapsed    = 0f;
-        Transform   vt         = valueText.transform;
+        const float duration = 0.18f;
+        const float peakScale = 1.15f;
+        float elapsed = 0f;
+        Transform vt = valueText.transform;
 
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            float t     = elapsed / duration;
+            float t = elapsed / duration;
             float scale = Mathf.Lerp(1f, peakScale, Mathf.Sin(t * Mathf.PI));
             vt.localScale = Vector3.one * scale;
             yield return null;
         }
 
-        vt.localScale  = Vector3.one;
+        vt.localScale = Vector3.one;
         valueText.text = newValue;
     }
 }

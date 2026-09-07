@@ -61,10 +61,10 @@ public class ODBackground : MonoBehaviour
 
         switch (backgroundStyle)
         {
-            case Style.Card:   _image.color = theme.panelBackground;    break;
-            case Style.Modal:  _image.color = theme.surfaceColor;       break;
-            case Style.Subtle: _image.color = theme.subtleColor;        break;
-            case Style.Alt:    _image.color = theme.panelBackgroundAlt; break;
+            case Style.Card: _image.color = theme.panelBackground; break;
+            case Style.Modal: _image.color = theme.surfaceColor; break;
+            case Style.Subtle: _image.color = theme.subtleColor; break;
+            case Style.Alt: _image.color = theme.panelBackgroundAlt; break;
         }
     }
 

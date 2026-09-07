@@ -19,10 +19,10 @@ using TMPro;
 public class ProfileSectionController : MonoBehaviour
 {
     [Header("References — wired by HomeNavBuilder")]
-    public ODMenuOverlay  menuOverlay;
-    public RectTransform  profileContent;
-    public RectTransform  settingsContent;
-    public ODPopup        popup;
+    public ODMenuOverlay menuOverlay;
+    public RectTransform profileContent;
+    public RectTransform settingsContent;
+    public ODPopup popup;
 
     [Header("Prefab references — wired by HomeNavBuilder")]
     public GameObject ghostButtonPrefab;
@@ -30,16 +30,16 @@ public class ProfileSectionController : MonoBehaviour
     public GameObject menuOverlayPrefab;
 
     // Mock account info — replace with real user data once a backend exists.
-    private const string MockName  = "Julien Martin";
+    private const string MockName = "Julien Martin";
     private const string MockEmail = "julien.martin@email.com";
 
     private CanvasGroup _profileGroup;
     private CanvasGroup _settingsGroup;
-    private Coroutine   _viewRoutine;
+    private Coroutine _viewRoutine;
 
     private void Start()
     {
-        if (profileContent  != null) _profileGroup  = GetOrAddCanvasGroup(profileContent.gameObject);
+        if (profileContent != null) _profileGroup = GetOrAddCanvasGroup(profileContent.gameObject);
         if (settingsContent != null) _settingsGroup = GetOrAddCanvasGroup(settingsContent.gameObject);
 
         SetupMenuOverlay();
@@ -144,8 +144,8 @@ public class ProfileSectionController : MonoBehaviour
         GameObject infoCol = new GameObject("Info", typeof(RectTransform));
         infoCol.transform.SetParent(account.transform, false);
         VerticalLayoutGroup infoVlg = infoCol.AddComponent<VerticalLayoutGroup>();
-        infoVlg.childAlignment    = TextAnchor.MiddleLeft;
-        infoVlg.spacing           = 2f;
+        infoVlg.childAlignment = TextAnchor.MiddleLeft;
+        infoVlg.spacing = 2f;
         infoVlg.childControlWidth = true;
         infoCol.AddComponent<LayoutElement>().flexibleWidth = 1f;
         CreateLabel(infoCol.transform, MockName, ODLabel.TextStyle.H2, TextAlignmentOptions.MidlineLeft);
@@ -226,10 +226,10 @@ public class ProfileSectionController : MonoBehaviour
             string option = options[i];
             items.Add(new ODMenuOverlay.MenuOverlayItem
             {
-                label      = option,
-                iconGlyph  = "",
+                label = option,
+                iconGlyph = "",
                 isSelected = i == defaultIndex,
-                onClick    = () => picker.SetTriggerLabel(option),
+                onClick = () => picker.SetTriggerLabel(option),
             });
         }
         picker.SetItems(items);
@@ -258,10 +258,10 @@ public class ProfileSectionController : MonoBehaviour
         GameObject go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(parent, false);
         HorizontalLayoutGroup hlg = go.AddComponent<HorizontalLayoutGroup>();
-        hlg.spacing               = spacing;
-        hlg.childAlignment        = TextAnchor.MiddleLeft;
-        hlg.childControlWidth     = false;
-        hlg.childControlHeight    = true;
+        hlg.spacing = spacing;
+        hlg.childAlignment = TextAnchor.MiddleLeft;
+        hlg.childControlWidth = false;
+        hlg.childControlHeight = true;
         hlg.childForceExpandWidth = false;
         go.AddComponent<LayoutElement>().preferredHeight = 48f;
         go.GetComponent<RectTransform>().sizeDelta = new Vector2(0f, 48f);
@@ -273,8 +273,8 @@ public class ProfileSectionController : MonoBehaviour
         GameObject go = new GameObject("Label", typeof(RectTransform));
         go.transform.SetParent(parent, false);
         TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
-        tmp.text               = text;
-        tmp.alignment          = alignment;
+        tmp.text = text;
+        tmp.alignment = alignment;
         tmp.enableWordWrapping = false;
         ODLabel lbl = go.AddComponent<ODLabel>();
         lbl.textStyle = style;

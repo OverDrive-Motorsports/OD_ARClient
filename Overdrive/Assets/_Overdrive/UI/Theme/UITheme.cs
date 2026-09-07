@@ -35,35 +35,35 @@ public class UITheme : ScriptableObject
 
     [Header("Backgrounds")]
     /// <summary>Primary frosted dark panel — rgba(28,28,32, 0.78). Used by ODBackground.Card.</summary>
-    public Color panelBackground    = new Color(0.110f, 0.110f, 0.125f, 0.78f);
+    public Color panelBackground = new Color(0.110f, 0.110f, 0.125f, 0.78f);
     /// <summary>Elevated panel variant — rgba(36,36,42, 0.85). Used by ODBackground.Alt.</summary>
     public Color panelBackgroundAlt = new Color(0.141f, 0.141f, 0.165f, 0.85f);
     /// <summary>Modal / deep surface — rgba(44,44,52, 0.90). Used by ODBackground.Modal.</summary>
-    public Color surfaceColor       = new Color(0.173f, 0.173f, 0.204f, 0.90f);
+    public Color surfaceColor = new Color(0.173f, 0.173f, 0.204f, 0.90f);
     /// <summary>Low-emphasis overlay — rgba(20,20,24, 0.50). Used by ODBackground.Subtle.</summary>
-    public Color subtleColor        = new Color(0.078f, 0.078f, 0.094f, 0.50f);
+    public Color subtleColor = new Color(0.078f, 0.078f, 0.094f, 0.50f);
 
     [Header("Text")]
     /// <summary>Near-white primary text. #F2F2F7.</summary>
-    public Color textPrimary   = new Color(0.949f, 0.949f, 0.969f, 1.00f);
+    public Color textPrimary = new Color(0.949f, 0.949f, 0.969f, 1.00f);
     /// <summary>Secondary and placeholder text. #8E8E93.</summary>
     public Color textSecondary = new Color(0.557f, 0.557f, 0.576f, 1.00f);
     /// <summary>De-emphasized tertiary text. #48484A.</summary>
-    public Color textTertiary  = new Color(0.282f, 0.282f, 0.290f, 1.00f);
+    public Color textTertiary = new Color(0.282f, 0.282f, 0.290f, 1.00f);
 
     [Header("Brand — shared with Flutter app_theme.dart")]
     /// <summary>Championship gold accent. #C9A84C.</summary>
-    public Color accentGold   = new Color(0.788f, 0.659f, 0.298f, 1.00f);
+    public Color accentGold = new Color(0.788f, 0.659f, 0.298f, 1.00f);
     /// <summary>Interactive blue. #0A84FF.</summary>
-    public Color blueColor    = new Color(0.039f, 0.518f, 1.000f, 1.00f);
+    public Color blueColor = new Color(0.039f, 0.518f, 1.000f, 1.00f);
     /// <summary>Danger / penalty red. #E8002D.</summary>
-    public Color dangerColor  = new Color(0.910f, 0.000f, 0.176f, 1.00f);
+    public Color dangerColor = new Color(0.910f, 0.000f, 0.176f, 1.00f);
     /// <summary>Positive / safe green. #32D74B.</summary>
     public Color successColor = new Color(0.196f, 0.843f, 0.294f, 1.00f);
 
     [Header("Borders")]
     /// <summary>Subtle white border at 10% opacity — separators and ghost button strokes.</summary>
-    public Color borderColor      = new Color(1.000f, 1.000f, 1.000f, 0.10f);
+    public Color borderColor = new Color(1.000f, 1.000f, 1.000f, 0.10f);
     /// <summary>Gold border bright end (#C9A84C at 60%) — top-left of ODGoldBorder diagonal gradient.</summary>
     public Color goldBorderColorA = new Color(0.788f, 0.659f, 0.298f, 0.60f);
     /// <summary>Gold border dim end (#C9A84C at 8%) — bottom-right of ODGoldBorder diagonal gradient.</summary>
@@ -71,19 +71,19 @@ public class UITheme : ScriptableObject
 
     [Header("Interaction States")]
     /// <summary>White overlay at low opacity, layered on any dark surface to signal hover. Matches ODMenuOverlay's selected-row tint.</summary>
-    public Color hoverOverlay   = new Color(1.000f, 1.000f, 1.000f, 0.08f);
+    public Color hoverOverlay = new Color(1.000f, 1.000f, 1.000f, 0.08f);
     /// <summary>White overlay at higher opacity for the pressed/active state.</summary>
     public Color pressedOverlay = new Color(1.000f, 1.000f, 1.000f, 0.14f);
 
     [Header("Team Colors")]
     /// <summary>Scuderia Ferrari red.</summary>
-    public Color teamFerrari  = new Color(0.900f, 0.050f, 0.050f, 1.00f);
+    public Color teamFerrari = new Color(0.900f, 0.050f, 0.050f, 1.00f);
     /// <summary>Red Bull Racing navy.</summary>
-    public Color teamRedBull  = new Color(0.100f, 0.220f, 0.600f, 1.00f);
+    public Color teamRedBull = new Color(0.100f, 0.220f, 0.600f, 1.00f);
     /// <summary>Mercedes-AMG petronas teal.</summary>
     public Color teamMercedes = new Color(0.000f, 0.820f, 0.740f, 1.00f);
     /// <summary>McLaren papaya orange.</summary>
-    public Color teamMcLaren  = new Color(1.000f, 0.500f, 0.000f, 1.00f);
+    public Color teamMcLaren = new Color(1.000f, 0.500f, 0.000f, 1.00f);
 
     [Header("Spacing Scale")]
     /// <summary>4pt — tightest gap, icon-to-label.</summary>
@@ -103,9 +103,9 @@ public class UITheme : ScriptableObject
 
     [Header("Shape")]
     /// <summary>Default rounded corner radius in UI units. Applied to panels and buttons.</summary>
-    public float cornerRadius    = 24f;
+    public float cornerRadius = 24f;
     /// <summary>Default border stroke width in UI units.</summary>
-    public float borderWidth     = 1.5f;
+    public float borderWidth = 1.5f;
     /// <summary>Gold border stroke width used by ODGoldBorder texture generation.</summary>
     public float goldBorderWidth = 1.5f;
 
@@ -115,17 +115,17 @@ public class UITheme : ScriptableObject
 
     [Header("Typography — Font Sizes")]
     /// <summary>Display heading size (36). Used by ODLabel.H1 and driver number text.</summary>
-    public float h1Size      = 36f;
+    public float h1Size = 36f;
     /// <summary>Section heading size (28). Used by ODLabel.H2 and telemetry values.</summary>
-    public float h2Size      = 28f;
+    public float h2Size = 28f;
     /// <summary>Body copy size (22). Used by ODLabel.Body and table cell text.</summary>
-    public float bodySize    = 22f;
+    public float bodySize = 22f;
     /// <summary>Small caption size (18). Used by ODLabel.Caption, badge labels, and column headers.</summary>
     public float captionSize = 18f;
 
     [Header("Typography — Display Font (future use)")]
     /// <summary>When true, H1 / driver number elements use the font named in displayFontName.</summary>
-    public bool   useOrbitronForDisplay = false;
+    public bool useOrbitronForDisplay = false;
     /// <summary>Name of the display TMP font asset. Must exist in a Resources folder to be loaded.</summary>
-    public string displayFontName       = "Orbitron";
+    public string displayFontName = "Orbitron";
 }
