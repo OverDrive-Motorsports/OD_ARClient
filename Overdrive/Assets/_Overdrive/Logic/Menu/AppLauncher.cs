@@ -11,6 +11,8 @@ public class AppLauncher : MonoBehaviour
     [Header("References")]
     public Canvas    menuCanvas;
     public Transform centerEyeAnchor;
+    public Transform navigationWindow;
+    public float navigationVerticalOffset = -0.47f;
 
     [Header("Placement")]
     [Tooltip("Distance from the user's head in metres when it first appears")]
@@ -55,6 +57,12 @@ public class AppLauncher : MonoBehaviour
         yield return WaitForTracking();
 
         SnapMenuInFront();   // place ONCE, then never touch it again
+        if (navigationWindow != null && navigationWindow.GetComponentInParent<LeftWristNavigation>() == null)
+        {
+            navigationWindow.SetPositionAndRotation(
+                menuCanvas.transform.position + menuCanvas.transform.up * navigationVerticalOffset,
+                menuCanvas.transform.rotation);
+        }
         yield return FadeIn();
     }
 
