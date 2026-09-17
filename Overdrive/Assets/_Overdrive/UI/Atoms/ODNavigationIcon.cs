@@ -1,0 +1,96 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+/// <summary>Font-independent line icons for the primary navigation.</summary>
+[RequireComponent(typeof(CanvasRenderer))]
+public class ODNavigationIcon : MaskableGraphic
+{
+    public enum Symbol { Races, Rankings, Profile, Settings }
+    public Symbol symbol;
+
+    protected override void OnPopulateMesh(VertexHelper mesh)
+    {
+        mesh.Clear();
+        switch (symbol)
+        {
+            case Symbol.Races:
+                Line(mesh, .23f, .12f, .23f, .88f);
+                Line(mesh, .23f, .83f, .81f, .83f);
+                Line(mesh, .81f, .83f, .81f, .43f);
+                Line(mesh, .81f, .43f, .23f, .43f);
+                for (int x = 0; x < 4; x++)
+                    for (int y = 0; y < 3; y++)
+                        if ((x + y) % 2 == 0)
+                            Box(mesh, .24f + x * .14f, .44f + y * .125f, .14f, .125f);
+                break;
+            case Symbol.Rankings:
+                Outline(mesh, .12f, .18f, .24f, .38f);
+                Outline(mesh, .38f, .18f, .24f, .66f);
+                Outline(mesh, .64f, .18f, .24f, .24f);
+                break;
+            case Symbol.Profile:
+                Ring(mesh, new Vector2(.5f, .70f), .17f, 0, 360);
+                Ring(mesh, new Vector2(.5f, .16f), .31f, 0, 180);
+                Line(mesh, .19f, .16f, .81f, .16f);
+                break;
+            case Symbol.Settings:
+                for (int i = 0; i < 3; i++)
+                {
+                    float y = .25f + i * .25f;
+                    float x = i == 1 ? .65f : .35f;
+                    Line(mesh, .14f, y, x - .10f, y);
+                    Line(mesh, x + .10f, y, .86f, y);
+                    Ring(mesh, new Vector2(x, y), .10f, 0, 360);
+                }
+                break;
+        }
+    }
+
+    private Vector2 Point(Vector2 p)
+    {
+        Rect r = GetPixelAdjustedRect();
+        float size = Mathf.Min(r.width, r.height);
+        return r.center + (p - Vector2.one * .5f) * size;
+    }
+
+    private void Quad(VertexHelper m, Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+    {
+        int start = m.currentVertCount;
+        m.AddVert(Point(a), color, Vector2.zero);
+        m.AddVert(Point(b), color, Vector2.zero);
+        m.AddVert(Point(c), color, Vector2.zero);
+        m.AddVert(Point(d), color, Vector2.zero);
+        m.AddTriangle(start, start + 1, start + 2);
+        m.AddTriangle(start + 2, start + 3, start);
+    }
+
+    private void Line(VertexHelper m, float x1, float y1, float x2, float y2)
+    {
+        Vector2 a = new Vector2(x1, y1), b = new Vector2(x2, y2);
+        Vector2 v = (b - a).normalized;
+        Vector2 n = new Vector2(-v.y, v.x) * .027f;
+        Quad(m, a - n, a + n, b + n, b - n);
+    }
+
+    private void Box(VertexHelper m, float x, float y, float w, float h)
+    {
+        Quad(m, new Vector2(x, y), new Vector2(x, y+h), new Vector2(x+w, y+h), new Vector2(x+w, y));
+    }
+
+    private void Outline(VertexHelper m, float x, float y, float w, float h)
+    {
+        Line(m, x, y, x, y+h); Line(m, x, y+h, x+w, y+h);
+        Line(m, x+w, y+h, x+w, y); Line(m, x+w, y, x, y);
+    }
+
+    private void Ring(VertexHelper m, Vector2 c, float r, float from, float to)
+    {
+        int steps = Mathf.CeilToInt((to - from) / 12f);
+        for (int i = 0; i < steps; i++)
+        {
+            float a = Mathf.Lerp(from, to, (float)i / steps) * Mathf.Deg2Rad;
+            float b = Mathf.Lerp(from, to, (float)(i+1) / steps) * Mathf.Deg2Rad;
+            Line(m, c.x + Mathf.Cos(a)*r, c.y + Mathf.Sin(a)*r, c.x + Mathf.Cos(b)*r, c.y + Mathf.Sin(b)*r);
+        }
+    }
+}
