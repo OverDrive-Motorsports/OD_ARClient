@@ -5,7 +5,7 @@ using UnityEngine.UI;
 [RequireComponent(typeof(CanvasRenderer))]
 public class ODNavigationIcon : MaskableGraphic
 {
-    public enum Symbol { Races, Rankings, Profile, Settings }
+    public enum Symbol { Races, Rankings, Profile, Settings, Homepage, Categories, Star, Search, Back }
     public Symbol symbol;
 
     protected override void OnPopulateMesh(VertexHelper mesh)
@@ -13,6 +13,42 @@ public class ODNavigationIcon : MaskableGraphic
         mesh.Clear();
         switch (symbol)
         {
+            case Symbol.Categories:
+                Outline(mesh, .13f, .55f, .30f, .30f);
+                Outline(mesh, .57f, .55f, .30f, .30f);
+                Outline(mesh, .13f, .11f, .30f, .30f);
+                Outline(mesh, .57f, .11f, .30f, .30f);
+                break;
+            case Symbol.Star:
+                for (int i = 0; i < 10; i++)
+                {
+                    float a = (90f + i * 36f) * Mathf.Deg2Rad;
+                    float b = (90f + (i + 1) * 36f) * Mathf.Deg2Rad;
+                    float ra = i % 2 == 0 ? .40f : .19f;
+                    float rb = (i + 1) % 2 == 0 ? .40f : .19f;
+                    Line(mesh, .5f + Mathf.Cos(a) * ra, .5f + Mathf.Sin(a) * ra,
+                        .5f + Mathf.Cos(b) * rb, .5f + Mathf.Sin(b) * rb);
+                }
+                break;
+            case Symbol.Search:
+                Ring(mesh, new Vector2(.43f, .57f), .27f, 0, 360);
+                Line(mesh, .63f, .37f, .87f, .13f);
+                break;
+            case Symbol.Back:
+                Line(mesh, .18f, .5f, .82f, .5f);
+                Line(mesh, .18f, .5f, .48f, .8f);
+                Line(mesh, .18f, .5f, .48f, .2f);
+                break;
+            case Symbol.Homepage:
+                Line(mesh, .10f, .52f, .50f, .88f);
+                Line(mesh, .50f, .88f, .90f, .52f);
+                Line(mesh, .23f, .56f, .23f, .15f);
+                Line(mesh, .23f, .15f, .77f, .15f);
+                Line(mesh, .77f, .15f, .77f, .56f);
+                Line(mesh, .42f, .15f, .42f, .40f);
+                Line(mesh, .42f, .40f, .58f, .40f);
+                Line(mesh, .58f, .40f, .58f, .15f);
+                break;
             case Symbol.Races:
                 Line(mesh, .23f, .12f, .23f, .88f);
                 Line(mesh, .23f, .83f, .81f, .83f);

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 /// <summary>Independent navigation window. Input gestures may call Show, Hide or Toggle later.</summary>
@@ -7,8 +8,10 @@ public class FloatingNavigation : MonoBehaviour
 {
     public OverdriveMainMenu menu;
     public Canvas contentWindow;
-    public Button racesButton;
-    public Button rankingsButton;
+    [FormerlySerializedAs("racesButton")]
+    public Button homepageButton;
+    [FormerlySerializedAs("rankingsButton")]
+    public Button categoriesButton;
     public Button profileButton;
     public Button settingsButton;
 
@@ -18,21 +21,21 @@ public class FloatingNavigation : MonoBehaviour
         if (menu != null)
         {
             menu.externalNavigation = true;
-            menu.racesButton = racesButton;
-            menu.rankingsButton = rankingsButton;
+            menu.racesButton = homepageButton;
+            menu.rankingsButton = categoriesButton;
             menu.profileButton = profileButton;
             menu.settingsButton = settingsButton;
         }
-        racesButton?.onClick.AddListener(OpenRaces);
-        rankingsButton?.onClick.AddListener(OpenRankings);
+        homepageButton?.onClick.AddListener(OpenHomepage);
+        categoriesButton?.onClick.AddListener(OpenCategories);
         profileButton?.onClick.AddListener(OpenProfile);
         settingsButton?.onClick.AddListener(OpenSettings);
     }
 
     private void OnDestroy()
     {
-        if (racesButton) racesButton.onClick.RemoveListener(OpenRaces);
-        if (rankingsButton) rankingsButton.onClick.RemoveListener(OpenRankings);
+        if (homepageButton) homepageButton.onClick.RemoveListener(OpenHomepage);
+        if (categoriesButton) categoriesButton.onClick.RemoveListener(OpenCategories);
         if (profileButton) profileButton.onClick.RemoveListener(OpenProfile);
         if (settingsButton) settingsButton.onClick.RemoveListener(OpenSettings);
     }
@@ -40,8 +43,8 @@ public class FloatingNavigation : MonoBehaviour
     public void Show() => gameObject.SetActive(true);
     public void Hide() => gameObject.SetActive(false);
     public void Toggle() => gameObject.SetActive(!gameObject.activeSelf);
-    public void OpenRaces() => OpenPage(0);
-    public void OpenRankings() => OpenPage(1);
+    public void OpenHomepage() => OpenPage(0);
+    public void OpenCategories() => OpenPage(1);
     public void OpenProfile() => OpenPage(2);
     public void OpenSettings() => OpenPage(3);
 
@@ -51,6 +54,7 @@ public class FloatingNavigation : MonoBehaviour
         contentWindow.gameObject.SetActive(true);
         var group = contentWindow.GetComponent<CanvasGroup>();
         if (group != null) group.alpha = 1f;
-        menu.SelectNav(index);
+        if (index == 0) menu.ShowHomepage();
+        else menu.SelectNav(index);
     }
 }
