@@ -37,8 +37,8 @@ public static class CircuitPreviewSetup
         var scene = EditorSceneManager.GetActiveScene();
         if (scene.path != "Assets/_Overdrive/Scenes/SampleScene.unity")
             throw new InvalidOperationException("Open SampleScene first.");
-        var player = UnityEngine.Object.FindFirstObjectByType<VideoPlayerController>(FindObjectsInactive.Include);
-        if (player == null) throw new InvalidOperationException("Video player not found.");
+        var player = UnityEngine.Object.FindAnyObjectByType<OverdriveMainMenu>(FindObjectsInactive.Include);
+        if (player == null) throw new InvalidOperationException("Course menu not found.");
         if (UnityEngine.Object.FindFirstObjectByType<CircuitPreview>(FindObjectsInactive.Include) != null)
             throw new InvalidOperationException("Circuit preview already installed; preserve the existing instance.");
         if (AssetDatabase.LoadAssetAtPath<GameObject>(PreviewPath) != null)
@@ -110,10 +110,6 @@ public static class CircuitPreviewSetup
             Undo.RegisterCreatedObjectUndo(instance, "Add circuit preview");
             float offset = ((RectTransform)player.transform).rect.width * player.transform.lossyScale.x * .5f + .39f + .1f;
             instance.transform.SetPositionAndRotation(player.transform.position - player.transform.right * offset, player.transform.rotation);
-            Undo.RecordObject(player, "Wire circuit preview");
-            player.circuitPreview = instance.GetComponent<CircuitPreview>();
-            EditorUtility.SetDirty(player);
-            if (PrefabUtility.IsPartOfPrefabInstance(player)) PrefabUtility.RecordPrefabInstancePropertyModifications(player);
             EditorSceneManager.MarkSceneDirty(scene);
             AssetDatabase.SaveAssets();
             EditorSceneManager.SaveScene(scene);

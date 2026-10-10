@@ -84,7 +84,7 @@ public static class CategoryPagesSetup
         return "Saved Categories, F1's three demo modes and controller/hand UI interaction; Homepage unchanged.";
     }
 
-    private static GameObject Root(string name, Scene scene)
+    internal static GameObject Root(string name, Scene scene)
     {
         var root = new GameObject(name, typeof(RectTransform));
         SceneManager.MoveGameObjectToScene(root, scene);
@@ -101,7 +101,7 @@ public static class CategoryPagesSetup
         return root;
     }
 
-    private static RectTransform Rect(Transform parent, string name, float x, float y, float w, float h)
+    internal static RectTransform Rect(Transform parent, string name, float x, float y, float w, float h)
     {
         var go = new GameObject(name, typeof(RectTransform));
         var rect = (RectTransform)go.transform;
@@ -113,7 +113,7 @@ public static class CategoryPagesSetup
         return rect;
     }
 
-    private static void Stretch(RectTransform rect)
+    internal static void Stretch(RectTransform rect)
     {
         rect.anchorMin = Vector2.zero;
         rect.anchorMax = Vector2.one;
@@ -129,7 +129,7 @@ public static class CategoryPagesSetup
         outline.useGraphicAlpha = true;
     }
 
-    private static RectTransform Card(Transform parent, string name, float x, float y, float w, float h)
+    internal static RectTransform Card(Transform parent, string name, float x, float y, float w, float h)
     {
         var rect = Rect(parent, name, x, y, w, h);
         var image = rect.gameObject.AddComponent<ODHomepageSurface>();
@@ -143,7 +143,7 @@ public static class CategoryPagesSetup
         return rect;
     }
 
-    private static RoundedImage Fill(Transform parent, string name, float x, float y, float w, float h, Color color, float radius = 20)
+    internal static RoundedImage Fill(Transform parent, string name, float x, float y, float w, float h, Color color, float radius = 20)
     {
         var rect = Rect(parent, name, x, y, w, h);
         var image = rect.gameObject.AddComponent<RoundedImage>();
@@ -154,7 +154,7 @@ public static class CategoryPagesSetup
         return image;
     }
 
-    private static TextMeshProUGUI Text(Transform parent, string name, string text, float x, float y, float w, float h,
+    internal static TextMeshProUGUI Text(Transform parent, string name, string text, float x, float y, float w, float h,
         float size = 26, bool bold = false, bool centered = false, bool secondary = false)
     {
         var rect = Rect(parent, name, x, y, w, h);
@@ -171,7 +171,7 @@ public static class CategoryPagesSetup
         return label;
     }
 
-    private static ODNavigationIcon Icon(Transform parent, string name, ODNavigationIcon.Symbol symbol, float x, float y, float size)
+    internal static ODNavigationIcon Icon(Transform parent, string name, ODNavigationIcon.Symbol symbol, float x, float y, float size)
     {
         var rect = Rect(parent, name, x, y, size, size);
         var icon = rect.gameObject.AddComponent<ODNavigationIcon>();
@@ -181,7 +181,7 @@ public static class CategoryPagesSetup
         return icon;
     }
 
-    private static Button Button(Transform parent, string name, string label, float x, float y, float w, float h, bool primary = false, float size = 23)
+    internal static Button Button(Transform parent, string name, string label, float x, float y, float w, float h, bool primary = false, float size = 23)
     {
         var graphic = Fill(parent, name, x, y, w, h, Color.white, h * .5f);
         graphic.raycastTarget = true;

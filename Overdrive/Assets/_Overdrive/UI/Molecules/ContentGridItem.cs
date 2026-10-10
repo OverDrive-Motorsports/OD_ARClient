@@ -44,10 +44,9 @@ public class ContentGridItem : MonoBehaviour,
                      : (_data != null ? _data.title : gameObject.name);
         Debug.Log($"[Overdrive] Opening: {title}");
 
-        if (VideoPlayerController.Instance != null)
-            VideoPlayerController.Instance.Open(title);
-        else
-            Debug.LogWarning("[Overdrive] No VideoPlayerController in scene.");
+        // Old cards no longer launch a separate playback page.
+        var menu = FindAnyObjectByType<OverdriveMainMenu>(FindObjectsInactive.Include);
+        if (menu != null) menu.ShowSport();
     }
 
     public void OnPointerEnter(PointerEventData _)

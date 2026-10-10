@@ -68,11 +68,10 @@ public static class CanvasInteractionVerification
         var module = UnityEngine.Object.FindFirstObjectByType<PointableCanvasModule>();
         Check(module != null, "Canvas input module missing.");
         var results = new List<string>();
-        foreach (var name in new[] { "OverdriveMenuCanvas", "OverdriveNavigationCanvas", "VideoPlayerCanvas", "CircuitPreview" })
+        foreach (var name in new[] { "OverdriveMenuCanvas", "OverdriveNavigationCanvas", "OverdriveCourseTV", "CircuitPreview" })
         {
             var pointable = UnityEngine.Object.FindObjectsByType<PointableCanvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            var target = Array.Find(pointable, p => p.Canvas != null && p.Canvas.name == name && p.gameObject.name != "ISDK_RayCanvasInteraction" && name != "VideoPlayerCanvas");
-            if (name == "VideoPlayerCanvas") target = Array.Find(pointable, p => p.Canvas != null && p.Canvas.name == name);
+            var target = Array.Find(pointable, p => p.Canvas != null && p.Canvas.name == name && p.gameObject.name != "ISDK_RayCanvasInteraction");
             Check(target != null, "Missing bridge: " + name);
             Check(target.GetComponents<PokeInteractable>().Length == 1, "Duplicate poke: " + name);
             var canvas = target.Canvas;

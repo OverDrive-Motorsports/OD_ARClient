@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>A separately movable, miniature 3D circuit beside the video player.</summary>
+/// <summary>Independent map selector and movable, flat miniature circuit.</summary>
 [RequireComponent(typeof(Canvas), typeof(WindowHandle))]
 public sealed class CircuitPreview : MonoBehaviour
 {
@@ -26,10 +26,14 @@ public sealed class CircuitPreview : MonoBehaviour
     public int SelectedIndex { get; private set; } = -1;
     public GameObject CurrentModel { get; private set; }
     private bool _placed;
+    private bool _bound;
 
-    private void Awake()
+    private void Awake() => Initialize();
+
+    public void Initialize()
     {
-        if (circuits == null) return;
+        if (_bound || circuits == null) return;
+        _bound = true;
         for (int i = 0; i < circuits.Length; i++)
         {
             int index = i;
@@ -38,16 +42,18 @@ public sealed class CircuitPreview : MonoBehaviour
         }
     }
 
-    public void ShowBeside(RectTransform player)
+    public void ShowBeside(RectTransform player, bool onRight = false)
     {
         if (player == null) return;
+        Initialize();
         var canvas = GetComponent<Canvas>();
         canvas.worldCamera = Camera.main;
         var rect = (RectTransform)transform;
         float offset = player.rect.width * Mathf.Abs(player.lossyScale.x) * 0.5f
                      + rect.rect.width * Mathf.Abs(rect.lossyScale.x) * 0.5f + playerGap;
-        // Standings occupy the right; circuits open on the left.
-        transform.SetPositionAndRotation(player.position - player.right * offset, player.rotation);
+        var center = player.TransformPoint(player.rect.center);
+        transform.SetPositionAndRotation(center + player.right * (onRight ? offset : -offset), player.rotation);
+        transform.position -= transform.TransformVector(rect.rect.center);
         gameObject.SetActive(true);
         if (circuitRoot != null)
         {

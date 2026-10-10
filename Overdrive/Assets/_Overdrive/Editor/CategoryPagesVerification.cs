@@ -35,10 +35,25 @@ public static class CategoryPagesVerification
             var menu = clone.GetComponent<OverdriveMainMenu>();
             var directory = clone.GetComponentInChildren<ODCategoriesPage>(true);
             var sport = clone.GetComponentInChildren<ODSportPage>(true);
+            sport.circuitPreview = null;
+            if (sport.television != null && sport.television.videoPanel != null)
+            {
+                var media = UnityEngine.Object.Instantiate(sport.television.videoPanel);
+                SceneManager.MoveGameObjectToScene(media, preview);
+                media.GetComponent<ODCourseVideoDock>().courseWindow = (RectTransform)menu.transform;
+                media.GetComponent<ODCourseVideoDock>().Align();
+                CourseMediaSetup.ConnectPanel(sport.television, media);
+            }
+            var catalog = clone.GetComponentInChildren<ODReplayCatalog>(true);
+            Check(catalog != null && menu.replayCatalogPanel == catalog.gameObject, "Replay catalogue wiring missing.");
             directory.persistFavorites = false;
             directory.menu = menu;
             directory.sport = sport;
             sport.menu = menu;
+            catalog.menu = menu;
+            catalog.sport = sport;
+            catalog.Initialize();
+            catalog.Initialize();
             var navGO = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(
                 "Assets/_Overdrive/UI/Prefabs/Screens/FloatingNavigation.prefab"), preview);
             navGO.transform.position = new Vector3(-5, 0, 0);
@@ -81,10 +96,41 @@ public static class CategoryPagesVerification
             sport.demoButton.onClick.Invoke();
             Check(sport.currentMode == ODSportPage.Mode.LiveSession && sport.status.text == "Live - Course", "Live demo state failed.");
             sport.demoButton.onClick.Invoke();
+            Check(sport.currentMode == ODSportPage.Mode.Replay && sport.status.text == "Replay", "Fourth demo state failed.");
+            sport.demoButton.onClick.Invoke();
             Check(sport.currentMode == ODSportPage.Mode.OffWeekend, "Off-weekend demo state failed.");
             sport.demoButton.onClick.Invoke();
             Check(sport.currentMode == ODSportPage.Mode.Weekend && sport.status.text == "Week-end en cours", "Weekend demo state failed.");
             Check(sport.modePanels.Count(p => p.activeSelf) == 1, "Multiple states overlap.");
+            Check(sport.modePanels.Length == 4 && catalog.entries.Length == 6, "Expected four states and six mock replays.");
+            for (int i = 0; i < 4; i++)
+            {
+                sport.SetMode((ODSportPage.Mode)i);
+                sport.replayButton.onClick.Invoke();
+                Check(catalog.gameObject.activeSelf && !sport.gameObject.activeSelf && !directory.gameObject.activeSelf, "Catalogue routing failed.");
+                catalog.backButton.onClick.Invoke();
+                Check(sport.gameObject.activeSelf && !catalog.gameObject.activeSelf && sport.currentMode == (ODSportPage.Mode)i, "Catalogue back lost the previous state.");
+            }
+            for (int i = 0; i < catalog.entries.Length; i++)
+            {
+                sport.replayButton.onClick.Invoke();
+                catalog.entries[i].openButton.onClick.Invoke();
+                Check(sport.gameObject.activeSelf && !catalog.gameObject.activeSelf && sport.currentMode == ODSportPage.Mode.Replay,
+                    "Replay selection did not open state four.");
+                Check(sport.replayId == catalog.entries[i].id && sport.heading.text == catalog.entries[i].grandPrix && sport.status.text == "Replay",
+                    "Selected replay metadata or badge mismatch.");
+                Check(sport.subtitle.text.Contains(catalog.entries[i].season) && sport.modePanels.Count(p => p.activeSelf) == 1,
+                    "Replay subtitle or exclusive panel failed.");
+            }
+            sport.replayButton.onClick.Invoke();
+            catalog.OpenReplay(-1);
+            catalog.OpenReplay(catalog.entries.Length);
+            Check(catalog.gameObject.activeSelf, "Invalid replay selection changed the page.");
+            nav.profileButton.onClick.Invoke();
+            Check(!catalog.gameObject.activeSelf && !sport.gameObject.activeSelf, "Profile left the catalogue visible.");
+            nav.categoriesButton.onClick.Invoke();
+            directory.cards[0].openButton.onClick.Invoke();
+            Check(sport.currentMode == ODSportPage.Mode.Weekend && sport.heading.text == sport.mockGrandPrix, "Returning to F1 retained replay presentation.");
             sport.backButton.onClick.Invoke();
             Check(directory.gameObject.activeSelf && !sport.gameObject.activeSelf, "Back button failed.");
 
@@ -104,17 +150,28 @@ public static class CategoryPagesVerification
             var overflow = new List<string>();
             Capture(camera, canvasGO, "/private/tmp/overdrive-categories.png", overflow);
             directory.cards[0].openButton.onClick.Invoke();
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
             {
                 sport.SetMode((ODSportPage.Mode)i);
                 Check(sport.modePanels.Count(p => p.activeSelf) == 1, "Mode exclusivity failed.");
                 Capture(camera, canvasGO, "/private/tmp/overdrive-f1-mode-" + i + ".png", overflow);
             }
+            sport.replayButton.onClick.Invoke();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(catalog.scroll.content);
+            Check(catalog.scroll.content.rect.height > catalog.scroll.viewport.rect.height, "Replay catalogue does not scroll.");
+            catalog.scroll.verticalNormalizedPosition = 1;
+            Capture(camera, canvasGO, "/private/tmp/overdrive-replay-catalog.png", overflow);
+            catalog.scroll.verticalNormalizedPosition = 0;
+            Check(catalog.scroll.content.anchoredPosition.y > 0, "Cannot reach the final replays.");
+            Capture(camera, canvasGO, "/private/tmp/overdrive-replay-catalog-bottom.png", overflow);
+            catalog.entries[0].openButton.onClick.Invoke();
+            Capture(camera, canvasGO, "/private/tmp/overdrive-replay-selected.png", overflow);
+            sport.replayButton.onClick.Invoke();
             nav.homepageButton.onClick.Invoke();
-            Check(menu.homepagePanel.activeSelf && !directory.gameObject.activeSelf && !sport.gameObject.activeSelf, "Returning to Homepage failed.");
+            Check(menu.homepagePanel.activeSelf && !directory.gameObject.activeSelf && !sport.gameObject.activeSelf && !catalog.gameObject.activeSelf, "Returning to Homepage failed.");
             Check(menu.homepagePanel.GetComponentsInChildren<TextMeshProUGUI>(true).Length == 4, "Homepage content changed.");
             Check(overflow.Count == 0, "Text overflow: " + string.Join(", ", overflow));
-            return "PASS: 4 wrist tabs, category/profile/home navigation, search/empty result, favorites, scrolling, F1 default, 3 exclusive modes, back button, Homepage untouched and text bounds. Four isolated screenshots captured.";
+            return "PASS: wrist/category/profile/home navigation, favorites/search, four exclusive F1 modes, replay button in every mode, catalogue/back preserving state, all six replay selections and metadata, catalogue scrolling, F1 default restored, Homepage unchanged, text bounds. Eight isolated screenshots captured.";
         }
         finally { EditorSceneManager.ClosePreviewScene(preview); }
     }

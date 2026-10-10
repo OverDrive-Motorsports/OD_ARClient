@@ -58,19 +58,28 @@ public class RaceRankingManager : MonoBehaviour
     private readonly List<Driver> _order = new List<Driver>();
     private int  _lap = 1;
     private bool _spawned;
+    public int DriverCount => _order.Count;
+    public int CurrentLap => _lap;
 
     // ── OnEnable so the simulation restarts every time the widget is shown ───
     private void OnEnable()
     {
-        if (!_spawned) Spawn();
+        Initialize();
         if (!_spawned) return;
-
-        RefreshAll(instant: true);
+        if (!Application.isPlaying) return;
         StartCoroutine(LapRoutine());
         StartCoroutine(OvertakeRoutine());
     }
 
     private void OnDisable() { StopAllCoroutines(); }
+
+    public void Initialize()
+    {
+        if (!_spawned) Spawn();
+        if (!_spawned) return;
+        RefreshAll(instant: true);
+        UpdateLapLabel();
+    }
 
     private void Spawn()
     {
@@ -108,8 +117,7 @@ public class RaceRankingManager : MonoBehaviour
         while (_lap < totalLaps)
         {
             yield return new WaitForSeconds(lapDuration);
-            _lap++;
-            UpdateLapLabel();
+            AdvanceLap();
         }
     }
 
@@ -119,21 +127,32 @@ public class RaceRankingManager : MonoBehaviour
         {
             yield return new WaitForSeconds(Random.Range(overtakeMin, overtakeMax));
 
-            int from = Random.Range(1, _order.Count);
-            int jump = Random.Range(1, Mathf.Min(3, from) + 1);
-            int to   = from - jump;
-
-            var d = _order[from];
-            _order.RemoveAt(from);
-            _order.Insert(to, d);
-
-            // small gap churn so numbers feel alive
-            foreach (var drv in _order)
-                drv.gap = Mathf.Max(0.05f,
-                    drv.gap + Random.Range(-0.35f, 0.35f));
-
-            RefreshAll(instant: false);
+            SimulateOvertake();
         }
+    }
+
+    public void AdvanceLap()
+    {
+        _lap = Mathf.Min(_lap + 1, totalLaps);
+        UpdateLapLabel();
+    }
+
+    public void SimulateOvertake()
+    {
+        if (_order.Count < 2) return;
+        int from = Random.Range(1, _order.Count);
+        int jump = Random.Range(1, Mathf.Min(3, from) + 1);
+        int to   = from - jump;
+
+        var d = _order[from];
+        _order.RemoveAt(from);
+        _order.Insert(to, d);
+
+        // Small gap churn so numbers feel alive.
+        foreach (var drv in _order)
+            drv.gap = Mathf.Max(0.05f, drv.gap + Random.Range(-0.35f, 0.35f));
+
+        RefreshAll(instant: !Application.isPlaying);
     }
 
     // ── refresh ───────────────────────────────────────────────────────────────
@@ -142,8 +161,7 @@ public class RaceRankingManager : MonoBehaviour
         for (int i = 0; i < _order.Count; i++)
         {
             var d = _order[i];
-            string gap = i == 0 ? "Leader"
-                       : (Random.value > 0.25f ? "+" : "-") + d.gap.ToString("0.000");
+            string gap = i == 0 ? "Leader" : "+" + d.gap.ToString("0.000");
 
             d.card.Set(i + 1, d.code, d.team, gap);
 
@@ -156,6 +174,6 @@ public class RaceRankingManager : MonoBehaviour
 
     private void UpdateLapLabel()
     {
-        if (lapText != null) lapText.text = $"LAP {_lap}/{totalLaps}";
+        if (lapText != null) lapText.text = $"Tour {_lap}/{totalLaps}";
     }
 }
