@@ -25,6 +25,7 @@ public class OverdriveMainMenu : MonoBehaviour
     [Header("Category directory and selected sport")]
     public GameObject categoriesPanel;
     public GameObject sportPanel;
+    public GameObject replayCatalogPanel;
     public Vector2 sportPageSize = new Vector2(1200f, 880f);
 
     [Header("Category (auto-found if empty)")]
@@ -78,6 +79,11 @@ public class OverdriveMainMenu : MonoBehaviour
         // Wire category click
         categoryButton?.onClick.AddListener(CycleCategory);
 
+        // The course may start inactive. Initialize its separately docked TV now,
+        // so an accidentally enabled TV canvas cannot remain visible on Homepage.
+        if (sportPanel != null)
+            sportPanel.GetComponent<ODSportPage>()?.television?.Initialize();
+
         if (homepagePanel != null) ShowHomepage();
         else SelectNav(0);
     }
@@ -106,6 +112,7 @@ public class OverdriveMainMenu : MonoBehaviour
     {
         if (categoriesPanel != null) categoriesPanel.SetActive(false);
         if (sportPanel != null) sportPanel.SetActive(false);
+        if (replayCatalogPanel != null) replayCatalogPanel.SetActive(false);
         if (homepagePanel == null) return;
         homepagePanel.SetActive(visible);
         foreach (var name in new[] { "Title", "SearchBar", "Body" })
@@ -127,11 +134,19 @@ public class OverdriveMainMenu : MonoBehaviour
         ShowCustomPage(sportPanel);
     }
 
+    public void ShowReplayCatalog()
+    {
+        if (replayCatalogPanel == null) return;
+        SelectNav(1);
+        ShowCustomPage(replayCatalogPanel);
+    }
+
     private void ShowCustomPage(GameObject page)
     {
         if (homepagePanel != null) homepagePanel.SetActive(false);
         if (categoriesPanel != null) categoriesPanel.SetActive(page == categoriesPanel);
         if (sportPanel != null) sportPanel.SetActive(page == sportPanel);
+        if (replayCatalogPanel != null) replayCatalogPanel.SetActive(page == replayCatalogPanel);
         foreach (var name in new[] { "Title", "SearchBar", "Body" })
         {
             var child = transform.Find(name);
