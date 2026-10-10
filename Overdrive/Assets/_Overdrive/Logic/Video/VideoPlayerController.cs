@@ -27,6 +27,9 @@ public class VideoPlayerController : MonoBehaviour
     [Tooltip("Horizontal offset of the ranking widget from the player (metres)")]
     public float rankingSideOffset = 1.0f;
 
+    [Header("Circuit Miniature")]
+    public CircuitPreview circuitPreview;
+
     private CanvasGroup _cg;
     private bool _seeking;
 
@@ -48,6 +51,9 @@ public class VideoPlayerController : MonoBehaviour
             var mgr = FindFirstObjectByType<RaceRankingManager>(FindObjectsInactive.Include);
             if (mgr != null) rankingWidget = mgr.gameObject;
         }
+
+        if (circuitPreview == null)
+            circuitPreview = FindFirstObjectByType<CircuitPreview>(FindObjectsInactive.Include);
 
         if (scrubSlider != null)
             scrubSlider.onValueChanged.AddListener(OnScrub);
@@ -98,6 +104,7 @@ public class VideoPlayerController : MonoBehaviour
         }
         UpdatePlayLabel();
         ShowRanking();
+        if (circuitPreview != null) circuitPreview.ShowBeside((RectTransform)transform);
 
         // Fade only (no scale): the root's own localScale is the baked 0.001
         // world-space canvas scale, so UITransitions must not touch transform here.
@@ -118,6 +125,7 @@ public class VideoPlayerController : MonoBehaviour
         if (videoPlayer != null) videoPlayer.Stop();
 
         if (rankingWidget != null) rankingWidget.SetActive(false);
+        if (circuitPreview != null) circuitPreview.Hide();
 
         if (menuCanvas != null)
         {
@@ -126,6 +134,16 @@ public class VideoPlayerController : MonoBehaviour
             menuCanvas.gameObject.SetActive(true);
         }
         gameObject.SetActive(false);
+    }
+
+    private void OnDisable()
+    {
+        if (circuitPreview != null) circuitPreview.Hide();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
     }
 
     /// <summary>Places the standings widget beside the video and shows it.</summary>

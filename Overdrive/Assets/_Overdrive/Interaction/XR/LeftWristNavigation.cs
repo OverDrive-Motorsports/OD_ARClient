@@ -110,8 +110,14 @@ public class LeftWristNavigation : MonoBehaviour
         palm = Vector3.up;
         // Query the LEFT device, so switching the right hand cannot change this menu.
         var device = OVRInput.GetActiveControllerForHand(OVRInput.Handedness.LeftHanded);
-        if (device == OVRInput.Controller.LTouch)
+        // In simultaneous mode, hands may remain the "active" input even while
+        // a Touch controller is held. Prefer that controller only when held (or
+        // explicitly active), never just because it is connected on a table.
+        bool leftControllerHeld = OVRInput.GetControllerIsInHandState(OVRInput.Hand.HandLeft)
+            == OVRInput.ControllerInHandState.ControllerInHand;
+        if (device == OVRInput.Controller.LTouch || leftControllerHeld)
         {
+            device = OVRInput.Controller.LTouch;
             if (cameraRig == null || !OVRInput.GetControllerPositionTracked(device)
                 || !OVRInput.GetControllerOrientationTracked(device)) return false;
             // Use raw grip pose in tracking space, without a visual-model offset.

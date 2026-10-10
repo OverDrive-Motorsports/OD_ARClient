@@ -17,6 +17,16 @@ public class OverdriveMainMenu : MonoBehaviour
     [Tooltip("Navigation button events are owned by a separate navigation window.")]
     public bool externalNavigation;
 
+    [Header("Homepage")]
+    public GameObject homepagePanel;
+    public Vector2 homepageSize = new Vector2(1200f, 880f);
+    public Vector2 menuSize = new Vector2(1200f, 692f);
+
+    [Header("Category directory and selected sport")]
+    public GameObject categoriesPanel;
+    public GameObject sportPanel;
+    public Vector2 sportPageSize = new Vector2(1200f, 880f);
+
     [Header("Category (auto-found if empty)")]
     public Button categoryButton;
     public TextMeshProUGUI categoryLabel;
@@ -68,7 +78,68 @@ public class OverdriveMainMenu : MonoBehaviour
         // Wire category click
         categoryButton?.onClick.AddListener(CycleCategory);
 
-        SelectNav(0);
+        if (homepagePanel != null) ShowHomepage();
+        else SelectNav(0);
+    }
+
+    public void ShowHomepage()
+    {
+        Initialize();
+        if (homepagePanel == null) { SelectNav(0); return; }
+        SetHomepageVisible(true);
+        foreach (var button in _navButtons)
+        {
+            if (button == null) continue;
+            bool active = externalNavigation && button == racesButton;
+            var colors = button.colors;
+            colors.normalColor = active ? activeNavColor : inactiveNavColor;
+            colors.selectedColor = colors.normalColor;
+            button.colors = colors;
+            var label = button.transform.Find("Label")?.GetComponent<TextMeshProUGUI>();
+            if (label != null) label.color = active ? activeTextColor : inactiveTextColor;
+            var icon = button.GetComponentInChildren<ODNavigationIcon>(true);
+            if (icon != null) icon.color = active ? activeTextColor : inactiveTextColor;
+        }
+    }
+
+    private void SetHomepageVisible(bool visible)
+    {
+        if (categoriesPanel != null) categoriesPanel.SetActive(false);
+        if (sportPanel != null) sportPanel.SetActive(false);
+        if (homepagePanel == null) return;
+        homepagePanel.SetActive(visible);
+        foreach (var name in new[] { "Title", "SearchBar", "Body" })
+        {
+            var child = transform.Find(name);
+            if (child != null) child.gameObject.SetActive(!visible);
+        }
+        var background = GetComponent<Image>();
+        if (background != null) background.enabled = !visible;
+        ((RectTransform)transform).sizeDelta = visible ? homepageSize : menuSize;
+    }
+
+    public void ShowCategories() => SelectNav(1);
+
+    public void ShowSport()
+    {
+        if (sportPanel == null) return;
+        SelectNav(1);
+        ShowCustomPage(sportPanel);
+    }
+
+    private void ShowCustomPage(GameObject page)
+    {
+        if (homepagePanel != null) homepagePanel.SetActive(false);
+        if (categoriesPanel != null) categoriesPanel.SetActive(page == categoriesPanel);
+        if (sportPanel != null) sportPanel.SetActive(page == sportPanel);
+        foreach (var name in new[] { "Title", "SearchBar", "Body" })
+        {
+            var child = transform.Find(name);
+            if (child != null) child.gameObject.SetActive(false);
+        }
+        var background = GetComponent<Image>();
+        if (background != null) background.enabled = false;
+        ((RectTransform)transform).sizeDelta = sportPageSize;
     }
 
     // ── Nav ───────────────────────────────────────────────────────────────────
@@ -76,6 +147,7 @@ public class OverdriveMainMenu : MonoBehaviour
     {
         Initialize();
         if (index < 0 || index >= _navButtons.Length) return;
+        SetHomepageVisible(false);
         for (int i = 0; i < _navButtons.Length; i++)
         {
             if (_navButtons[i] == null) continue;
@@ -111,6 +183,8 @@ public class OverdriveMainMenu : MonoBehaviour
         // Category selector only makes sense on the Races tab
         if (categoryLabel != null)
             categoryLabel.gameObject.SetActive(index == 0);
+
+        if (index == 1 && categoriesPanel != null) ShowCustomPage(categoriesPanel);
     }
 
     // ── Category ──────────────────────────────────────────────────────────────

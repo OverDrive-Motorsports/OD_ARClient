@@ -14,7 +14,10 @@ public class WindowHandle : MonoBehaviour
     [Header("Pill Appearance")]
     public float pillWidth = 0.12f;   // world-space metres
     public float pillThickness = 0.014f;
-    public float belowOffset = 0.022f;
+    public float belowOffset   = 0.022f;
+    [Tooltip("Use a local-space handle position for a horizontal tabletop model.")]
+    public bool customPillPosition;
+    public Vector3 pillLocalPosition;
 
     public Color idleColor = new Color(1f, 1f, 1f, 0.85f);
     public Color hoverColor = new Color(0.85f, 0.70f, 0.20f, 1f);
@@ -61,6 +64,18 @@ public class WindowHandle : MonoBehaviour
         else CheckGrabStart();
     }
 
+    private void OnDisable()
+    {
+        // A window hidden during a grab must not keep following the old ray
+        // when it opens again (notably the circuit preview next to the player).
+        EndGrab();
+    }
+
+    private void OnDestroy()
+    {
+        if (_pillMat != null) Destroy(_pillMat);
+    }
+
     // ── pill ────────────────────────────────────────────────────────────────────
     private void BuildPill()
     {
@@ -77,6 +92,7 @@ public class WindowHandle : MonoBehaviour
         float halfH = GetComponent<RectTransform>().rect.height * 0.5f;
 
         go.transform.localPosition = new Vector3(0f, -halfH - belowOffset * inv, 0f);
+        if (customPillPosition) go.transform.localPosition = pillLocalPosition;
         go.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
         go.transform.localScale = new Vector3(
             pillThickness * inv * 0.5f,
