@@ -9,11 +9,23 @@ application does with that data (that's [Logic](../../Logic/Doc/README.md)'s job
 
 ## Current state
 
-`Network/` holds every real network call so far: a gateway health check,
-the championship endpoints, and the race/telemetry endpoints. Nothing
-displayed in the app uses this yet though — screens still read from static
-mocks (see [Data/Mock](../../Data/Doc/README.md)); wiring a screen to
-`ChampionshipApi`/`RaceDataApi` is the next step.
+`Network/` talks to the OverDrive gateway (`OD_Backend/gateway`, routes in
+`gateway/ROUTES.md`):
+
+- `ODApiConfig` — gateway URL (Editor / headset), `GATEWAY_AUTH_TOKEN`,
+  championship code, timeout, live polling period. Loaded from
+  `Core/Resources/ODApiConfig.asset`, which is **git-ignored** (it holds the
+  token): create it with *Assets > Create > Overdrive > API Config*.
+- `ODApiClient` — async `UnityWebRequest` + Newtonsoft, Bearer header, every
+  failure turned into an `ODApiException` (Unreachable / Unauthorized /
+  HttpError / InvalidResponse).
+- `ODBackendApi` — one typed method per route used by the app, returning DTOs.
+
+The headset reaches the backend through the machine's LAN IP
+(`deviceBaseUrl`); plain HTTP is allowed in Player Settings for that.
+There is no WebSocket yet: the live state is polled.
+
+Remaining folders to add when needed:
 
 ```
 Core/
