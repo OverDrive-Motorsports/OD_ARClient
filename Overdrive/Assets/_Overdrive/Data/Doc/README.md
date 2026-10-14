@@ -15,12 +15,16 @@ Data/
 
 ## Current state
 
-- `DTO/` and `Entities/` are empty: no backend exchange exists yet in the
-  project (see [Core](../../Core/Doc/README.md)).
-- `Mock/ODMockData.cs` (moved from `OD_UI/Dev/`) holds the fake data
-  currently used by UI and Logic to display rankings, drivers, videos, etc.
-  Eventually these mocks should be replaced by real `Entities` fed through
-  `Core`.
+- `DTO/` mirrors the backend JSON (`ChampionshipDtos`, `RaceDataDtos`). Every
+  DTO name ends with `Dto` so `DTO/link.xml` keeps them from IL2CPP stripping.
+- `Entities/` holds what the championship panel and replay gallery display
+  (`OffSeasonData`, `WeekendData`, `LiveSessionData`, `ReplayData`,
+  `SeasonStandings`).
+- `Mappers/ODChampionshipMapper` converts DTOs into entities (pure functions).
+- `Mock/` — `ODOffSeasonMockData`, `ODWeekendMockData`, `ODLiveSessionMockData`
+  and `ODReplayMockData` are ported from OD_Mobile and shown when the backend
+  is unreachable and the user picks the demo data. `ODMockData.cs` (moved from
+  `OD_UI/Dev/`) still feeds the older widgets.
 
 ## Allowed dependencies
 

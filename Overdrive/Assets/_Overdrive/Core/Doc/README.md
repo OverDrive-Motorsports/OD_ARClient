@@ -9,9 +9,23 @@ application does with that data (that's [Logic](../../Logic/Doc/README.md)'s job
 
 ## Current state
 
-Empty for now: the project doesn't make any real network calls today, all
-displayed data comes from static mocks (see [Data/Mock](../../Data/Doc/README.md)).
-Suggested structure once the first networking need shows up:
+`Network/` talks to the OverDrive gateway (`OD_Backend/gateway`, routes in
+`gateway/ROUTES.md`):
+
+- `ODApiConfig` — gateway URL (Editor / headset), `GATEWAY_AUTH_TOKEN`,
+  championship code, timeout, live polling period. Loaded from
+  `Core/Resources/ODApiConfig.asset`, which is **git-ignored** (it holds the
+  token): create it with *Assets > Create > Overdrive > API Config*.
+- `ODApiClient` — async `UnityWebRequest` + Newtonsoft, Bearer header, every
+  failure turned into an `ODApiException` (Unreachable / Unauthorized /
+  HttpError / InvalidResponse).
+- `ODBackendApi` — one typed method per route used by the app, returning DTOs.
+
+The headset reaches the backend through the machine's LAN IP
+(`deviceBaseUrl`); plain HTTP is allowed in Player Settings for that.
+There is no WebSocket yet: the live state is polled.
+
+Remaining folders to add when needed:
 
 ```
 Core/

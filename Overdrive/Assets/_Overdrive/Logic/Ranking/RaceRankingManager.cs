@@ -7,6 +7,8 @@ using TMPro;
 /// Drives the live standings widget: spawns 20 driver rows from a template,
 /// advances the lap counter, and performs random overtakes with smooth
 /// row reordering — simulating live race data.
+/// Once ShowEntries() is called (backend or demo data), the simulation stops
+/// for good and the rows mirror those entries instead.
 /// </summary>
 public class RaceRankingManager : MonoBehaviour
 {
@@ -65,7 +67,7 @@ public class RaceRankingManager : MonoBehaviour
     private void OnEnable()
     {
         Initialize();
-        if (!_spawned) return;
+        if (!_spawned || _external) return;
         if (!Application.isPlaying) return;
         StartCoroutine(LapRoutine());
         StartCoroutine(OvertakeRoutine());
@@ -76,7 +78,7 @@ public class RaceRankingManager : MonoBehaviour
     public void Initialize()
     {
         if (!_spawned) Spawn();
-        if (!_spawned) return;
+        if (!_spawned || _external) return;
         RefreshAll(instant: true);
         UpdateLapLabel();
     }
@@ -175,5 +177,99 @@ public class RaceRankingManager : MonoBehaviour
     private void UpdateLapLabel()
     {
         if (lapText != null) lapText.text = $"Tour {_lap}/{totalLaps}";
+    }
+
+    // ── real data (backend or demo data) ──────────────────────────────────────
+    private static readonly Color FastestLap   = new Color(.72f, .55f, 1f);
+    private static readonly Color LastLapColor = new Color(1f, 1f, 1f, .65f);   // the row template's secondary text
+    private static readonly Color GapGold      = new Color(.93f, .78f, .45f);
+    private bool _external;
+
+    /// <summary>
+    /// Stops the simulation and shows one row per entry (P1 first). Rows are
+    /// matched by driver between calls, so a position change slides like an
+    /// overtake; rows are added from the template or hidden as needed.
+    /// </summary>
+    public void ShowEntries(IList<LiveEntry> entries, string lapLabel, string sourceNotice)
+    {
+        if (!_spawned) Spawn();
+        if (!_spawned || entries == null) return;
+        _external = true;
+        StopAllCoroutines();
+
+        var rows = new Driver[entries.Count];
+        var used = new HashSet<Driver>();
+        for (int i = 0; i < entries.Count; i++)
+        {
+            rows[i] = _order.Find(d => d.code == entries[i].name && !used.Contains(d));
+            if (rows[i] != null) used.Add(rows[i]);
+        }
+        var free = new Queue<Driver>(_order.FindAll(d => !used.Contains(d)));
+        var fresh = new HashSet<Driver>();
+        for (int i = 0; i < entries.Count; i++)
+        {
+            if (rows[i] != null) continue;
+            rows[i] = free.Count > 0 ? free.Dequeue() : SpawnRow();
+            fresh.Add(rows[i]);
+        }
+
+        _order.Clear();
+        _order.AddRange(rows);
+        foreach (var spare in free)
+        {
+            spare.card.gameObject.SetActive(false);
+            _order.Add(spare);
+        }
+
+        for (int i = 0; i < entries.Count; i++)
+        {
+            LiveEntry entry = entries[i];
+            Driver d = rows[i];
+            d.code = entry.name;
+            d.team = entry.teamColor;
+            d.card.gameObject.SetActive(true);
+            d.card.Set(entry.position, DisplayCode(entry), entry.teamColor, entry.gap);
+            if (d.card.gapText != null) d.card.gapText.color = GapGold;
+
+            SetCell(d.card, "Tyre", string.IsNullOrEmpty(entry.tyreCompound) ? "--"
+                : entry.tyreAgeLaps >= 0 ? $"{entry.tyreCompound} {entry.tyreAgeLaps}t" : entry.tyreCompound);
+            SetCell(d.card, "Stops", entry.pitStops >= 0 ? entry.pitStops.ToString() : "--");
+            var lastLap = SetCell(d.card, "LastLap", string.IsNullOrEmpty(entry.lastLap) ? "--:--.---" : entry.lastLap);
+            if (lastLap != null) lastLap.color = entry.isFastestLap ? FastestLap : LastLapColor;
+
+            if (fresh.Contains(d)) d.card.SetYInstant(SlotY(i));
+            else                   d.card.MoveToY(SlotY(i), moveDuration);
+        }
+
+        if (container != null)
+            container.sizeDelta = new Vector2(container.sizeDelta.x, entries.Count * (rowHeight + rowSpacing));
+        if (lapText != null) lapText.text = lapLabel ?? "";
+
+        var hint = transform.Find("ScrollHint")?.GetComponent<TextMeshProUGUI>();
+        if (hint != null) hint.text = entries.Count > 9 ? $"{entries.Count} pilotes · Faites défiler pour voir la suite" : $"{entries.Count} pilotes";
+        var notice = transform.Find("DemoNotice")?.GetComponent<TextMeshProUGUI>();
+        if (notice != null) notice.text = sourceNotice ?? "";
+    }
+
+    private Driver SpawnRow()
+    {
+        var go = Instantiate(cardTemplate, container);
+        go.name = "Row_" + _order.Count;
+        go.SetActive(true);
+        return new Driver { card = go.GetComponent<RaceStandingCard>() };
+    }
+
+    private static string DisplayCode(LiveEntry entry)
+    {
+        if (!string.IsNullOrEmpty(entry.code)) return entry.code;
+        string name = entry.name ?? "";
+        return name.Substring(0, Mathf.Min(3, name.Length)).ToUpperInvariant();
+    }
+
+    private static TextMeshProUGUI SetCell(RaceStandingCard card, string child, string value)
+    {
+        var label = card.transform.Find(child)?.GetComponent<TextMeshProUGUI>();
+        if (label != null) label.text = value;
+        return label;
     }
 }
