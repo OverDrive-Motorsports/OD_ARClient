@@ -5,7 +5,8 @@ using UnityEngine.UI;
 [RequireComponent(typeof(CanvasRenderer))]
 public class ODNavigationIcon : MaskableGraphic
 {
-    public enum Symbol { Races, Rankings, Profile, Settings, Homepage, Categories, Star, Search, Back }
+    // New symbols go at the end: prefabs serialize the enum as an index.
+    public enum Symbol { Races, Rankings, Profile, Settings, Homepage, Categories, Star, Search, Back, Calendar, Trophy }
     public Symbol symbol;
 
     protected override void OnPopulateMesh(VertexHelper mesh)
@@ -13,6 +14,28 @@ public class ODNavigationIcon : MaskableGraphic
         mesh.Clear();
         switch (symbol)
         {
+            case Symbol.Calendar:
+                Outline(mesh, .14f, .14f, .72f, .64f);
+                Line(mesh, .14f, .62f, .86f, .62f);
+                Line(mesh, .34f, .70f, .34f, .88f);
+                Line(mesh, .66f, .70f, .66f, .88f);
+                for (int x = 0; x < 3; x++)
+                    for (int y = 0; y < 2; y++)
+                        Box(mesh, .27f + x * .18f, .24f + y * .17f, .09f, .08f);
+                break;
+            case Symbol.Trophy:
+                Line(mesh, .28f, .86f, .72f, .86f);
+                Ring(mesh, new Vector2(.5f, .62f), .22f, 180, 360);
+                Line(mesh, .28f, .86f, .28f, .62f);
+                Line(mesh, .72f, .86f, .72f, .62f);
+                Ring(mesh, new Vector2(.24f, .70f), .09f, 90, 270);
+                Ring(mesh, new Vector2(.76f, .70f), .09f, -90, 90);
+                Line(mesh, .5f, .40f, .5f, .24f);
+                Line(mesh, .32f, .14f, .68f, .14f);
+                Line(mesh, .38f, .24f, .62f, .24f);
+                Line(mesh, .38f, .24f, .32f, .14f);
+                Line(mesh, .62f, .24f, .68f, .14f);
+                break;
             case Symbol.Categories:
                 Outline(mesh, .13f, .55f, .30f, .30f);
                 Outline(mesh, .57f, .55f, .30f, .30f);

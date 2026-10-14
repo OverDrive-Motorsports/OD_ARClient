@@ -65,8 +65,8 @@ public static class CategoryPagesVerification
             directory.Initialize(); // Repeated opening must not duplicate handlers.
             sport.Initialize();
             Check(nav.GetComponentsInChildren<Button>(true).Length == 4, "Wrist tab count changed.");
-            Check(nav.categoriesButton.GetComponentInChildren<TextMeshProUGUI>(true).text == "Catégories", "Wrong wrist label.");
-            Check(nav.categoriesButton.GetComponentInChildren<ODNavigationIcon>(true).symbol == ODNavigationIcon.Symbol.Categories, "Wrong wrist icon.");
+            Check(nav.categoriesButton.GetComponentInChildren<TextMeshProUGUI>(true).text == "Championnats", "Wrong wrist label.");
+            Check(nav.categoriesButton.GetComponentInChildren<ODNavigationIcon>(true).symbol == ODNavigationIcon.Symbol.Trophy, "Wrong wrist icon.");
             nav.homepageButton.onClick.Invoke();
             Check(menu.homepagePanel.activeSelf && !directory.gameObject.activeSelf && !sport.gameObject.activeSelf, "Startup Homepage route failed.");
             nav.categoriesButton.onClick.Invoke();

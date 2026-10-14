@@ -20,13 +20,18 @@ public class OverdriveMainMenu : MonoBehaviour
     [Header("Homepage")]
     public GameObject homepagePanel;
     public Vector2 homepageSize = new Vector2(1200f, 880f);
-    public Vector2 menuSize = new Vector2(1200f, 692f);
 
     [Header("Category directory and selected sport")]
     public GameObject categoriesPanel;
     public GameObject sportPanel;
     public GameObject replayCatalogPanel;
-    public Vector2 sportPageSize = new Vector2(1200f, 880f);
+    [Tooltip("Created at runtime next to the sport page when left empty (see ODCalendarPage).")]
+    public GameObject calendarPanel;
+    [Tooltip("Created at runtime next to the sport page when left empty (see ODProfilePage).")]
+    public GameObject profilePanel;
+
+    /// <summary>Tab of the navigation bar matching the visible page: 0 Home, 1 Championships, 2 Calendar, 3 Profile, -1 none.</summary>
+    public int ActiveTab { get; private set; }
 
     [Header("Category (auto-found if empty)")]
     public Button          categoryButton;
@@ -42,6 +47,9 @@ public class OverdriveMainMenu : MonoBehaviour
     private Button[]     _navButtons;
     private GameObject[] _panels;
     private int          _currentCat = 0;
+
+    /// <summary>World size of the main window relative to its 1200 x 880 layout.</summary>
+    public const float WindowScale = 1.12f;
 
     private static readonly string[] Categories = { "F1  ▾", "MotoGP  ▾", "IndyCar  ▾", "F2  ▾" };
 
@@ -66,6 +74,14 @@ public class OverdriveMainMenu : MonoBehaviour
             GetOrCreatePanel("Profile"),
             GetOrCreatePanel("Settings")
         };
+
+        // visionOS density: a roomier window; page labels are scaled down to match (ODChampionshipTheme.TypeScale).
+        transform.localScale = Vector3.one * WindowScale;
+        ODChampionshipTheme.ScaleType(transform.Find("OverdriveHomepage"));
+
+        // The menu canvas is larger than the visible window: keep the drag pill under the window itself.
+        var handle = GetComponentInParent<WindowHandle>();
+        if (handle != null && handle.followTarget == null) handle.followTarget = (RectTransform)transform;
 
         // Wire nav clicks
         if (!externalNavigation)
@@ -92,6 +108,7 @@ public class OverdriveMainMenu : MonoBehaviour
     {
         Initialize();
         if (homepagePanel == null) { SelectNav(0); return; }
+        ActiveTab = 0;
         SetHomepageVisible(true);
         foreach (var button in _navButtons)
         {
@@ -113,6 +130,8 @@ public class OverdriveMainMenu : MonoBehaviour
         if (categoriesPanel != null) categoriesPanel.SetActive(false);
         if (sportPanel != null) sportPanel.SetActive(false);
         if (replayCatalogPanel != null) replayCatalogPanel.SetActive(false);
+        if (calendarPanel != null) calendarPanel.SetActive(false);
+        if (profilePanel != null) profilePanel.SetActive(false);
         if (homepagePanel == null) return;
         homepagePanel.SetActive(visible);
         foreach (var name in new[] { "Title", "SearchBar", "Body" })
@@ -122,10 +141,42 @@ public class OverdriveMainMenu : MonoBehaviour
         }
         var background = GetComponent<Image>();
         if (background != null) background.enabled = !visible;
-        ((RectTransform)transform).sizeDelta = visible ? homepageSize : menuSize;
+        // Pages drawn from the design system share its 16:10 window (ODDesign.WindowSize).
+        ((RectTransform)transform).sizeDelta = visible ? homepageSize : ODDesign.WindowSize;
     }
 
     public void ShowCategories() => SelectNav(1);
+
+    /// <summary>
+    /// Called by the navigation window when it styles its own tabs (ODTabBar):
+    /// the menu then stops recolouring those buttons on every page change.
+    /// </summary>
+    public void ReleaseNavButtons()
+    {
+        racesButton = rankingsButton = profileButton = settingsButton = null;
+        if (_navButtons != null)
+            for (int i = 0; i < _navButtons.Length; i++) _navButtons[i] = null;
+    }
+
+    public void ShowCalendar()
+    {
+        Initialize();
+        if (calendarPanel == null && sportPanel != null)
+            calendarPanel = ODCalendarPage.Create((RectTransform)sportPanel.transform).gameObject;
+        if (calendarPanel == null) return;
+        ShowCustomPage(calendarPanel);
+        ActiveTab = 2;
+    }
+
+    public void ShowProfile()
+    {
+        Initialize();
+        if (profilePanel == null && sportPanel != null)
+            profilePanel = ODProfilePage.Create((RectTransform)sportPanel.transform).gameObject;
+        if (profilePanel == null) return;
+        ShowCustomPage(profilePanel);
+        ActiveTab = 3;
+    }
 
     public void ShowSport()
     {
@@ -147,6 +198,8 @@ public class OverdriveMainMenu : MonoBehaviour
         if (categoriesPanel != null) categoriesPanel.SetActive(page == categoriesPanel);
         if (sportPanel != null) sportPanel.SetActive(page == sportPanel);
         if (replayCatalogPanel != null) replayCatalogPanel.SetActive(page == replayCatalogPanel);
+        if (calendarPanel != null) calendarPanel.SetActive(page == calendarPanel);
+        if (profilePanel != null) profilePanel.SetActive(page == profilePanel);
         foreach (var name in new[] { "Title", "SearchBar", "Body" })
         {
             var child = transform.Find(name);
@@ -154,7 +207,7 @@ public class OverdriveMainMenu : MonoBehaviour
         }
         var background = GetComponent<Image>();
         if (background != null) background.enabled = false;
-        ((RectTransform)transform).sizeDelta = sportPageSize;
+        ((RectTransform)transform).sizeDelta = ODDesign.WindowSize;
     }
 
     // ── Nav ───────────────────────────────────────────────────────────────────
@@ -162,6 +215,7 @@ public class OverdriveMainMenu : MonoBehaviour
     {
         Initialize();
         if (index < 0 || index >= _navButtons.Length) return;
+        ActiveTab = index == 0 ? 0 : index == 1 ? 1 : index == 2 ? 3 : -1;
         SetHomepageVisible(false);
         for (int i = 0; i < _navButtons.Length; i++)
         {

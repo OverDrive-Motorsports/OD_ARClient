@@ -161,8 +161,9 @@ public sealed class VideoPlayerController : MonoBehaviour
         {
             if (button == null) continue;
             var colors = button.colors;
+            // Neutral frosted white (ODChampionshipTheme): readable on every championship gradient.
             colors.normalColor = colors.selectedColor = IsVisible
-                ? new Color(.40f, .65f, .88f, .85f) : new Color(.42f, .46f, .54f, .60f);
+                ? new Color(1f, 1f, 1f, .38f) : new Color(1f, 1f, 1f, .14f);
             button.colors = colors;
         }
     }
