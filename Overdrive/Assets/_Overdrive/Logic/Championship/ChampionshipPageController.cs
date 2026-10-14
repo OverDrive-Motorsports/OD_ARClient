@@ -315,7 +315,7 @@ public class ChampionshipPageController : MonoBehaviour
         TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
         tmp.text               = text;
         tmp.alignment          = TextAlignmentOptions.Center;
-        tmp.enableWordWrapping = false;
+        tmp.textWrappingMode = TextWrappingModes.NoWrap;
         tmp.overflowMode       = TextOverflowModes.Ellipsis;
         ODLabel lbl = go.AddComponent<ODLabel>();
         lbl.textStyle = style;

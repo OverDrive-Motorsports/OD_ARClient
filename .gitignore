@@ -136,3 +136,8 @@ local.properties
 Library/
 Packages/
 UserSettings/
+
+# === OVERDRIVE LOCAL CONFIG ===
+# Backend URL + gateway token (see ODApiConfig.cs)
+Overdrive/Assets/_Overdrive/Core/Resources/ODApiConfig.asset
+Overdrive/Assets/_Overdrive/Core/Resources/ODApiConfig.asset.meta

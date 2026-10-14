@@ -275,7 +275,7 @@ public class ProfileSectionController : MonoBehaviour
         TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
         tmp.text               = text;
         tmp.alignment          = alignment;
-        tmp.enableWordWrapping = false;
+        tmp.textWrappingMode = TextWrappingModes.NoWrap;
         ODLabel lbl = go.AddComponent<ODLabel>();
         lbl.textStyle = style;
         return go;
