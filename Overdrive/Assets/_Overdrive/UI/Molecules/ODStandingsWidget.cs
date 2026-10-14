@@ -53,8 +53,8 @@ public class ODStandingsWidget : MonoBehaviour
         GameObject catGO = new GameObject("CategoryLabel", typeof(RectTransform));
         catGO.transform.SetParent(root.transform, false);
         TextMeshProUGUI catTmp = catGO.AddComponent<TextMeshProUGUI>();
-        catTmp.alignment = TextAlignmentOptions.MidlineLeft;
-        catTmp.enableWordWrapping = false;
+        catTmp.alignment          = TextAlignmentOptions.MidlineLeft;
+        catTmp.textWrappingMode = TextWrappingModes.NoWrap;
         ODLabel catLbl = catGO.AddComponent<ODLabel>();
         catLbl.textStyle = ODLabel.TextStyle.H2;
         catGO.AddComponent<LayoutElement>().preferredHeight = 32f;

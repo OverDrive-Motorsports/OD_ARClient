@@ -145,9 +145,9 @@ public class ODMenuOverlay : MonoBehaviour
         GameObject labelGO = new GameObject("Label", typeof(RectTransform));
         labelGO.transform.SetParent(row.transform, false);
         TextMeshProUGUI labelTmp = labelGO.AddComponent<TextMeshProUGUI>();
-        labelTmp.text = item.label;
-        labelTmp.alignment = TextAlignmentOptions.MidlineLeft;
-        labelTmp.enableWordWrapping = false;
+        labelTmp.text               = item.label;
+        labelTmp.alignment          = TextAlignmentOptions.MidlineLeft;
+        labelTmp.textWrappingMode = TextWrappingModes.NoWrap;
         ODLabel labelLbl = labelGO.AddComponent<ODLabel>();
         labelLbl.textStyle = ODLabel.TextStyle.Body;
         labelGO.AddComponent<LayoutElement>().flexibleWidth = 1f;

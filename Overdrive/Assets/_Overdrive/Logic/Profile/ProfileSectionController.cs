@@ -273,9 +273,9 @@ public class ProfileSectionController : MonoBehaviour
         GameObject go = new GameObject("Label", typeof(RectTransform));
         go.transform.SetParent(parent, false);
         TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
-        tmp.text = text;
-        tmp.alignment = alignment;
-        tmp.enableWordWrapping = false;
+        tmp.text               = text;
+        tmp.alignment          = alignment;
+        tmp.textWrappingMode = TextWrappingModes.NoWrap;
         ODLabel lbl = go.AddComponent<ODLabel>();
         lbl.textStyle = style;
         return go;

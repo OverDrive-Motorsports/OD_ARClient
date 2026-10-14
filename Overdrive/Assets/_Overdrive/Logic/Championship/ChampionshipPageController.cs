@@ -313,10 +313,10 @@ public class ChampionshipPageController : MonoBehaviour
         GameObject go = new GameObject("Label", typeof(RectTransform));
         go.transform.SetParent(parent, false);
         TextMeshProUGUI tmp = go.AddComponent<TextMeshProUGUI>();
-        tmp.text = text;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.enableWordWrapping = false;
-        tmp.overflowMode = TextOverflowModes.Ellipsis;
+        tmp.text               = text;
+        tmp.alignment          = TextAlignmentOptions.Center;
+        tmp.textWrappingMode = TextWrappingModes.NoWrap;
+        tmp.overflowMode       = TextOverflowModes.Ellipsis;
         ODLabel lbl = go.AddComponent<ODLabel>();
         lbl.textStyle = style;
         go.AddComponent<LayoutElement>().preferredHeight = style == ODLabel.TextStyle.H1 ? 44f : 28f;
