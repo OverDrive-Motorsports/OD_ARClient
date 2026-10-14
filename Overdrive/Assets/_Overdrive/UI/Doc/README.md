@@ -44,6 +44,33 @@ runtime (`ODStandingsWidget.Create(...)`) by
 category found in whatever `ChampionshipData.standings` list it's given —
 it has no idea which championship it's rendering.
 
+## Design system (OverDrive VR v2)
+
+The championship catalogue, championship pages (hors direct, live week-end,
+live course, replay), replay gallery, profile / settings, error popup and
+navigation bar follow the Canva design "OverDrive VR – v2" (pages
+01 · Fondations and 01 · Composants):
+
+- `Theme/ODDesign.cs` holds the tokens and runtime builders. Mockups draw a
+  window at 1920 x 1200 px; `ODDesign.Px()` turns design px into window units
+  (the window is 1200 x 750 units, `ODDesign.WindowSize`).
+- Typeface: DM Sans (`Art/Fonts/DMSans`, OFL), TextMesh Pro assets generated
+  by `Editor/ODFontAssetsSetup.cs` into `Resources/Fonts`.
+- `Theme/ODChampionshipTheme.cs` applies the materials: glass window tinted by
+  the championship, white 7 % plateaux, ornament bar, status pills.
+- Frosted glass (`Resources/Shaders/ODGlass.shader`): `Core/Services/ODPassthroughBlur`
+  blurs the Quest 3 passthrough camera and stitches each frame into a
+  world-anchored panorama (`ODGlassPanorama.shader`); the glass looks it up in
+  the direction behind each pixel, so it stays frosted when the panel leaves
+  the camera's field of view. Pages that show glass call `Acquire` / `Release`.
+- Controls: `Molecules/ODSegmentedControl` (recessed track, white 24 % pill;
+  `solidPill` for the Profil / Réglages switch), `Atoms/ODToggleSwitch`
+  (identity blue), `ODHoverState` (gaze ring, press scale) on design buttons.
+- Page layouts sit next to their display code:
+  `Organisms/ODChampionshipPanel.Layout.cs`, `Organisms/ODChampionshipTile.cs`,
+  `Organisms/ODProfileView.cs`, `Logic/Menu/ODCategoriesPage.cs`,
+  `Logic/Menu/ODReplayCatalog.cs`.
+
 ## Allowed dependencies
 
 None towards Core/Data/Logic. UI may use Interaction only for input-related

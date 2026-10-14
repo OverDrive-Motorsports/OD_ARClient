@@ -350,9 +350,9 @@ public static class HomeNavScreenBuilder
         TextMeshProUGUI tmp = title.GetComponent<TextMeshProUGUI>();
         if (tmp != null)
         {
-            tmp.enableWordWrapping = false;
-            tmp.overflowMode = TextOverflowModes.Ellipsis;
-            tmp.alignment = TextAlignmentOptions.MidlineLeft;
+            tmp.textWrappingMode = TextWrappingModes.NoWrap;
+            tmp.overflowMode       = TextOverflowModes.Ellipsis;
+            tmp.alignment          = TextAlignmentOptions.MidlineLeft;
         }
     }
 }

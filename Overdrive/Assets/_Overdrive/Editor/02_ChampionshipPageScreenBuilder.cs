@@ -150,9 +150,9 @@ public static class ChampionshipPageScreenBuilder
         TMPro.TextMeshProUGUI tmp = title.GetComponent<TMPro.TextMeshProUGUI>();
         if (tmp != null)
         {
-            tmp.enableWordWrapping = false;
-            tmp.overflowMode = TMPro.TextOverflowModes.Ellipsis;
-            tmp.alignment = TMPro.TextAlignmentOptions.MidlineLeft;
+            tmp.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
+            tmp.overflowMode       = TMPro.TextOverflowModes.Ellipsis;
+            tmp.alignment          = TMPro.TextAlignmentOptions.MidlineLeft;
         }
     }
 }

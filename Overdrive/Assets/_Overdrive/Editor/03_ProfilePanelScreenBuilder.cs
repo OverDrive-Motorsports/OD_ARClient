@@ -217,7 +217,7 @@ public static class ProfilePanelScreenBuilder
         var t = go.AddComponent<TextMeshProUGUI>();
         t.text = txt; t.fontSize = size; t.fontStyle = style;
         t.color = color; t.alignment = align; t.raycastTarget = false;
-        t.enableWordWrapping = false; t.overflowMode = TextOverflowModes.Overflow;
+        t.textWrappingMode = TextWrappingModes.NoWrap; t.overflowMode = TextOverflowModes.Overflow;
         if (full) Stretch(go);
         return go;
     }

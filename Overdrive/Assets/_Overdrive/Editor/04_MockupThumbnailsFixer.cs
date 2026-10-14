@@ -163,7 +163,7 @@ public static class MockupThumbnailsFixer
         lTxt.fontStyle = FontStyles.Bold;
         lTxt.color = Txt;
         lTxt.alignment = TextAlignmentOptions.MidlineLeft;
-        lTxt.enableWordWrapping = false;
+        lTxt.textWrappingMode = TextWrappingModes.NoWrap;
         lTxt.overflowMode = TextOverflowModes.Ellipsis;
         lTxt.raycastTarget = false;
 

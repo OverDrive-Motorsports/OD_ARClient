@@ -2,7 +2,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>Independent map selector and movable, flat miniature circuit.</summary>
+/// <summary>
+/// Independent map selector and movable miniature circuit. The miniature can be
+/// spun and zoomed (CircuitManipulator: one ray spins, two rays zoom, thumbsticks)
+/// and from the visionOS ornament floating under it.
+/// </summary>
 [RequireComponent(typeof(Canvas), typeof(WindowHandle))]
 public sealed class CircuitPreview : MonoBehaviour
 {
@@ -27,6 +31,21 @@ public sealed class CircuitPreview : MonoBehaviour
     public GameObject CurrentModel { get; private set; }
     private bool _placed;
     private bool _bound;
+    private CircuitManipulator _manipulator;
+
+    private ODCircuitOrnament _ornament;
+
+    const float SpinStep = 45f;
+    // Ornament placement (constants, not serialized: scene copies would keep stale values).
+    // Metres from the circuit centre toward the user, height relative to the tabletop
+    // (just below its front edge, under the handle bar, like a visionOS volume ornament),
+    // backward tilt, and seconds it stays once the handle bar / ornament stop being aimed at.
+    const float ornamentDistance = .46f, ornamentHeight = -.06f, ornamentTilt = 28f, ornamentLinger = 2.5f;
+
+    private CanvasGroup _ornamentGroup;
+    private Oculus.Interaction.RayInteractable _ornamentRay;
+    private WindowHandle _tabletopHandle;
+    private float _ornamentUntil, _ornamentShown;
 
     private void Awake() => Initialize();
 
@@ -40,6 +59,73 @@ public sealed class CircuitPreview : MonoBehaviour
             if (circuits[i]?.button != null)
                 circuits[i].button.onClick.AddListener(() => SelectCircuit(index));
         }
+
+        if (circuitRoot != null && modelMount != null)
+        {
+            _manipulator = circuitRoot.GetComponent<CircuitManipulator>();
+            if (_manipulator == null) _manipulator = circuitRoot.gameObject.AddComponent<CircuitManipulator>();
+            _manipulator.target = modelMount;
+            BuildOrnament();
+        }
+    }
+
+    /// <summary>visionOS ornament under the circuit: spin, zoom slider, reset.</summary>
+    private void BuildOrnament()
+    {
+        if (_ornament != null) return;
+        var canvas = ODPointableCanvas.Create("CircuitOrnament", new Vector2(ODCircuitOrnament.Width, ODCircuitOrnament.Height));
+        _ornament = ODCircuitOrnament.Build(canvas);
+        _ornament.SpinRequested += direction => _manipulator.Spin(direction * SpinStep);
+        _ornament.ZoomChanged += value => _manipulator.NormalizedZoom = value;
+        _ornament.ResetRequested += () => _manipulator.ResetView(false);
+        _ornamentGroup = canvas.gameObject.AddComponent<CanvasGroup>();
+        _ornamentRay = canvas.GetComponent<Oculus.Interaction.RayInteractable>();
+        _tabletopHandle = circuitRoot.GetComponent<WindowHandle>();
+        canvas.gameObject.SetActive(false);
+    }
+
+    /// <summary>
+    /// visionOS ornament: appears when the circuit's handle bar is aimed at, stays while
+    /// it (or the ornament) is aimed at or the circuit is handled, then fades out.
+    /// </summary>
+    private void LateUpdate()
+    {
+        if (_ornament == null || circuitRoot == null) return;
+        bool rootVisible = circuitRoot.gameObject.activeInHierarchy;
+        bool wanted = rootVisible && (
+            (_tabletopHandle != null && (_tabletopHandle.IsHovered || _tabletopHandle.IsGrabbed)) ||
+            (_ornamentRay != null && _ornament.gameObject.activeSelf && _ornamentRay.State != Oculus.Interaction.InteractableState.Normal) ||
+            _ornament.IsDraggingZoom || _manipulator.IsHandled);
+        if (wanted) _ornamentUntil = ODTime.Now + ornamentLinger;
+        bool show = rootVisible && ODTime.Now < _ornamentUntil;
+
+        float dt = ODTime.Delta;
+        _ornamentShown = Mathf.MoveTowards(_ornamentShown, show ? 1f : 0f, dt / (show ? .18f : .30f));
+        if (_ornamentShown <= 0f)
+        {
+            if (_ornament.gameObject.activeSelf) _ornament.gameObject.SetActive(false);
+            return;
+        }
+        if (!_ornament.gameObject.activeSelf) _ornament.gameObject.SetActive(true);
+
+        float eased = ODRuntimeUI.EaseOutCubic(_ornamentShown);
+        _ornamentGroup.alpha = eased;
+        _ornamentGroup.interactable = _ornamentGroup.blocksRaycasts = show;
+
+        // Under the circuit's front edge, just in front of the handle bar, tilted back to face the eyes.
+        Vector3 forward = Vector3.ProjectOnPlane(circuitRoot.forward, Vector3.up);
+        if (forward.sqrMagnitude < .0001f) forward = Vector3.forward;
+        forward.Normalize();
+        _ornament.transform.SetPositionAndRotation(
+            circuitRoot.position - forward * ornamentDistance + Vector3.up * (ornamentHeight - .02f * (1f - eased)),
+            Quaternion.LookRotation(forward, Vector3.up) * Quaternion.Euler(ornamentTilt, 0f, 0f));
+        _ornament.transform.localScale = Vector3.one * .001f * Mathf.Lerp(.92f, 1f, eased);
+        _ornament.SetZoom(_manipulator.NormalizedZoom);
+    }
+
+    private void OnDestroy()
+    {
+        if (_ornament != null) Destroy(_ornament.gameObject);
     }
 
     public void ShowBeside(RectTransform player, bool onRight = false)
@@ -73,8 +159,12 @@ public sealed class CircuitPreview : MonoBehaviour
 
     public void Hide() => gameObject.SetActive(false);
 
+    private void OnEnable() => ODPassthroughBlur.Acquire(this);   // frosted room behind the glass ornament
+
     private void OnDisable()
     {
+        ODPassthroughBlur.Release(this);
+        if (_ornament != null) _ornament.gameObject.SetActive(false);
         if (circuitRoot != null) circuitRoot.gameObject.SetActive(false);
     }
 
@@ -109,6 +199,11 @@ public sealed class CircuitPreview : MonoBehaviour
         }
         CurrentModel = model;
         SelectedIndex = index;
+        if (_manipulator != null)
+        {
+            _manipulator.SetModelBounds(TryGetMeshBounds(model.transform, modelMount, out Bounds placed) ? placed : (Bounds?)null);
+            _manipulator.ResetView(false);
+        }
         if (circuitLabel != null) circuitLabel.text = circuits[index].label;
         UpdateButtons();
     }

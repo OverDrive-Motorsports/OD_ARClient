@@ -84,7 +84,7 @@ public class LeftWristNavigation : MonoBehaviour
         var eye = cameraRig != null ? cameraRig.centerEyeAnchor : null;
         if (eye == null) { _gate.Reset(); navigation.Hide(); return; }
         bool wasVisible = _gate.Visible;
-        bool visible = _gate.Step(Vector3.Dot(palm, Vector3.up), Time.unscaledDeltaTime,
+        bool visible = _gate.Step(Vector3.Dot(palm, Vector3.up), ODTime.Delta,
             showDot, hideDot, showDelay, hideDelay);
         if (!visible) { navigation.Hide(); return; }
 
@@ -96,7 +96,7 @@ public class LeftWristNavigation : MonoBehaviour
             ? eye.up : Vector3.up;
         Quaternion rotation = Quaternion.LookRotation(forward, up);
         Transform window = navigation.transform;
-        float t = wasVisible ? 1f - Mathf.Exp(-followSpeed * Time.unscaledDeltaTime) : 1f;
+        float t = wasVisible ? 1f - Mathf.Exp(-followSpeed * ODTime.Delta) : 1f;
         window.SetPositionAndRotation(Vector3.Lerp(window.position, target, t),
             Quaternion.Slerp(window.rotation, rotation, t));
         float units = ((RectTransform)window).rect.width;
