@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 public static class ODChampionshipMapper
@@ -101,7 +102,7 @@ public static class ODChampionshipMapper
             circuit        = new WeekendCircuit
             {
                 name     = string.IsNullOrEmpty(evt.circuit) ? evt.location : evt.circuit,
-                location = JoinNonEmpty(" · ", evt.circuit != null ? evt.location : null, evt.countryName),
+                location = JoinNonEmpty(" · ", evt.circuit != null && evt.location != evt.circuit ? evt.location : null, evt.countryName),
                 // Not exposed by the backend yet — the panel shows "--".
                 lengthKm  = 0f,
                 totalLaps = 0,
@@ -228,7 +229,7 @@ public static class ODChampionshipMapper
                 tyreAgeLaps = -1,
                 pitStops    = -1,
                 gap       = row.dnf ? "Abandon" : row.dns ? "Non partant" : row.dsq ? "Disqualifié"
-                          : row.position == 1 ? "1er" : FormatGap(row.gap_to_leader?.ToString()),
+                          : row.position == 1 ? "1er" : FormatGap(row.gap_to_leader),
             });
             if (row.position == 1 && row.number_of_laps.HasValue) detail.totalLaps = row.number_of_laps.Value;
         }
@@ -285,6 +286,31 @@ public static class ODChampionshipMapper
         string temp = weather.trackTemperature.HasValue ? $"Piste {weather.trackTemperature.Value:0}°C"
                     : weather.airTemperature.HasValue   ? $"{weather.airTemperature.Value:0}°C" : "";
         return JoinNonEmpty(" · ", temp, weather.rainfall ? "Pluie" : "Sec");
+    }
+
+    /// <summary>
+    /// session_result "gap_to_leader" as the backend sends it (raw OpenF1): seconds as a number,
+    /// "+1 LAP" as a string, or [Q1, Q2, Q3] for qualifying (the last segment reached counts).
+    /// Numbers are formatted invariantly: ToString() would give "22,457" on a French headset.
+    /// </summary>
+    public static string FormatGap(object raw)
+    {
+        switch (raw)
+        {
+            case null:
+                return "";
+            case JArray segments:
+                var reached = segments.LastOrDefault(t => t != null && t.Type != JTokenType.Null);
+                return reached != null ? FormatGap((object)reached) : "";
+            case JValue value:
+                return FormatGap(value.Value);
+            case string text:
+                return FormatGap(text);
+            case IConvertible number:
+                return FormatGap(Convert.ToDouble(number, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture));
+            default:
+                return "";
+        }
     }
 
     /// <summary>"3.456" → "+3.5s"; "+1 LAP" → "+1 tour"; empty → "".</summary>
