@@ -1,12 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>Font-independent line icons for the primary navigation.</summary>
+/// <summary>Font-independent line icons for the primary navigation (and the play glyph of the replay pages).</summary>
 [RequireComponent(typeof(CanvasRenderer))]
 public class ODNavigationIcon : MaskableGraphic
 {
     // New symbols go at the end: prefabs serialize the enum as an index.
-    public enum Symbol { Races, Rankings, Profile, Settings, Homepage, Categories, Star, Search, Back, Calendar, Trophy }
+    public enum Symbol { Races, Rankings, Profile, Settings, Homepage, Categories, Star, Search, Back, Calendar, Trophy, Play }
     public Symbol symbol;
 
     protected override void OnPopulateMesh(VertexHelper mesh)
@@ -91,6 +91,14 @@ public class ODNavigationIcon : MaskableGraphic
                 Ring(mesh, new Vector2(.5f, .70f), .17f, 0, 360);
                 Ring(mesh, new Vector2(.5f, .16f), .31f, 0, 180);
                 Line(mesh, .19f, .16f, .81f, .16f);
+                break;
+            case Symbol.Play:
+                // Filled triangle, nudged right so it looks centred in a disc.
+                int start = mesh.currentVertCount;
+                mesh.AddVert(Point(new Vector2(.30f, .18f)), color, Vector2.zero);
+                mesh.AddVert(Point(new Vector2(.30f, .82f)), color, Vector2.zero);
+                mesh.AddVert(Point(new Vector2(.84f, .50f)), color, Vector2.zero);
+                mesh.AddTriangle(start, start + 1, start + 2);
                 break;
             case Symbol.Settings:
                 for (int i = 0; i < 3; i++)

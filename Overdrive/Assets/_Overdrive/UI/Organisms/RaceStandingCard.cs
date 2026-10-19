@@ -30,6 +30,7 @@ public class RaceStandingCard : MonoBehaviour
 
     public void SetYInstant(float y)
     {
+        if (_move != null) { StopCoroutine(_move); _move = null; }   // a slide in progress would undo the jump
         if (_rt == null) _rt = GetComponent<RectTransform>();
         var p = _rt.anchoredPosition; p.y = y;
         _rt.anchoredPosition = p;

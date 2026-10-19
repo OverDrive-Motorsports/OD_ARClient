@@ -190,7 +190,8 @@ public class RaceRankingManager : MonoBehaviour
     /// matched by driver between calls, so a position change slides like an
     /// overtake; rows are added from the template or hidden as needed.
     /// </summary>
-    public void ShowEntries(IList<LiveEntry> entries, string lapLabel, string sourceNotice)
+    /// <param name="animate">False places every row at once (replay results): no sliding.</param>
+    public void ShowEntries(IList<LiveEntry> entries, string lapLabel, string sourceNotice, bool animate = true)
     {
         if (!_spawned) Spawn();
         if (!_spawned || entries == null) return;
@@ -237,8 +238,8 @@ public class RaceRankingManager : MonoBehaviour
             var lastLap = SetCell(d.card, "LastLap", string.IsNullOrEmpty(entry.lastLap) ? "--:--.---" : entry.lastLap);
             if (lastLap != null) lastLap.color = entry.isFastestLap ? FastestLap : LastLapColor;
 
-            if (fresh.Contains(d)) d.card.SetYInstant(SlotY(i));
-            else                   d.card.MoveToY(SlotY(i), moveDuration);
+            if (fresh.Contains(d) || !animate) d.card.SetYInstant(SlotY(i));
+            else                               d.card.MoveToY(SlotY(i), moveDuration);
         }
 
         if (container != null)

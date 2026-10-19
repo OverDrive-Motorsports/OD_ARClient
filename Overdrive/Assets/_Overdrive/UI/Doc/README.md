@@ -70,6 +70,14 @@ navigation bar follow the Canva design "OverDrive VR – v2" (pages
   `Organisms/ODChampionshipPanel.Layout.cs`, `Organisms/ODChampionshipTile.cs`,
   `Organisms/ODProfileView.cs`, `Logic/Menu/ODCategoriesPage.cs`,
   `Logic/Menu/ODReplayCatalog.cs`.
+- Replays: the championship header's "▶ Replays" capsule (every state, backend
+  or demo data) opens the gallery: a search field, then two sections,
+  "Replays" (everything available) and "Mes replays" (saved with the card's
+  star, kept on the headset in PlayerPrefs — no user endpoint yet). Simple
+  glass cards, no motion (`Organisms/ODReplayTile.cs`). Picking one shows the
+  broadcast page (championship panel in its replay state: video card,
+  podium, circuit line, "Résultat final"), whose back arrow returns to the
+  gallery. The demo button only cycles hors week-end / week-end / live.
 
 ## Allowed dependencies
 

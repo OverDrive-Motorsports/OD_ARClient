@@ -7,7 +7,10 @@ using UnityEngine.UI;
 /// <summary>
 /// Four presentation states. Live states come from the backend (state decided
 /// by ODChampionshipDataService); when it can't be reached, a popup offers to
-/// retry or to switch to the mobile mocks, where the demo button cycles states.
+/// retry or to switch to the mobile mocks, where the demo button cycles the
+/// three championship states. The replay state is the broadcast page of a
+/// replay picked in the gallery (header "Replays" button, in both modes); its
+/// back button returns to the gallery.
 /// </summary>
 public sealed class ODSportPage : MonoBehaviour
 {
@@ -39,6 +42,7 @@ public sealed class ODSportPage : MonoBehaviour
     private ChampionshipSnapshot _snapshot;
     private int _loadVersion;
     private int _replayVersion;
+    private Mode _modeBeforeReplay = Mode.Weekend;
 
     private void OnEnable()
     {
@@ -55,14 +59,15 @@ public sealed class ODSportPage : MonoBehaviour
         if (championshipPanel == null && !TryGetComponent(out championshipPanel))
             championshipPanel = gameObject.AddComponent<ODChampionshipPanel>();
         demoButton?.onClick.AddListener(NextMode);
-        backButton?.onClick.AddListener(BackToCategories);
+        backButton?.onClick.AddListener(Back);
         replayButton?.onClick.AddListener(OpenReplayCatalog);
         if (circuitButtons != null)
             foreach (var button in circuitButtons) button?.onClick.AddListener(ToggleCircuits);
         television?.Initialize();
     }
 
-    public void NextMode() => SetMode((Mode)(((int)currentMode + 1) % 4));
+    /// <summary>Demo data only: hors week-end → week-end → live. The replay state is reached from the gallery.</summary>
+    public void NextMode() => SetMode((Mode)(((int)currentMode + 1) % 3));
 
     public void OpenReplayCatalog()
     {
@@ -76,7 +81,23 @@ public sealed class ODSportPage : MonoBehaviour
         replayGrandPrix = entry.grandPrix;
         replaySession = entry.session;
         replaySeason = entry.season;
+        if (currentMode != Mode.Replay) _modeBeforeReplay = currentMode;
         SetMode(Mode.Replay);
+    }
+
+    /// <summary>Back to the championship state the replay was opened from (or the one the backend decides).</summary>
+    public void LeaveReplay()
+    {
+        if (currentMode != Mode.Replay) return;
+        _replayVersion++;   // drops an in-flight replay load
+        SetMode(!ODDataSource.UseMocks && _snapshot != null ? ModeFor(_snapshot.state) : _modeBeforeReplay);
+    }
+
+    /// <summary>Header back arrow: the replay page returns to the gallery, the other states to the championships.</summary>
+    public void Back()
+    {
+        if (currentMode == Mode.Replay) OpenReplayCatalog();
+        else BackToCategories();
     }
 
     public void BackToCategories()
@@ -113,14 +134,16 @@ public sealed class ODSportPage : MonoBehaviour
             ? "Formule 1 · " + replaySession + " · Saison " + replaySeason
             : "Formule 1 · " + mockGrandPrix;
         if (status != null) status.text = modes[index];
-        if (demoLabel != null) demoLabel.text = "Mode démo · " + (replay ? "Replay" : index == 0 ? "Hors week-end" : index == 1 ? "Week-end" : "Live");
+        if (demoLabel != null) demoLabel.text = "Mode démo · " + (index == 0 ? "Hors week-end" : index == 1 ? "Week-end" : "Live");
         // Background and status pill colours: ODChampionshipPanel / ODChampionshipTheme
         // (championship palette + state style), applied by ShowModeContent below.
         if (television != null) television.Configure(currentMode,
             replay ? "replay:" + replayId + ":" + replayGrandPrix : "live:" + index + ":" + mockGrandPrix + ":" + mockSession,
             replay ? replayGrandPrix : mockGrandPrix);
         // States are cycled by hand only on demo data; on the backend the data decides.
-        if (demoButton != null) demoButton.gameObject.SetActive(ODDataSource.UseMocks);
+        // The replay page has neither: its back arrow returns to the gallery.
+        if (demoButton != null) demoButton.gameObject.SetActive(ODDataSource.UseMocks && !replay);
+        if (replayButton != null) replayButton.gameObject.SetActive(!replay);
         ShowModeContent();
     }
 
@@ -276,7 +299,7 @@ public sealed class ODSportPage : MonoBehaviour
         championshipPanel.ShowReplay(detail);
         if (detail != null && detail.results.Count > 0)
             Ranking?.ShowEntries(detail.results, detail.totalLaps > 0 ? $"{detail.totalLaps} tours" : "",
-                ODDataSource.UseMocks ? "Données de démonstration (OD_Mobile)" : "Résultats du backend");
+                ODDataSource.UseMocks ? "Données de démonstration (OD_Mobile)" : "Résultats du backend", animate: false);
     }
 
     private RaceRankingManager _ranking;
@@ -309,7 +332,7 @@ public sealed class ODSportPage : MonoBehaviour
     {
         if (!_bound) return;
         demoButton?.onClick.RemoveListener(NextMode);
-        backButton?.onClick.RemoveListener(BackToCategories);
+        backButton?.onClick.RemoveListener(Back);
         replayButton?.onClick.RemoveListener(OpenReplayCatalog);
         if (circuitButtons != null)
             foreach (var button in circuitButtons) button?.onClick.RemoveListener(ToggleCircuits);

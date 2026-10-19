@@ -1,14 +1,19 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
 /// <summary>
-/// Replay gallery. Cards are generated from data — finished sessions from the
-/// backend, or the mobile mocks once the user picks the demo data — by cloning
-/// the first card baked in the prefab, so the look stays the builder's.
+/// Replay gallery, reached from the "Replays" button of the championship page.
+/// Cards are generated from data — finished sessions from the backend, or the
+/// mobile mocks once the user picks the demo data — in two sections: "Replays"
+/// (everything available) and "Mes replays" (saved with the card's star, kept
+/// on the headset), both filtered by the search field. Simple cards, no motion
+/// (ODReplayTile). Picking one opens the championship page in its replay
+/// state (the broadcast page).
 /// </summary>
 public sealed class ODReplayCatalog : MonoBehaviour
 {
@@ -33,8 +38,6 @@ public sealed class ODReplayCatalog : MonoBehaviour
     public TextMeshProUGUI notice;
 
     private bool _bound;
-    private UnityAction[] _openActions = Array.Empty<UnityAction>();
-    private GameObject _template;
     private readonly List<GameObject> _generated = new List<GameObject>();
     private int _loadVersion;
 
@@ -63,10 +66,9 @@ public sealed class ODReplayCatalog : MonoBehaviour
         if (subtitle == null) subtitle = transform.Find("Subtitle")?.GetComponent<TextMeshProUGUI>();
         if (notice == null) notice = transform.Find("DemoNotice")?.GetComponent<TextMeshProUGUI>();
 
-        // The prefab's demo cards are hidden; the first one becomes the card template.
+        // The prefab's demo cards are hidden: cards are built from data (ODReplayTile).
         foreach (var entry in entries)
             if (entry?.openButton != null) entry.openButton.gameObject.SetActive(false);
-        if (entries.Length > 0 && entries[0]?.openButton != null) _template = entries[0].openButton.gameObject;
         entries = Array.Empty<Entry>();
 
         backButton?.onClick.AddListener(BackToSport);
@@ -123,62 +125,163 @@ public sealed class ODReplayCatalog : MonoBehaviour
 
     private void Bind(List<ReplaySummary> replays, bool demo)
     {
-        UnwireEntries();
-        foreach (var card in _generated) if (card != null) Destroy(card);
-        _generated.Clear();
-
-        entries = new Entry[replays.Count];
-        _openActions = new UnityAction[replays.Count];
-        for (int i = 0; i < replays.Count; i++)
-        {
-            ReplaySummary replay = replays[i];
-            Button open = _template != null ? CreateCard(replay) : null;
+        _replays = replays.OrderByDescending(r => r.date).ToList();   // most recent first
+        entries = new Entry[_replays.Count];
+        for (int i = 0; i < _replays.Count; i++)
             entries[i] = new Entry
             {
-                id         = replay.id,
-                grandPrix  = replay.grandPrix,
-                session    = replay.sessionName,
-                season     = replay.season,
-                openButton = open,
+                id        = _replays[i].id,
+                grandPrix = _replays[i].grandPrix,
+                session   = _replays[i].sessionName,
+                season    = _replays[i].season,
             };
-            int index = i;
-            _openActions[i] = () => OpenReplay(index);
-            open?.onClick.AddListener(_openActions[i]);
+
+        if (_replays.Count > 0) ApplyTheme(_replays[0].championshipId);
+        string championship = _replays.Count > 0 ? ChampionshipLabel(_replays[0]) : "Formule 1";
+        SetLabel(subtitle, $"{championship} · {_replays.Count} replay{(_replays.Count > 1 ? "s" : "")} disponible{(_replays.Count > 1 ? "s" : "")}");
+        SetLabel(notice, demo ? "Données de démonstration (OD_Mobile)" : "Données du backend · Vidéos non connectées");
+        Render();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Sections — "Replays" (everything available) and "Mes replays" (saved
+    // with the star, kept on the headset: the backend has no user list yet)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    const string SavedKey = "od.replays.mine";
+
+    private List<ReplaySummary> _replays = new List<ReplaySummary>();
+    private HashSet<string> _saved;
+
+    private HashSet<string> Saved
+    {
+        get
+        {
+            if (_saved == null)
+                _saved = new HashSet<string>((PlayerPrefs.GetString(SavedKey, "") ?? "")
+                    .Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries));
+            return _saved;
+        }
+    }
+
+    private void ToggleSaved(string id)
+    {
+        if (!Saved.Remove(id)) Saved.Add(id);
+        PlayerPrefs.SetString(SavedKey, string.Join("\n", Saved));
+        PlayerPrefs.Save();
+        Render();
+    }
+
+    /// <summary>Rebuilds both sections for the current data, search text and saved list.</summary>
+    private void Render()
+    {
+        UnwireEntries();
+        foreach (var item in _generated) if (item != null) Destroy(item);
+        _generated.Clear();
+        var content = scroll != null ? scroll.content : (RectTransform)transform;
+
+        string term = _search != null ? _search.text.Trim() : "";
+        var matches = new List<int>();
+        for (int i = 0; i < _replays.Count; i++)
+            if (Matches(_replays[i], term)) matches.Add(i);
+        var mine = matches.Where(i => Saved.Contains(_replays[i].id)).ToList();
+
+        float y = 0f;
+        y = Section(content, "Replays", matches, y,
+            term.Length > 0 ? "Aucun replay ne correspond à ta recherche." : "Aucun replay disponible pour le moment.");
+        y += SectionGap;
+        y = Section(content, "Mes replays", mine, y,
+            term.Length > 0 ? "Aucun de tes replays ne correspond à ta recherche."
+                            : "Aucun replay enregistré. Touche l'étoile d'un replay pour le retrouver ici.");
+
+        content.sizeDelta = new Vector2(content.sizeDelta.x, ODDesign.Px(y));
+        if (scroll != null)
+        {
+            scroll.StopMovement();
+            scroll.verticalNormalizedPosition = 1f;
+            // No scroll view under the ray when everything fits (a drag would steal the click).
+            scroll.enabled = scroll.viewport != null && content.rect.height > scroll.viewport.rect.height + 1f;
+        }
+    }
+
+    /// <summary>Section title, then its cards in rows of three (or a muted line when empty). Returns the bottom y.</summary>
+    private float Section(RectTransform content, string title, List<int> indices, float y, string empty)
+    {
+        var label = ODDesign.Text(content, "Section", title, 0f, y, 900f, 44f, ODDesign.Title2, ODDesign.Weight.SemiBold);
+        _generated.Add(label.gameObject);
+        y += 44f + 20f;
+
+        if (indices.Count == 0)
+        {
+            var hint = ODDesign.Text(content, "Empty", empty, 0f, y, ContentW, 30f, 22f, ODDesign.Weight.Regular, ODDesign.Muted);
+            _generated.Add(hint.gameObject);
+            return y + 30f;
         }
 
-        if (replays.Count > 0) ApplyTheme(replays[0].championshipId);
-        string championship = replays.Count > 0 ? replays[0].championshipName : "Formule 1";
-        SetLabel(subtitle, $"{championship} · {replays.Count} replay{(replays.Count > 1 ? "s" : "")}");
-        SetLabel(notice, demo ? "Données de démonstration (OD_Mobile)" : "Données du backend · Vidéos non connectées");
-        if (scroll != null) scroll.verticalNormalizedPosition = 1f;
+        for (int n = 0; n < indices.Count; n++)
+        {
+            int index = indices[n];
+            ReplaySummary replay = _replays[index];
+            var tile = ODReplayTile.Card(content, TileInfo(replay, Saved.Contains(replay.id)), CardW, CardH);
+            ODDesign.Place(tile.transform, (n % 3) * (CardW + CardGap), y + (n / 3) * (CardH + CardGap), CardW, CardH);
+            _generated.Add(tile.gameObject);
+
+            UnityAction open = () => OpenReplay(index);
+            tile.Button.onClick.AddListener(open);
+            _wired.Add((tile.Button, open));
+            string id = replay.id;
+            tile.SaveButton.onClick.AddListener(() => ToggleSaved(id));
+            if (entries[index].openButton == null) entries[index].openButton = tile.Button;
+        }
+        int rows = (indices.Count + 2) / 3;
+        return y + rows * CardH + (rows - 1) * CardGap;
     }
 
-    private Button CreateCard(ReplaySummary replay)
+    private static bool Matches(ReplaySummary replay, string term)
     {
-        var card = Instantiate(_template, _template.transform.parent);
-        card.name = "Replay_" + replay.id;
-        card.SetActive(true);
-        _generated.Add(card);
-
-        SetChild(card.transform, "Season",    $"{(replay.championshipName ?? "").ToUpperInvariant()} · SAISON {replay.season}");
-        SetChild(card.transform, "GrandPrix", replay.grandPrix);
-        SetChild(card.transform, "Session",   replay.date != default
-            ? $"{replay.sessionName} · {replay.date:dd/MM/yyyy}"
-            : replay.sessionName);
-        StyleCard(card.transform);
-        return card.GetComponent<Button>();
+        if (string.IsNullOrEmpty(term)) return true;
+        string haystack = string.Join(" ", replay.grandPrix, replay.sessionName, replay.season, replay.circuit,
+            replay.date != default ? replay.date.ToString("dd/MM/yyyy") : "");
+        return Fold(haystack).Contains(Fold(term));
     }
 
-    // ── Design layout (design px, 1920 x 1200 window): header like the championship pages, 3-column plateaux ──
+    /// <summary>Lower case without accents: "bahrein" finds "Bahreïn".</summary>
+    private static string Fold(string text)
+    {
+        var decomposed = (text ?? "").ToLowerInvariant().Normalize(System.Text.NormalizationForm.FormD);
+        var sb = new System.Text.StringBuilder(decomposed.Length);
+        foreach (char c in decomposed)
+            if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark) sb.Append(c);
+        return sb.ToString();
+    }
 
-    const float CardW = 570.67f, CardH = 300f;
+    private static ODReplayTile.Info TileInfo(ReplaySummary replay, bool saved) => new ODReplayTile.Info
+    {
+        title  = replay.grandPrix,
+        detail = replay.date != default ? $"{replay.sessionName} · {replay.date:dd/MM/yyyy}" : replay.sessionName,
+        saved  = saved,
+    };
+
+    /// <summary>French name of the championship whatever the source ("Formula 1" in the mocks).</summary>
+    private static string ChampionshipLabel(ReplaySummary replay) =>
+        ODDesign.Normalise(replay.championshipId) == "f1" ? "Formule 1" : replay.championshipName ?? "";
+
+    // ── Design layout (design px, 1920 x 1200 window) ──────────────────────
+    // Header like the championship pages with a search field on the right,
+    // then the two sections in one vertical scroll.
+
+    const float GX = 72f, ContentTop = 202f, ContentW = 1920f - 144f, ContentBottom = 1200f - 64f;
+    const float CardW = 570.67f, CardH = 160f, CardGap = 32f, SectionGap = 52f;
+    const float HeaderMid = 162f - 34f, BadgeW = 120f, SearchW = 520f;
+
+    private TMP_InputField _search;
 
     private void LayoutPage()
     {
-        const float headerBottom = 162f, x = 72f + 68f + 24f;
+        const float x = GX + 68f + 24f;
         if (backButton != null)
         {
-            ODDesign.Place(backButton.transform, 72f, headerBottom - 68f, 68f, 68f);
+            ODDesign.Place(backButton.transform, GX, HeaderMid - 34f, 68f, 68f);
             if (backButton.targetGraphic is RoundedImage round) round.cornerRadius = ODDesign.Px(34f);
             ODDesign.ApplyButton(backButton, ODDesign.ButtonKind.Icon);
             var icon = backButton.GetComponentInChildren<ODNavigationIcon>(true);
@@ -186,19 +289,20 @@ public sealed class ODReplayCatalog : MonoBehaviour
         }
         if (subtitle != null)
         {
-            ODDesign.Place(subtitle.transform, x, 60f, 1100f, 30f);
+            ODDesign.Place(subtitle.transform, x, 60f, 1000f, 30f);
             ODDesign.Style(subtitle, ODDesign.PageCaps, ODDesign.Weight.SemiBold, ODDesign.Secondary, caps: true);
         }
         var heading = transform.Find("Heading")?.GetComponent<TextMeshProUGUI>();
         if (heading != null)
         {
-            ODDesign.Place(heading.transform, x, 97f, 1100f, 72f);
+            ODDesign.Place(heading.transform, x, 97f, 900f, 72f);
             ODDesign.Style(heading, ODDesign.TitleXL, ODDesign.Weight.Bold, ODDesign.Primary);
+            heading.text = "Replays";
         }
         var badge = transform.Find("SportBadge");
         if (badge != null)
         {
-            ODDesign.Place(badge, 1920f - 72f - 120f, headerBottom - 64f, 120f, 64f);
+            ODDesign.Place(badge, 1920f - GX - BadgeW, HeaderMid - 32f, BadgeW, 64f);   // centred on the back button
             if (badge.GetComponent<RoundedImage>() is RoundedImage pill) pill.cornerRadius = ODDesign.Px(32f);
             var label = badge.Find("Label")?.GetComponent<TextMeshProUGUI>();
             if (label != null)
@@ -208,58 +312,86 @@ public sealed class ODReplayCatalog : MonoBehaviour
                 ODDesign.Style(label, ODDesign.CapsSize, ODDesign.Weight.Bold, Color.white, TextAlignmentOptions.Center, trackingEm: .06f);
             }
         }
+        _search = BuildSearch(1920f - GX - BadgeW - 16f - SearchW, HeaderMid - 32f, SearchW, 64f);
+        _search.onValueChanged.AddListener(_ => Render());
+
         if (scroll != null)
         {
-            ODDesign.Place(scroll.transform, 72f, 202f, 1920f - 144f, 1200f - 202f - 64f - 40f);
-            var grid = scroll.content != null ? scroll.content.GetComponent<GridLayoutGroup>() : null;
-            if (grid != null)
-            {
-                grid.cellSize = new Vector2(ODDesign.Px(CardW), ODDesign.Px(CardH));
-                grid.spacing = new Vector2(ODDesign.Px(32f), ODDesign.Px(32f));
-                grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-                grid.constraintCount = 3;
-            }
+            ODDesign.Place(scroll.transform, GX, ContentTop, ContentW, ContentBottom - ContentTop);
             scroll.verticalScrollbar = null;
+            if (scroll.viewport != null)
+            {
+                // Viewport = the whole scroll area (the prefab's insets cut the third column).
+                scroll.viewport.anchorMin = Vector2.zero;
+                scroll.viewport.anchorMax = Vector2.one;
+                scroll.viewport.offsetMin = scroll.viewport.offsetMax = Vector2.zero;
+            }
+            var content = scroll.content;
+            if (content != null)
+            {
+                // Sections are placed by hand: no grid / size fitter driving the content.
+                var grid = content.GetComponent<GridLayoutGroup>();
+                if (grid != null) grid.enabled = false;
+                var fitter = content.GetComponent<ContentSizeFitter>();
+                if (fitter != null) fitter.enabled = false;
+                content.anchorMin = new Vector2(0f, 1f);
+                content.anchorMax = new Vector2(1f, 1f);
+                content.pivot = new Vector2(.5f, 1f);
+                content.anchoredPosition = Vector2.zero;
+                content.offsetMin = new Vector2(0f, content.offsetMin.y);
+                content.offsetMax = new Vector2(0f, 0f);
+            }
         }
         var track = transform.Find("ScrollTrack");
         if (track != null) track.gameObject.SetActive(false);
         if (notice != null)
         {
-            ODDesign.Place(notice.transform, 72f, 1200f - 64f - 30f, 1200f, 30f);
+            ODDesign.Place(notice.transform, GX, ContentBottom + 14f, 1200f, 30f);
             ODDesign.Style(notice, 18f, ODDesign.Weight.Regular, ODDesign.Tertiary);
         }
     }
 
-    /// <summary>Replay plateau: caps season line, 34-px Grand Prix, session line, "Ouvrir le replay" capsule.</summary>
-    private static void StyleCard(Transform card)
+    /// <summary>Recessed capsule with a search glyph and a TMP field (the Quest system keyboard types into it).</summary>
+    private TMP_InputField BuildSearch(float x, float y, float w, float h)
     {
-        Style(card, "Season", 36f, 34f, CardW - 72f, 26f, 18f, ODDesign.Weight.SemiBold, ODDesign.Secondary, caps: true);
-        Style(card, "GrandPrix", 36f, 70f, CardW - 72f, 44f, 34f, ODDesign.Weight.SemiBold, ODDesign.Primary);
-        Style(card, "Session", 36f, 120f, CardW - 72f, 30f, 21f, ODDesign.Weight.Regular, ODDesign.Muted);
-        var open = card.Find("OpenReplaySurface");
-        if (open != null)
-        {
-            ODDesign.Place(open, 36f, CardH - 36f - 64f, CardW - 72f, 64f);
-            if (open.GetComponent<RoundedImage>() is RoundedImage pill) pill.cornerRadius = ODDesign.Px(32f);
-            foreach (var label in open.GetComponentsInChildren<TextMeshProUGUI>(true))
-            {
-                var r = label.rectTransform;
-                r.anchorMin = Vector2.zero; r.anchorMax = Vector2.one; r.offsetMin = r.offsetMax = Vector2.zero;
-                ODDesign.Style(label, 22f, ODDesign.Weight.SemiBold, Color.white, TextAlignmentOptions.Center);
-            }
-        }
+        var field = ODDesign.Fill(transform, "Search", x, y, w, h, ODDesign.Recessed, h * .5f);
+        field.raycastTarget = true;
+        field.gameObject.SetActive(false);   // configure the input field before its OnEnable
+
+        var icon = ODDesign.Rect(field.transform, "Icon", 24f, (h - 26f) * .5f, 26f, 26f).gameObject.AddComponent<ODNavigationIcon>();
+        icon.symbol = ODNavigationIcon.Symbol.Search;
+        icon.color = ODDesign.Secondary;
+        icon.raycastTarget = false;
+
+        var area = ODDesign.Rect(field.transform, "TextArea", 64f, 0f, w - 64f - 28f, h);
+        area.gameObject.AddComponent<RectMask2D>();
+        var placeholder = ODDesign.Text(area, "Placeholder", "Rechercher un replay", 0f, 0f, w - 92f, h, 22f, ODDesign.Weight.Regular, ODDesign.Tertiary);
+        var text = ODDesign.Text(area, "Text", "", 0f, 0f, w - 92f, h, 22f, ODDesign.Weight.Regular, ODDesign.Primary);
+        text.overflowMode = TextOverflowModes.Overflow;
+
+        var input = field.gameObject.AddComponent<TMP_InputField>();
+        input.targetGraphic = field;
+        input.textViewport = area;
+        input.textComponent = text;
+        input.placeholder = placeholder;
+        input.fontAsset = text.font;
+        input.pointSize = text.fontSize;
+        input.lineType = TMP_InputField.LineType.SingleLine;
+        input.characterLimit = 40;
+        input.caretColor = Color.white;
+        input.customCaretColor = true;
+        input.selectionColor = new Color(1f, 1f, 1f, .25f);
+        var colours = input.colors;
+        colours.normalColor = Color.white;
+        colours.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
+        colours.pressedColor = colours.selectedColor = new Color(1.3f, 1.3f, 1.3f, 1f);
+        colours.fadeDuration = 0f;   // no motion on the replay pages
+        input.colors = colours;
+        field.gameObject.SetActive(true);
+        return input;
     }
 
-    private static void Style(Transform card, string child, float x, float y, float w, float h, float size, ODDesign.Weight weight, Color colour, bool caps = false)
-    {
-        var label = card.Find(child)?.GetComponent<TextMeshProUGUI>();
-        if (label == null) return;
-        ODDesign.FitLine(ref y, ref h, size);
-        ODDesign.Place(label.transform, x, y, w, h);
-        ODDesign.Style(label, size, weight, colour, caps: caps);
-    }
-
-    /// <summary>Championship gradient behind the gallery, glass cards, accent-tinted sport badge.</summary>
+    /// <summary>Championship gradient behind the gallery, accent-tinted sport badge (tiles dress themselves).</summary>
     private void ApplyTheme(string championshipId)
     {
         var palette = ODChampionshipTheme.For(championshipId);
@@ -271,9 +403,6 @@ public sealed class ODReplayCatalog : MonoBehaviour
 
         var badge = transform.Find("SportBadge")?.GetComponent<Graphic>();
         if (badge != null) badge.color = new Color(palette.accent.r, palette.accent.g, palette.accent.b, .32f);
-        foreach (var cta in GetComponentsInChildren<Transform>(true))
-            if (cta.name == "OpenReplaySurface" && cta.TryGetComponent(out Graphic graphic))
-                graphic.color = new Color(1f, 1f, 1f, .14f);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -287,21 +416,21 @@ public sealed class ODReplayCatalog : MonoBehaviour
         menu.ShowSport();
     }
 
+    /// <summary>Back to the championship page, in its own state (not the replay that may have been open).</summary>
     public void BackToSport()
     {
+        sport?.LeaveReplay();
         if (menu != null) menu.ShowSport();
     }
 
+    private readonly List<(Button button, UnityAction action)> _wired = new List<(Button, UnityAction)>();
+
     private void UnwireEntries()
     {
-        for (int i = 0; i < entries.Length && i < _openActions.Length; i++)
-            entries[i].openButton?.onClick.RemoveListener(_openActions[i]);
-    }
-
-    private static void SetChild(Transform card, string child, string value)
-    {
-        var label = card.Find(child)?.GetComponent<TextMeshProUGUI>();
-        if (label != null) label.text = value;
+        foreach (var (button, action) in _wired)
+            if (button != null) button.onClick.RemoveListener(action);
+        _wired.Clear();
+        foreach (var entry in entries) if (entry != null) entry.openButton = null;
     }
 
     private static void SetLabel(TextMeshProUGUI label, string value)

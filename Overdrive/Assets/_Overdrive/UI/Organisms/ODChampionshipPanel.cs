@@ -166,6 +166,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
 
         LayoutLive(liveSection);
         LayoutCourseStandings();
+        SetCourseColumns(replay: false);
         SetLabel(heading, data != null && !string.IsNullOrEmpty(data.circuitName) ? data.circuitName : session);
         SetLabel(subtitle, data != null ? JoinNonEmpty(" · ", ChampionshipName(data.championshipId), session, data.conditions) : session);
         ApplyTheme(data?.championshipId, ODStatusStyle.Live, "Live · " + session);
@@ -179,7 +180,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
         BindTrackStatus(circuit, data != null ? data.trackStatus : null);
     }
 
-    /// <summary>Replay of a finished session: final podium and race length.</summary>
+    /// <summary>Replay broadcast page: video card (watch / telemetry), final podium, circuit line, final classification.</summary>
     public void ShowReplay(ReplayDetail data)
     {
         Resolve();
@@ -187,16 +188,17 @@ public partial class ODChampionshipPanel : MonoBehaviour
         if (data == null) return;
 
         ReplaySummary s = data.summary;
-        LayoutLive(replaySection);
+        LayoutReplay(replaySection);
         LayoutCourseStandings();
+        SetCourseColumns(replay: true);
         SetLabel(heading, s.grandPrix);
-        SetLabel(subtitle, JoinNonEmpty(" · ", s.championshipName, s.sessionName, string.IsNullOrEmpty(s.season) ? null : "Saison " + s.season, data.location));
+        SetLabel(subtitle, JoinNonEmpty(" · ", ChampionshipName(s.championshipId) ?? s.championshipName, s.sessionName, string.IsNullOrEmpty(s.season) ? null : "Saison " + s.season, data.location));
         ApplyTheme(s.championshipId, ODStatusStyle.Replay, "Replay");
         AfterStatus(null);
 
         var circuit = Child(replaySection, "Circuit");
         BindPodium(Child(replaySection, "Podium"), data.results);
-        BindLapProgress(circuit, data.totalLaps > 0 ? $"{data.totalLaps} tours" : "", "Terminé", 1f);
+        BindLapProgress(circuit, JoinNonEmpty(" · ", data.location, data.totalLaps > 0 ? $"{data.totalLaps} tours" : null), "", 1f);
         BindTrackStatus(circuit, null);
     }
 
@@ -248,7 +250,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
         WireOffSeason();
         WireWeekend();
         LayoutLive(liveSection);
-        LayoutLive(replaySection);
+        LayoutReplay(replaySection);
         LayoutCourseStandings();
     }
 

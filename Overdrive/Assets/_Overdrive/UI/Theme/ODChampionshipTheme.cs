@@ -193,13 +193,17 @@ public static class ODChampionshipTheme
         surface.SetVerticesDirty();
     }
 
-    /// <summary>Every card under <paramref name="page"/> becomes a glass platter, except the page surface itself and popups.</summary>
+    /// <summary>
+    /// Every card under <paramref name="page"/> becomes a glass platter, except the page surface
+    /// itself, popups and the posters / replay tiles, which dress themselves.
+    /// </summary>
     public static void ApplyGlassCards(Transform page)
     {
         if (page == null) return;
         var root = page.GetComponent<ODHomepageSurface>();
         foreach (var surface in page.GetComponentsInChildren<ODHomepageSurface>(true))
-            if (surface != root && surface.GetComponentInParent<ODBackendErrorPopup>(true) == null)
+            if (surface != root && surface.GetComponentInParent<ODBackendErrorPopup>(true) == null &&
+                surface.GetComponentInParent<ODReplayTile>(true) == null && surface.GetComponentInParent<ODChampionshipTile>(true) == null)
                 ApplyGlass(surface);
     }
 

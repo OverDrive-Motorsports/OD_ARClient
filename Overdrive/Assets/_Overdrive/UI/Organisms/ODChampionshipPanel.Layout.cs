@@ -22,6 +22,8 @@ public partial class ODChampionshipPanel
     // Window grid (design px).
     const float GX = D.WindowPadSide, GTop = D.WindowPadTop, GRight = 1920f - D.WindowPadSide;
     const float HeaderBottom = 162f, ContentTop = 202f, ContentBottom = 1200f - D.WindowPadBottom;
+    /// <summary>Header controls are centred on the back button's line, whatever their height.</summary>
+    const float HeaderMid = HeaderBottom - 34f;
     const float ContentH = ContentBottom - ContentTop;
 
     bool _headerLaidOut;
@@ -58,50 +60,72 @@ public partial class ODChampionshipPanel
             heading.overflowMode = TextOverflowModes.Ellipsis;
         }
 
-        // Right side, from the right edge: Replay capsule, status pill, then the demo-mode capsule.
+        // Right side, from the right edge: "Replays" capsule (gallery access, every state but the
+        // replay page itself), status pill, then the demo-mode capsule.
         float right = GRight;
         var replay = transform.Find("ReplayCatalogButton");
         if (replay != null)
         {
-            D.Place(replay, right - 156f, HeaderBottom - 68f, 156f, 68f);
+            const float w = 184f;
+            D.Place(replay, right - w, HeaderBottom - 68f, w, 68f);
             StyleCapsule(replay, D.ButtonKind.Secondary, 22f);
-            right -= 156f + 16f;
+            var label = replay.Find("Label")?.GetComponent<TextMeshProUGUI>();
+            if (label != null)
+            {
+                label.text = "Replays";
+                label.alignment = TextAlignmentOptions.MidlineLeft;
+                label.rectTransform.offsetMin = new Vector2(D.Px(64f), 0f);
+            }
+            var icon = D.Rect(replay, "PlayIcon", 30f, 23f, 22f, 22f).gameObject.AddComponent<ODNavigationIcon>();
+            icon.symbol = ODNavigationIcon.Symbol.Play;
+            icon.color = Color.white;
+            icon.raycastTarget = false;
+            right -= w + 16f;
         }
         if (statusPill != null)
         {
             // Right edge kept by ApplyStatus, which sizes the pill to its text.
-            D.Place(statusPill.transform, right - 300f, HeaderBottom - 64f, 300f, 64f);
+            D.Place(statusPill.transform, right - 300f, HeaderMid - 32f, 300f, 64f);
         }
         var demo = transform.Find("DemoModeButton");
         if (demo != null)
         {
-            D.Place(demo, right - 300f - 20f - 330f, HeaderBottom - 56f, 330f, 52f);
+            D.Place(demo, right - 300f - 20f - 330f, HeaderMid - 26f, 330f, 52f);
             StyleCapsule(demo, D.ButtonKind.Secondary, 17f);
         }
-        _headerLap = D.Text(transform, "HeaderLap", "", right - 300f - 20f - 260f, HeaderBottom - 64f, 260f, 64f, 30f, D.Weight.SemiBold,
+        _headerLap = D.Text(transform, "HeaderLap", "", right - 300f - 20f - 260f, HeaderMid - 32f, 260f, 64f, 30f, D.Weight.SemiBold,
             new Color(1f, 1f, 1f, .80f), TextAlignmentOptions.MidlineRight);
         _headerLap.gameObject.SetActive(false);
     }
 
-    /// <summary>Keeps the demo capsule / live lap to the left of the (resized) status pill.</summary>
+    /// <summary>
+    /// Status pill against the right edge — or left of the "Replays" capsule when it shows
+    /// (every state but the replay page) — then the demo capsule / live lap to its left.
+    /// </summary>
     void AfterStatus(string lap)
     {
         if (statusPill == null) return;
         var pill = statusPill.rectTransform;
-        float pillLeft = pill.anchoredPosition.x / D.Scale;
+        var replay = transform.Find("ReplayCatalogButton") as RectTransform;
+        bool replayShown = replay != null && _state != State.Replay;
+        if (replay != null) replay.gameObject.SetActive(replayShown);
+        float pillW = pill.rect.width / D.Scale;
+        float pillRight = replayShown ? replay.anchoredPosition.x / D.Scale - 16f : GRight;
+        D.Place(pill, pillRight - pillW, HeaderMid - 32f, pillW, 64f);
+        float pillLeft = pillRight - pillW;
         var demo = transform.Find("DemoModeButton") as RectTransform;
         bool showLap = !string.IsNullOrEmpty(lap);
         if (_headerLap != null)
         {
             _headerLap.gameObject.SetActive(showLap);
             _headerLap.text = lap;
-            D.Place(_headerLap.transform, pillLeft - 20f - 260f, HeaderBottom - 64f, 260f, 64f);
+            D.Place(_headerLap.transform, pillLeft - 20f - 260f, HeaderMid - 32f, 260f, 64f);
         }
         if (demo != null)
         {
             float w = demo.rect.width / D.Scale;
             float x = pillLeft - 20f - w - (showLap ? 280f : 0f);
-            D.Place(demo, x, HeaderBottom - 58f, w, 52f);
+            D.Place(demo, x, HeaderMid - 26f, w, 52f);
         }
     }
 
@@ -224,20 +248,20 @@ public partial class ODChampionshipPanel
     const float LiveLeftW = 580f, PodiumH = 300f, LiveButtonsY = ContentTop + PodiumH + 28f, LiveCircuitY = LiveButtonsY + 72f + 28f;
     const float LiveCircuitH = ContentBottom - LiveCircuitY, CourseX = GX + 580f + 36f;
 
+    void LayoutPodium(RectTransform podium, float y)
+    {
+        if (podium == null) return;
+        D.Place(podium, GX, y, LiveLeftW, PodiumH);
+        for (int i = 0; i < 3; i++)
+            StyleLabel(podium, "Position" + i, 36f, 12f + i * 92f, 50f, 92f, 26f, D.Weight.Bold, i == 0 ? D.GoldText : D.RankText);
+        foreach (Transform child in podium)
+            if (child.name == "Divider") child.gameObject.SetActive(false);
+    }
+
     void LayoutLive(RectTransform section)
     {
         if (section == null) return;
-        var podium = Child(section, "Podium");
-        if (podium != null)
-        {
-            D.Place(podium, GX, ContentTop, LiveLeftW, PodiumH);
-            for (int i = 0; i < 3; i++)
-            {
-                StyleLabel(podium, "Position" + i, 36f, 12f + i * 92f, 50f, 92f, 26f, D.Weight.Bold, i == 0 ? D.GoldText : D.RankText);
-                foreach (Transform child in podium)
-                    if (child.name == "Divider") child.gameObject.SetActive(false);
-            }
-        }
+        LayoutPodium(Child(section, "Podium"), ContentTop);
         float bw = (LiveLeftW - 18f) * .5f;
         string[] buttons = { "TVLive", "TVReplay", "Telemetry" };
         int slot = 0;
@@ -269,6 +293,112 @@ public partial class ODChampionshipPanel
                 if (fill != null) { fill.color = Color.white; fill.cornerRadius = D.Px(5f); }
             }
         }
+    }
+
+    // ── Replay · broadcast page ─────────────────────────────────────────────
+    // Left column: "Replay vidéo" card (16:9 screen with a play disc, "Regarder le
+    // replay" + "Télémétrie"), final podium, one-line circuit card ("Voir en 3D").
+    // Right: the classification card, titled "Résultat final".
+
+    const float ReplayHeroH = 470f, ReplayScreenY = 70f, ReplayScreenH = (LiveLeftW - 72f) * 9f / 16f;
+    const float ReplayButtonsY = ReplayScreenY + ReplayScreenH + 22f, ReplayPodiumY = ContentTop + ReplayHeroH + 24f;
+    const float ReplayCircuitY = ReplayPodiumY + PodiumH + 24f, ReplayCircuitH = ContentBottom - ReplayCircuitY;
+
+    void LayoutReplay(RectTransform section)
+    {
+        if (section == null || section.Find("ReplayHero") != null) return;
+
+        var hero = D.Rect(section, "ReplayHero", GX, ContentTop, LiveLeftW, ReplayHeroH);
+        hero.SetAsFirstSibling();
+        var plateau = hero.gameObject.AddComponent<ODHomepageSurface>();
+        plateau.raycastTarget = false;
+        ODChampionshipTheme.ApplyGlass(plateau);
+        D.Caps(hero, "Heading", "Replay vidéo", 36f, 30f, 400f);
+
+        // The scene's "TV Replay" button stays the TV toggle (VideoPlayerController recolours it
+        // as an on/off switch); the card shows a primary capsule and a screen that press it.
+        var watch = section.Find("TVReplay");
+        if (watch != null) watch.gameObject.SetActive(false);
+        var screen = D.Fill(hero, "Screen", 36f, ReplayScreenY, LiveLeftW - 72f, ReplayScreenH, D.Recessed, 28f);
+        screen.raycastTarget = true;
+        var screenButton = screen.gameObject.AddComponent<Button>();
+        screenButton.transition = Selectable.Transition.None;
+        if (watch != null) screenButton.onClick.AddListener(() => watch.GetComponent<Button>()?.onClick.Invoke());
+        const float disc = 104f;
+        var play = D.Fill(screen.transform, "Play", (LiveLeftW - 72f - disc) * .5f, (ReplayScreenH - disc) * .5f, disc, disc,
+            new Color(1f, 1f, 1f, .92f), disc * .5f);
+        var icon = D.Rect(play.transform, "Icon", (disc - 42f) * .5f + 3f, (disc - 42f) * .5f, 42f, 42f).gameObject.AddComponent<ODNavigationIcon>();
+        icon.symbol = ODNavigationIcon.Symbol.Play;
+        icon.color = D.Ink;
+        icon.raycastTarget = false;
+
+        float watchW = 330f;
+        var primary = D.Button(hero, "Watch", "", 36f, ReplayButtonsY, watchW, 68f, D.ButtonKind.Primary);
+        if (watch != null) primary.onClick.AddListener(() => watch.GetComponent<Button>()?.onClick.Invoke());
+        var watchIcon = D.Rect(primary.transform, "Icon", 34f, 24f, 20f, 20f).gameObject.AddComponent<ODNavigationIcon>();
+        watchIcon.symbol = ODNavigationIcon.Symbol.Play;
+        watchIcon.color = D.Ink;
+        watchIcon.raycastTarget = false;
+        D.Text(primary.transform, "Label", "Regarder le replay", 66f, 0f, watchW - 66f - 24f, 68f, 22f, D.Weight.SemiBold, D.Ink);
+        var telemetry = section.Find("Telemetry");
+        if (telemetry != null)
+        {
+            D.Place(telemetry, GX + 36f + watchW + 14f, ContentTop + ReplayButtonsY, LiveLeftW - 72f - watchW - 14f, 68f);
+            StyleCapsule(telemetry, D.ButtonKind.Secondary, 22f);
+        }
+
+        LayoutPodium(Child(section, "Podium"), ReplayPodiumY);
+
+        var circuit = Child(section, "Circuit");
+        if (circuit != null)
+        {
+            D.Place(circuit, GX, ReplayCircuitY, LiveLeftW, ReplayCircuitH);
+            StyleCaps(circuit, "Heading", 32f, 22f, 300f, "Circuit");
+            StyleLabel(circuit, "LapProgress", 32f, 54f, LiveLeftW - 64f - 210f - 16f, 34f, 21f, D.Weight.SemiBold, D.Primary);
+            foreach (var name in new[] { "ProgressTrack", "LapPercent", "TrackStatus" })
+            {
+                var t = circuit.Find(name);
+                if (t != null) t.gameObject.SetActive(false);
+            }
+            var hint = circuit.Find("MapHint");
+            if (hint != null)
+            {
+                D.Place(hint, LiveLeftW - 32f - 210f, (ReplayCircuitH - 56f) * .5f, 210f, 56f);
+                var text = hint.GetComponent<TextMeshProUGUI>();
+                if (text != null)
+                {
+                    D.Style(text, 20f, D.Weight.SemiBold, Color.white, TextAlignmentOptions.Center);
+                    text.text = "Voir en 3D";
+                    var capsule = D.Fill(hint, "Capsule", 0f, 0f, 210f, 56f, D.ButtonFill, 28f);
+                    capsule.transform.SetAsFirstSibling();
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Live: tyre / stops / last lap columns. Replay: final result, those columns
+    /// hidden (the result has none). Rows built later from the template inherit it.
+    /// </summary>
+    public void SetCourseColumns(bool replay)
+    {
+        var card = transform.Find("CourseStandings");
+        if (card == null) return;
+        var heading = card.Find("Heading")?.GetComponent<TextMeshProUGUI>();
+        if (heading != null) heading.text = replay ? "Résultat final" : "Classement en direct";
+        foreach (var name in new[] { "Column1", "Column2", "Column4" })
+        {
+            var column = card.Find(name);
+            if (column != null) column.gameObject.SetActive(!replay);
+        }
+        var rows = card.Find("StandingsScroll/Viewport/Rows");
+        if (rows == null) return;
+        foreach (Transform row in rows)
+            foreach (var name in new[] { "Tyre", "Stops", "LastLap" })
+            {
+                var cell = row.Find(name);
+                if (cell != null) cell.gameObject.SetActive(!replay);
+            }
     }
 
     void LayoutCourseStandings()
