@@ -4,9 +4,10 @@
  ## All Technical rights reserved
  ##
  ## ODPointableCanvas - Creates a world-space canvas at runtime that the ISDK
- ## rays can click, with the same component set as the scene windows
- ## (PointableCanvas, clipped PlaneSurface, RayInteractable). Everything is
- ## injected before the object is activated, so the ISDK Start checks pass.
+ ## rays and fingers can click, with the same component set as the scene
+ ## windows (PointableCanvas, clipped PlaneSurface, RayInteractable,
+ ## PokeInteractable). Everything is injected before the object is
+ ## activated, so the ISDK Start checks pass.
  ##
  */
 
@@ -52,6 +53,11 @@ public static class ODPointableCanvas
         var ray = go.AddComponent<RayInteractable>();
         ray.InjectAllRayInteractable(surface);
         ray.InjectOptionalPointableElement(pointable);
+
+        // Direct touch with the index finger, like the scene windows.
+        var poke = go.AddComponent<PokeInteractable>();
+        poke.InjectAllPokeInteractable(surface);
+        poke.InjectOptionalPointableElement(pointable);
 
         go.SetActive(true);
         return canvas;

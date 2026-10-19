@@ -209,6 +209,10 @@ public sealed class ODCategoriesPage : MonoBehaviour
             if (scroll.content != null) LayoutRebuilder.ForceRebuildLayoutImmediate(scroll.content);
             scroll.StopMovement();
             scroll.verticalNormalizedPosition = 1f;
+            // When the posters fit, the scroll view must not exist for the pointer: as the drag
+            // handler under every poster, a slight ray shake during a press would cancel the click.
+            scroll.enabled = scroll.content != null && scroll.viewport != null &&
+                             scroll.content.rect.height > scroll.viewport.rect.height + 1f;
         }
     }
 
