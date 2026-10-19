@@ -15,11 +15,11 @@ using UnityEngine;
 public static class ODRuntimeUI
 {
     public static readonly Color Secondary = new Color(1f, 1f, 1f, .62f);
-    public static readonly Color Tertiary  = new Color(1f, 1f, 1f, .42f);
-    public static readonly Color Line      = new Color(1f, 1f, 1f, .10f);
-    public static readonly Color Gold      = new Color(.93f, .78f, .45f);
-    public static readonly Color Dark      = new Color(.08f, .10f, .15f);
-    public static readonly Color LiveRed   = new Color(1f, .34f, .28f);
+    public static readonly Color Tertiary = new Color(1f, 1f, 1f, .42f);
+    public static readonly Color Line = new Color(1f, 1f, 1f, .10f);
+    public static readonly Color Gold = new Color(.93f, .78f, .45f);
+    public static readonly Color Dark = new Color(.08f, .10f, .15f);
+    public static readonly Color LiveRed = new Color(1f, .34f, .28f);
 
     /// <summary>Rect anchored top-left of its parent; x/y are distances from that corner.</summary>
     public static RectTransform Rect(Transform parent, string name, float x, float y, float w, float h)
@@ -46,10 +46,10 @@ public static class ODRuntimeUI
     public static RoundedImage Fill(Transform parent, string name, float x, float y, float w, float h, Color color, float radius)
     {
         var image = Rect(parent, name, x, y, w, h).gameObject.AddComponent<RoundedImage>();
-        image.color          = color;
-        image.cornerRadius   = radius;
+        image.color = color;
+        image.cornerRadius = radius;
         image.cornerSegments = 16;
-        image.raycastTarget  = false;
+        image.raycastTarget = false;
         return image;
     }
 
@@ -58,13 +58,13 @@ public static class ODRuntimeUI
         float size, bool bold = false, bool centered = false, Color? color = null)
     {
         var label = Rect(parent, name, x, y, w, h).gameObject.AddComponent<TextMeshProUGUI>();
-        label.text             = text;
-        label.fontSize         = size;
-        label.fontStyle        = bold ? FontStyles.Bold : FontStyles.Normal;
-        label.alignment        = centered ? TextAlignmentOptions.Center : TextAlignmentOptions.MidlineLeft;
-        label.color            = color ?? Color.white;
-        label.raycastTarget    = false;
-        label.overflowMode     = TextOverflowModes.Ellipsis;
+        label.text = text;
+        label.fontSize = size;
+        label.fontStyle = bold ? FontStyles.Bold : FontStyles.Normal;
+        label.alignment = centered ? TextAlignmentOptions.Center : TextAlignmentOptions.MidlineLeft;
+        label.color = color ?? Color.white;
+        label.raycastTarget = false;
+        label.overflowMode = TextOverflowModes.Ellipsis;
         label.textWrappingMode = TextWrappingModes.NoWrap;
         ODChampionshipTheme.SetFont(label, bold);
         return label;

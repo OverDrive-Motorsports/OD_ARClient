@@ -21,12 +21,12 @@ public sealed class ODProfilePage : MonoBehaviour
         go.SetActive(false);
         var rect = (RectTransform)go.transform;
         rect.SetParent(template.parent, false);
-        rect.anchorMin        = template.anchorMin;
-        rect.anchorMax        = template.anchorMax;
-        rect.pivot            = template.pivot;
+        rect.anchorMin = template.anchorMin;
+        rect.anchorMax = template.anchorMax;
+        rect.pivot = template.pivot;
         rect.anchoredPosition = template.anchoredPosition;
-        rect.sizeDelta        = template.sizeDelta;
-        rect.localScale       = template.localScale;
+        rect.sizeDelta = template.sizeDelta;
+        rect.localScale = template.localScale;
         rect.SetSiblingIndex(template.GetSiblingIndex() + 1);
 
         var page = go.AddComponent<ODProfilePage>();

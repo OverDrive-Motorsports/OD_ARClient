@@ -24,7 +24,7 @@ public struct ODSpring
         {
             float h = Mathf.Min(dt, maxStep);
             velocity += (stiffness * (target - value) - damping * velocity) * h;
-            value    += velocity * h;
+            value += velocity * h;
             dt -= h;
         }
     }

@@ -21,7 +21,7 @@ public class ODReplayTile : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     {
         public string title;     // Grand Prix
         public string detail;    // "Course · 02/03/2024"
-        public bool   saved;     // in "Mes replays"
+        public bool saved;     // in "Mes replays"
     }
 
     static readonly Color RimRest = new Color(1f, 1f, 1f, .10f), RimHover = new Color(1f, 1f, 1f, .40f);

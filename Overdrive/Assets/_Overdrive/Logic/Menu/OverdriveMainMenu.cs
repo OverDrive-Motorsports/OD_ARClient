@@ -38,9 +38,9 @@ public class OverdriveMainMenu : MonoBehaviour
     public TextMeshProUGUI categoryLabel;
 
     [Header("Nav Style")]
-    public Color activeNavColor    = new Color(0.72f, 0.79f, 0.86f, 0.32f);
-    public Color inactiveNavColor  = Color.clear;
-    public Color activeTextColor   = Color.white;
+    public Color activeNavColor = new Color(0.72f, 0.79f, 0.86f, 0.32f);
+    public Color inactiveNavColor = Color.clear;
+    public Color activeTextColor = Color.white;
     public Color inactiveTextColor = new Color(1f, 1f, 1f, 0.80f);
 
     // ── private ──────────────────────────────────────────────────────────────
@@ -86,9 +86,9 @@ public class OverdriveMainMenu : MonoBehaviour
         // Wire nav clicks
         if (!externalNavigation)
         {
-            racesButton?   .onClick.AddListener(() => SelectNav(0));
+            racesButton?.onClick.AddListener(() => SelectNav(0));
             rankingsButton?.onClick.AddListener(() => SelectNav(1));
-            profileButton? .onClick.AddListener(() => SelectNav(2));
+            profileButton?.onClick.AddListener(() => SelectNav(2));
             settingsButton?.onClick.AddListener(() => SelectNav(3));
         }
 
@@ -230,12 +230,12 @@ public class OverdriveMainMenu : MonoBehaviour
             if (img) img.color = Color.white;
 
             var cb = _navButtons[i].colors;
-            cb.normalColor      = active ? activeNavColor : Color.clear;
+            cb.normalColor = active ? activeNavColor : Color.clear;
             cb.highlightedColor = new Color(0.78f, 0.84f, 0.90f, 0.38f);
-            cb.pressedColor     = new Color(0.84f, 0.90f, 0.96f, 0.48f);
-            cb.selectedColor    = cb.normalColor;
-            cb.colorMultiplier  = 1f;
-            cb.fadeDuration     = 0.1f;
+            cb.pressedColor = new Color(0.84f, 0.90f, 0.96f, 0.48f);
+            cb.selectedColor = cb.normalColor;
+            cb.colorMultiplier = 1f;
+            cb.fadeDuration = 0.1f;
             _navButtons[i].colors = cb;
 
             var lbl = _navButtons[i].transform.Find("Label")
@@ -268,9 +268,9 @@ public class OverdriveMainMenu : MonoBehaviour
     {
         // Nav buttons
         // Explicit null checks — never ?? with Unity objects (fake-null)
-        if (racesButton    == null) racesButton    = FindNavButton("Nav_Races");
+        if (racesButton == null) racesButton = FindNavButton("Nav_Races");
         if (rankingsButton == null) rankingsButton = FindNavButton("Nav_Rankings");
-        if (profileButton  == null) profileButton  = FindNavButton("Nav_Profile");
+        if (profileButton == null) profileButton = FindNavButton("Nav_Profile");
         if (settingsButton == null) settingsButton = FindNavButton("Nav_Settings");
 
         // Category label
@@ -344,7 +344,7 @@ public class OverdriveMainMenu : MonoBehaviour
         tmp.text = label + "\n<size=60%>Coming soon</size>";
         tmp.fontSize = 32f;
         tmp.alignment = TMPro.TextAlignmentOptions.Center;
-        tmp.color     = Color.white;
+        tmp.color = Color.white;
 
         go.SetActive(false);
         return go;

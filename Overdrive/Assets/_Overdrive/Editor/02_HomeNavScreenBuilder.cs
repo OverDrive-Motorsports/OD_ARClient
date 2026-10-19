@@ -351,8 +351,8 @@ public static class HomeNavScreenBuilder
         if (tmp != null)
         {
             tmp.textWrappingMode = TextWrappingModes.NoWrap;
-            tmp.overflowMode       = TextOverflowModes.Ellipsis;
-            tmp.alignment          = TextAlignmentOptions.MidlineLeft;
+            tmp.overflowMode = TextOverflowModes.Ellipsis;
+            tmp.alignment = TextAlignmentOptions.MidlineLeft;
         }
     }
 }

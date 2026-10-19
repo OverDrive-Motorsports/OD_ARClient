@@ -55,25 +55,25 @@ public class ODBackendErrorPopup : MonoBehaviour
     {
         // Full-size overlay: dims the page and swallows every pointer hit behind the card.
         var overlay = gameObject.AddComponent<RoundedImage>();
-        overlay.color         = new Color(0f, 0f, 0f, .30f);
-        overlay.cornerRadius  = ODDesign.Px(ODDesign.WindowRadius);
+        overlay.color = new Color(0f, 0f, 0f, .30f);
+        overlay.cornerRadius = ODDesign.Px(ODDesign.WindowRadius);
         overlay.raycastTarget = true;
 
         const float cw = 800f, ch = 560f;
         var card = Centered(transform, "Card", ODDesign.Px(cw), ODDesign.Px(ch));
         var surface = card.gameObject.AddComponent<ODHomepageSurface>();
-        surface.color         = Color.white;
-        surface.cornerRadius  = ODDesign.Px(56f);
-        surface.topLeft       = ODDesign.WithAlpha(ODDesign.Hex("34373F"), .97f);
-        surface.bottomRight   = ODDesign.WithAlpha(ODDesign.Hex("25272D"), .97f);
+        surface.color = Color.white;
+        surface.cornerRadius = ODDesign.Px(56f);
+        surface.topLeft = ODDesign.WithAlpha(ODDesign.Hex("34373F"), .97f);
+        surface.bottomRight = ODDesign.WithAlpha(ODDesign.Hex("25272D"), .97f);
         surface.raycastTarget = true;
-        surface.glass         = true;
-        surface.sheen         = 0f;
-        surface.shadowSize    = 40f;
-        surface.shadowAlpha   = .45f;
-        surface.rimWidth      = 1.5f;
-        surface.rimTop        = new Color(1f, 1f, 1f, .16f);
-        surface.rimBottom     = new Color(1f, 1f, 1f, .06f);
+        surface.glass = true;
+        surface.sheen = 0f;
+        surface.shadowSize = 40f;
+        surface.shadowAlpha = .45f;
+        surface.rimWidth = 1.5f;
+        surface.rimTop = new Color(1f, 1f, 1f, .16f);
+        surface.rimBottom = new Color(1f, 1f, 1f, .06f);
 
         // Icon colour follows the kind of problem: connection (red), no data (orange), session (blue).
         string t = (title ?? "").ToLowerInvariant();
@@ -88,7 +88,7 @@ public class ODBackendErrorPopup : MonoBehaviour
         var body = ODDesign.Text(card, "Message", message, (cw - 640f) * .5f, 46f + 88f + 26f + 50f + 14f, 640f, 110f, 23f,
             ODDesign.Weight.Regular, new Color(1f, 1f, 1f, .72f), TextAlignmentOptions.Top);
         body.textWrappingMode = TextWrappingModes.Normal;
-        body.overflowMode     = TextOverflowModes.Ellipsis;
+        body.overflowMode = TextOverflowModes.Ellipsis;
 
         var retry = ODDesign.Button(card, "RetryButton", "Réessayer", 56f, ch - 44f - 72f * 2f - 12f, cw - 112f, 72f, ODDesign.ButtonKind.Primary);
         retry.onClick.AddListener(() => { Destroy(gameObject); onRetry?.Invoke(); });

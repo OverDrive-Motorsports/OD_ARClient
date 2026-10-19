@@ -144,7 +144,7 @@ public class RaceRankingManager : MonoBehaviour
         if (_order.Count < 2) return;
         int from = Random.Range(1, _order.Count);
         int jump = Random.Range(1, Mathf.Min(3, from) + 1);
-        int to   = from - jump;
+        int to = from - jump;
 
         var d = _order[from];
         _order.RemoveAt(from);
@@ -180,9 +180,9 @@ public class RaceRankingManager : MonoBehaviour
     }
 
     // ── real data (backend or demo data) ──────────────────────────────────────
-    private static readonly Color FastestLap   = new Color(.72f, .55f, 1f);
+    private static readonly Color FastestLap = new Color(.72f, .55f, 1f);
     private static readonly Color LastLapColor = new Color(1f, 1f, 1f, .65f);   // the row template's secondary text
-    private static readonly Color GapGold      = new Color(.93f, .78f, .45f);
+    private static readonly Color GapGold = new Color(.93f, .78f, .45f);
     private bool _external;
 
     /// <summary>
@@ -239,7 +239,7 @@ public class RaceRankingManager : MonoBehaviour
             if (lastLap != null) lastLap.color = entry.isFastestLap ? FastestLap : LastLapColor;
 
             if (fresh.Contains(d) || !animate) d.card.SetYInstant(SlotY(i));
-            else                               d.card.MoveToY(SlotY(i), moveDuration);
+            else d.card.MoveToY(SlotY(i), moveDuration);
         }
 
         if (container != null)

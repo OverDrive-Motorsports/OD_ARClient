@@ -141,13 +141,13 @@ public class ODNavigationIcon : MaskableGraphic
 
     private void Box(VertexHelper m, float x, float y, float w, float h)
     {
-        Quad(m, new Vector2(x, y), new Vector2(x, y+h), new Vector2(x+w, y+h), new Vector2(x+w, y));
+        Quad(m, new Vector2(x, y), new Vector2(x, y + h), new Vector2(x + w, y + h), new Vector2(x + w, y));
     }
 
     private void Outline(VertexHelper m, float x, float y, float w, float h)
     {
-        Line(m, x, y, x, y+h); Line(m, x, y+h, x+w, y+h);
-        Line(m, x+w, y+h, x+w, y); Line(m, x+w, y, x, y);
+        Line(m, x, y, x, y + h); Line(m, x, y + h, x + w, y + h);
+        Line(m, x + w, y + h, x + w, y); Line(m, x + w, y, x, y);
     }
 
     private void Ring(VertexHelper m, Vector2 c, float r, float from, float to)
@@ -156,8 +156,8 @@ public class ODNavigationIcon : MaskableGraphic
         for (int i = 0; i < steps; i++)
         {
             float a = Mathf.Lerp(from, to, (float)i / steps) * Mathf.Deg2Rad;
-            float b = Mathf.Lerp(from, to, (float)(i+1) / steps) * Mathf.Deg2Rad;
-            Line(m, c.x + Mathf.Cos(a)*r, c.y + Mathf.Sin(a)*r, c.x + Mathf.Cos(b)*r, c.y + Mathf.Sin(b)*r);
+            float b = Mathf.Lerp(from, to, (float)(i + 1) / steps) * Mathf.Deg2Rad;
+            Line(m, c.x + Mathf.Cos(a) * r, c.y + Mathf.Sin(a) * r, c.x + Mathf.Cos(b) * r, c.y + Mathf.Sin(b) * r);
         }
     }
 }

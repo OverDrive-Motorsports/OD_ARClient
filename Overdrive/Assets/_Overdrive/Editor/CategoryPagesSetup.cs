@@ -312,7 +312,11 @@ public static class CategoryPagesSetup
                 {
                     id = i == 0 ? "f1" : "coming-" + i,
                     searchTerms = i == 0 ? "F1 Formule 1 Formula 1 GP de Singapour" : "Bientôt disponible prochainement coming soon",
-                    available = i == 0, root = card.gameObject, openButton = open, favoriteButton = favorite, favoriteIcon = star
+                    available = i == 0,
+                    root = card.gameObject,
+                    openButton = open,
+                    favoriteButton = favorite,
+                    favoriteIcon = star
                 };
             }
             directory.noResults = Text(root.transform, "NoResults", "Aucune catégorie trouvée", 32, 360, 1100, 60, 28, centered: true, secondary: true).gameObject;

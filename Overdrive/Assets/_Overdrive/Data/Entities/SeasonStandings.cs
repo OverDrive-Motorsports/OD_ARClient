@@ -14,12 +14,12 @@ using System.Collections.Generic;
 [Serializable]
 public struct SeasonStandingEntry
 {
-    public int    position;
+    public int position;
     public string name;
     /// <summary>Driver entries only; empty for team entries (the team IS the entry).</summary>
     public string teamName;
     /// <summary>float because the backend can award half points.</summary>
-    public float  points;
+    public float points;
 }
 
 /// <summary>
@@ -30,7 +30,7 @@ public struct SeasonStandingEntry
 [Serializable]
 public class SeasonStandingCategory
 {
-    public string                    label;
+    public string label;
     public List<SeasonStandingEntry> drivers = new();
-    public List<SeasonStandingEntry> teams   = new();
+    public List<SeasonStandingEntry> teams = new();
 }

@@ -15,7 +15,7 @@ public class WindowHandle : MonoBehaviour
     [Header("Pill Appearance")]
     public float pillWidth = 0.12f;   // world-space metres
     public float pillThickness = 0.014f;
-    public float belowOffset   = 0.022f;
+    public float belowOffset = 0.022f;
     [Tooltip("Use a local-space handle position for a horizontal tabletop model.")]
     public bool customPillPosition;
     public Vector3 pillLocalPosition;
@@ -29,9 +29,9 @@ public class WindowHandle : MonoBehaviour
     /// window; a constant so stale serialized scene values can't override it.
     /// </summary>
     static readonly Vector2 BarSize = new Vector2(0.224f, 0.0126f);
-    static readonly Color BarIdle  = new Color(1f, 1f, 1f, .62f);
+    static readonly Color BarIdle = new Color(1f, 1f, 1f, .62f);
     static readonly Color BarHover = new Color(1f, 1f, 1f, .90f);
-    static readonly Color BarGrab  = new Color(1f, 1f, 1f, 1f);
+    static readonly Color BarGrab = new Color(1f, 1f, 1f, 1f);
 
     public Color idleColor = new Color(1f, 1f, 1f, 0.85f);
     public Color hoverColor = new Color(0.85f, 0.70f, 0.20f, 1f);
@@ -48,7 +48,7 @@ public class WindowHandle : MonoBehaviour
     public bool IsGrabbed => _grabbed;
 
     // ── runtime ───────────────────────────────────────────────────────────────
-    private Transform    _pill;
+    private Transform _pill;
     private RoundedImage _pillImage;
 
     private bool _grabbed;
@@ -112,9 +112,9 @@ public class WindowHandle : MonoBehaviour
         rect.localPosition = customPillPosition ? pillLocalPosition : new Vector3(0f, -halfH - followGap * inv, 0f);
 
         _pillImage = go.AddComponent<RoundedImage>();
-        _pillImage.cornerRadius   = BarSize.y * inv * .5f;
+        _pillImage.cornerRadius = BarSize.y * inv * .5f;
         _pillImage.cornerSegments = 12;
-        _pillImage.raycastTarget  = false;
+        _pillImage.raycastTarget = false;
         _pill = go.transform;
         SetColor(idleColor);
         FollowTarget();

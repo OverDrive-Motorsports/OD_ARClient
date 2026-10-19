@@ -165,9 +165,9 @@ public sealed class ODSportPage : MonoBehaviour
         {
             switch (currentMode)
             {
-                case Mode.OffWeekend:  championshipPanel.ShowOffSeason(ODOffSeasonMockData.Wec);   break;
-                case Mode.Weekend:     championshipPanel.ShowWeekend(ODWeekendMockData.MotoGp);    break;
-                case Mode.LiveSession: ShowLiveData(ODLiveSessionMockData.Formula1);                break;
+                case Mode.OffWeekend: championshipPanel.ShowOffSeason(ODOffSeasonMockData.Wec); break;
+                case Mode.Weekend: championshipPanel.ShowWeekend(ODWeekendMockData.MotoGp); break;
+                case Mode.LiveSession: ShowLiveData(ODLiveSessionMockData.Formula1); break;
             }
             return;
         }
@@ -180,8 +180,8 @@ public sealed class ODSportPage : MonoBehaviour
         switch (_snapshot.state)
         {
             case ChampionshipViewState.OffSeason: championshipPanel.ShowOffSeason(_snapshot.offSeason); break;
-            case ChampionshipViewState.Weekend:   championshipPanel.ShowWeekend(_snapshot.weekend);     break;
-            case ChampionshipViewState.Live:      ShowLiveData(_snapshot.live);                         break;
+            case ChampionshipViewState.Weekend: championshipPanel.ShowWeekend(_snapshot.weekend); break;
+            case ChampionshipViewState.Live: ShowLiveData(_snapshot.live); break;
         }
     }
 
@@ -250,12 +250,12 @@ public sealed class ODSportPage : MonoBehaviour
     {
         var summary = new ReplaySummary
         {
-            id               = replayId,
-            championshipId   = ODDataSource.UseMocks ? "formula_1" : ODApiConfig.Instance.championshipCode,
+            id = replayId,
+            championshipId = ODDataSource.UseMocks ? "formula_1" : ODApiConfig.Instance.championshipCode,
             championshipName = "Formule 1",
-            grandPrix        = replayGrandPrix,
-            sessionName      = replaySession,
-            season           = replaySeason,
+            grandPrix = replayGrandPrix,
+            sessionName = replaySession,
+            season = replaySeason,
         };
 
         if (ODDataSource.UseMocks)

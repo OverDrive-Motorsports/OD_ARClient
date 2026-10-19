@@ -25,15 +25,15 @@ public enum ChampionshipViewState
 public class ChampionshipSnapshot
 {
     public ChampionshipViewState state;
-    public OffSeasonData         offSeason;
-    public WeekendData           weekend;
-    public LiveSessionData       live;
+    public OffSeasonData offSeason;
+    public WeekendData weekend;
+    public LiveSessionData live;
     /// <summary>False when the backend answered but holds no event for the championship.</summary>
-    public bool                  hasData = true;
+    public bool hasData = true;
 
     // Kept so the live state can be refreshed without re-resolving the catalog.
-    public EventSummaryDto       liveEvent;
-    public SessionSummaryDto     liveSession;
+    public EventSummaryDto liveEvent;
+    public SessionSummaryDto liveSession;
 }
 
 /// <summary>
@@ -64,8 +64,8 @@ public static class ODChampionshipDataService
     {
         DateTime now = DateTime.UtcNow;
         var championships = await ODBackendApi.GetChampionships();
-        var championship  = championships?.FirstOrDefault(c => c.championshipCode == Code);
-        var events        = (await ODBackendApi.GetEvents(Code) ?? new List<EventSummaryDto>()).OrderBy(e => e.startDate).ToList();
+        var championship = championships?.FirstOrDefault(c => c.championshipCode == Code);
+        var events = (await ODBackendApi.GetEvents(Code) ?? new List<EventSummaryDto>()).OrderBy(e => e.startDate).ToList();
 
         var current = events.FirstOrDefault(e => e.status == "live")
                    ?? events.FirstOrDefault(e => e.startDate <= now && now <= e.endDate && e.status != "finished");
@@ -78,25 +78,25 @@ public static class ODChampionshipDataService
             if (liveSession != null)
                 return new ChampionshipSnapshot
                 {
-                    state       = ChampionshipViewState.Live,
-                    live        = await LoadLiveAsync(current, liveSession),
-                    liveEvent   = current,
+                    state = ChampionshipViewState.Live,
+                    live = await LoadLiveAsync(current, liveSession),
+                    liveEvent = current,
                     liveSession = liveSession,
                 };
 
             var standings = await LoadSeasonStandingsAsync(events, now);
-            var weather   = await LoadLatestWeatherAsync(sessions);
+            var weather = await LoadLatestWeatherAsync(sessions);
             return new ChampionshipSnapshot
             {
-                state   = ChampionshipViewState.Weekend,
+                state = ChampionshipViewState.Weekend,
                 weekend = ODChampionshipMapper.ToWeekend(Code, current, sessions, weather, standings),
             };
         }
 
         return new ChampionshipSnapshot
         {
-            hasData   = events.Count > 0,
-            state     = ChampionshipViewState.OffSeason,
+            hasData = events.Count > 0,
+            state = ChampionshipViewState.OffSeason,
             offSeason = ODChampionshipMapper.ToOffSeason(championship, Code, events, now, await LoadSeasonStandingsAsync(events, now)),
         };
     }
@@ -106,11 +106,11 @@ public static class ODChampionshipDataService
     {
         string id = session.sessionId;
         var positionsTask = ODBackendApi.GetPositions(id);
-        var driversTask   = ODBackendApi.GetSessionDrivers(id);
-        var stintsTask    = ODBackendApi.GetStints(id);
-        var pitsTask      = ODBackendApi.GetPitStops(id);
-        var lapsTask      = ODBackendApi.GetLaps(id);
-        var weatherTask   = ODBackendApi.GetWeather(id);
+        var driversTask = ODBackendApi.GetSessionDrivers(id);
+        var stintsTask = ODBackendApi.GetStints(id);
+        var pitsTask = ODBackendApi.GetPitStops(id);
+        var lapsTask = ODBackendApi.GetLaps(id);
+        var weatherTask = ODBackendApi.GetWeather(id);
         await Task.WhenAll(positionsTask, driversTask, stintsTask, pitsTask, lapsTask, weatherTask);
 
         return ODChampionshipMapper.ToLive(Code, evt, session, positionsTask.Result,
@@ -134,8 +134,8 @@ public static class ODChampionshipDataService
             foreach (var race in races)
             {
                 var driversTask = ODBackendApi.GetDriverStandings(race.sessionId);
-                var teamsTask   = ODBackendApi.GetTeamStandings(race.sessionId);
-                var lookupTask  = ODBackendApi.GetSessionDrivers(race.sessionId);
+                var teamsTask = ODBackendApi.GetTeamStandings(race.sessionId);
+                var lookupTask = ODBackendApi.GetSessionDrivers(race.sessionId);
                 await Task.WhenAll(driversTask, teamsTask, lookupTask);
 
                 var standings = ODChampionshipMapper.ToStandings(driversTask.Result?.data, teamsTask.Result?.data,
@@ -152,7 +152,7 @@ public static class ODChampionshipDataService
         foreach (var session in sessions.Where(s => s.status != "scheduled").OrderByDescending(s => s.startTime))
         {
             var samples = await ODBackendApi.GetWeather(session.sessionId);
-            var latest  = samples?.OrderBy(w => w.timestamp).LastOrDefault();
+            var latest = samples?.OrderBy(w => w.timestamp).LastOrDefault();
             if (latest != null) return latest;
         }
         return null;
@@ -167,8 +167,8 @@ public static class ODChampionshipDataService
     {
         DateTime now = DateTime.UtcNow;
         var championships = await ODBackendApi.GetChampionships();
-        var championship  = championships?.FirstOrDefault(c => c.championshipCode == Code);
-        var events        = await ODBackendApi.GetEvents(Code) ?? new List<EventSummaryDto>();
+        var championship = championships?.FirstOrDefault(c => c.championshipCode == Code);
+        var events = await ODBackendApi.GetEvents(Code) ?? new List<EventSummaryDto>();
 
         var replays = new List<ReplaySummary>();
         foreach (var evt in events.Where(e => e.status == "finished" || e.endDate < now)
@@ -186,7 +186,7 @@ public static class ODChampionshipDataService
 
     public static async Task<ReplayDetail> LoadReplayDetailAsync(ReplaySummary summary)
     {
-        var resultTask  = ODBackendApi.GetSessionResult(summary.id);
+        var resultTask = ODBackendApi.GetSessionResult(summary.id);
         var driversTask = ODBackendApi.GetSessionDrivers(summary.id);
         await Task.WhenAll(resultTask, driversTask);
         return ODChampionshipMapper.ToReplayDetail(summary, null, resultTask.Result?.data,
@@ -202,10 +202,10 @@ public static class ODChampionshipDataService
         if (!(error is ODApiException api)) return "Erreur";
         switch (api.Kind)
         {
-            case ODApiErrorKind.Unreachable:     return "Backend injoignable";
-            case ODApiErrorKind.Unauthorized:    return "Accès refusé";
+            case ODApiErrorKind.Unreachable: return "Backend injoignable";
+            case ODApiErrorKind.Unauthorized: return "Accès refusé";
             case ODApiErrorKind.InvalidResponse: return "Réponse invalide";
-            default:                             return "Erreur du backend";
+            default: return "Erreur du backend";
         }
     }
 

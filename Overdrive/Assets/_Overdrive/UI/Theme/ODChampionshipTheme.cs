@@ -49,7 +49,10 @@ public static class ODChampionshipTheme
     /// <summary>Unknown championship / loading, and the catalogue: identity blue + gold glows.</summary>
     static readonly Palette Neutral = new Palette
     {
-        accent = ODDesign.Blue, topLeft = ODDesign.Blue, middle = ODDesign.Night, bottomRight = ODDesign.Gold,
+        accent = ODDesign.Blue,
+        topLeft = ODDesign.Blue,
+        middle = ODDesign.Night,
+        bottomRight = ODDesign.Gold,
     };
 
     /// <summary>Accepts backend codes ("f1") and mock ids ("formula_1", "wec", "motogp").</summary>
@@ -68,7 +71,7 @@ public static class ODChampionshipTheme
     // (window radius − padding). Passthrough can't be blurred by an app, so
     // opacity stays high enough to keep text readable over a busy room.
 
-    public static readonly float WindowRadius  = ODDesign.Px(ODDesign.WindowRadius);
+    public static readonly float WindowRadius = ODDesign.Px(ODDesign.WindowRadius);
     public static readonly float PlatterRadius = ODDesign.Px(ODDesign.CardRadius);
 
     /// <summary>Warm neutral grey of visionOS glass; the championship colour is only a glow in the corners.</summary>
@@ -83,8 +86,8 @@ public static class ODChampionshipTheme
 
     static void Rim(ODHomepageSurface surface, float width, float top, float bottom)
     {
-        surface.rimWidth  = width;
-        surface.rimTop    = new Color(1f, 1f, 1f, top);
+        surface.rimWidth = width;
+        surface.rimTop = new Color(1f, 1f, 1f, top);
         surface.rimBottom = new Color(1f, 1f, 1f, bottom);
         // The rim replaces the builders' Outline (a shifted copy that looks doubled on glass).
         var outline = surface.GetComponent<Outline>();
@@ -126,14 +129,14 @@ public static class ODChampionshipTheme
     {
         if (surface == null) return;
         if (GlassMaterial != null) surface.material = GlassMaterial;
-        surface.glass        = true;
-        surface.useMiddle    = true;
-        surface.topLeft      = WithAlpha(Color.Lerp(palette.topLeft, Color.white, .18f), .78f);
-        surface.middle       = new Color(1f, 1f, 1f, .20f);
-        surface.bottomRight  = WithAlpha(Color.Lerp(palette.bottomRight, ODDesign.Night, .35f), .55f);
-        surface.sheen        = .04f;
-        surface.shadowSize   = 46f;
-        surface.shadowAlpha  = .22f;
+        surface.glass = true;
+        surface.useMiddle = true;
+        surface.topLeft = WithAlpha(Color.Lerp(palette.topLeft, Color.white, .18f), .78f);
+        surface.middle = new Color(1f, 1f, 1f, .20f);
+        surface.bottomRight = WithAlpha(Color.Lerp(palette.bottomRight, ODDesign.Night, .35f), .55f);
+        surface.sheen = .04f;
+        surface.shadowSize = 46f;
+        surface.shadowAlpha = .22f;
         surface.cornerRadius = WindowRadius;
         Rim(surface, 1.5f, .24f, .10f);
         surface.SetVerticesDirty();
@@ -146,14 +149,14 @@ public static class ODChampionshipTheme
     {
         if (surface == null) return;
         if (GlassMaterial != null) surface.material = GlassMaterial;
-        surface.glass        = true;
-        surface.useMiddle    = false;
+        surface.glass = true;
+        surface.useMiddle = false;
         // Design "Ornement": brighter glass (white 18 % → 8 %) floating in front, shadow below.
-        surface.topLeft      = new Color(1f, 1f, 1f, .44f);
-        surface.bottomRight  = new Color(1f, 1f, 1f, .20f);
-        surface.sheen        = .05f;
-        surface.shadowSize   = 30f;
-        surface.shadowAlpha  = .30f;
+        surface.topLeft = new Color(1f, 1f, 1f, .44f);
+        surface.bottomRight = new Color(1f, 1f, 1f, .20f);
+        surface.sheen = .05f;
+        surface.shadowSize = 30f;
+        surface.shadowAlpha = .30f;
         Rim(surface, 1.5f, .22f, .12f);
         surface.SetVerticesDirty();
     }
@@ -166,12 +169,12 @@ public static class ODChampionshipTheme
     public static void ApplyTile(ODHomepageSurface surface, Palette palette, bool muted = false)
     {
         if (surface == null) return;
-        surface.glass        = true;
-        surface.useMiddle    = false;
-        surface.topLeft      = Glass(palette.topLeft, muted ? .40f : .85f, muted ? .62f : .78f);
-        surface.bottomRight  = Glass(palette.middle, .30f, muted ? .52f : .62f);
-        surface.sheen        = .06f;
-        surface.shadowSize   = 0f;
+        surface.glass = true;
+        surface.useMiddle = false;
+        surface.topLeft = Glass(palette.topLeft, muted ? .40f : .85f, muted ? .62f : .78f);
+        surface.bottomRight = Glass(palette.middle, .30f, muted ? .52f : .62f);
+        surface.sheen = .06f;
+        surface.shadowSize = 0f;
         surface.cornerRadius = PlatterRadius;
         Rim(surface, 1.25f, .14f, .02f);
         surface.SetVerticesDirty();
@@ -181,13 +184,13 @@ public static class ODChampionshipTheme
     public static void ApplyGlass(ODHomepageSurface surface)
     {
         if (surface == null) return;
-        surface.glass        = true;
-        surface.useMiddle    = false;
+        surface.glass = true;
+        surface.useMiddle = false;
         // Design "Plateau": white 7 % on the glass, a 1-px light line on top, no shadow.
-        surface.topLeft      = ODDesign.Plateau;
-        surface.bottomRight  = ODDesign.Plateau;
-        surface.sheen        = 0f;
-        surface.shadowSize   = 0f;
+        surface.topLeft = ODDesign.Plateau;
+        surface.bottomRight = ODDesign.Plateau;
+        surface.sheen = 0f;
+        surface.shadowSize = 0f;
         surface.cornerRadius = PlatterRadius;
         Rim(surface, 1f, .08f, 0f);
         surface.SetVerticesDirty();
@@ -219,15 +222,15 @@ public static class ODChampionshipTheme
     {
         if (_fontsLoaded) return;
         _fontsLoaded = true;
-        _regular  = Resources.Load<TMP_FontAsset>("Fonts/DMSans-Regular SDF");
+        _regular = Resources.Load<TMP_FontAsset>("Fonts/DMSans-Regular SDF");
         _semiBold = Resources.Load<TMP_FontAsset>("Fonts/DMSans-SemiBold SDF");
-        _bold     = Resources.Load<TMP_FontAsset>("Fonts/DMSans-Bold SDF");
+        _bold = Resources.Load<TMP_FontAsset>("Fonts/DMSans-Bold SDF");
         if (_regular == null) Debug.LogWarning("[ODChampionshipTheme] DM Sans font assets missing (UI/Resources/Fonts) — keeping the current font.");
     }
 
-    public static TMP_FontAsset Regular  { get { LoadFonts(); return _regular; } }
+    public static TMP_FontAsset Regular { get { LoadFonts(); return _regular; } }
     public static TMP_FontAsset SemiBold { get { LoadFonts(); return _semiBold != null ? _semiBold : _regular; } }
-    public static TMP_FontAsset Bold     { get { LoadFonts(); return _bold != null ? _bold : SemiBold; } }
+    public static TMP_FontAsset Bold { get { LoadFonts(); return _bold != null ? _bold : SemiBold; } }
 
     /// <summary>Titles start at this size; smaller bold text is emphasis (SemiBold).</summary>
     const float TitleSize = 28f;
@@ -246,7 +249,7 @@ public static class ODChampionshipTheme
         {
             if (label.GetComponent<ODTypeScaled>() != null) continue;
             label.gameObject.AddComponent<ODTypeScaled>();
-            label.fontSize    *= TypeScale;
+            label.fontSize *= TypeScale;
             label.fontSizeMin *= TypeScale;
             label.fontSizeMax *= TypeScale;
             if (label.characterSpacing < 0f) label.characterSpacing *= TypeScale;
@@ -271,7 +274,7 @@ public static class ODChampionshipTheme
         if (label == null || Regular == null) return;
 
         bool title = bold && label.fontSize >= TitleSize;
-        label.font      = title ? Bold : bold ? SemiBold : Regular;
+        label.font = title ? Bold : bold ? SemiBold : Regular;
         label.fontStyle &= ~FontStyles.Bold;
         if (title) label.characterSpacing = -1.5f;
     }
@@ -300,7 +303,7 @@ public static class ODChampionshipTheme
             else if (button.targetGraphic is ODHomepageSurface)
             {
                 colors.highlightedColor = new Color(.90f, .90f, .92f);
-                colors.pressedColor     = new Color(.75f, .75f, .78f);
+                colors.pressedColor = new Color(.75f, .75f, .78f);
                 button.colors = colors;
                 var outline = button.GetComponent<Outline>();
                 if (outline != null) outline.enabled = false;
@@ -347,7 +350,7 @@ public static class ODChampionshipTheme
         var labelRect = label.rectTransform;
         labelRect.anchorMin = new Vector2(0f, 0f);
         labelRect.anchorMax = new Vector2(1f, 1f);
-        labelRect.pivot     = new Vector2(0f, .5f);
+        labelRect.pivot = new Vector2(0f, .5f);
         labelRect.offsetMin = new Vector2(pad + dot + gap, 0f);
         labelRect.offsetMax = new Vector2(0f, 0f);
         label.transform.SetAsLastSibling();

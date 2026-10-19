@@ -30,15 +30,15 @@ public enum ODApiErrorKind
 
 public class ODApiException : Exception
 {
-    public ODApiErrorKind Kind       { get; }
-    public long           StatusCode { get; }
-    public string         Url        { get; }
+    public ODApiErrorKind Kind { get; }
+    public long StatusCode { get; }
+    public string Url { get; }
 
     public ODApiException(ODApiErrorKind kind, string url, long statusCode, string message, Exception inner = null)
         : base(message, inner)
     {
-        Kind       = kind;
-        Url        = url;
+        Kind = kind;
+        Url = url;
         StatusCode = statusCode;
     }
 }
@@ -52,8 +52,8 @@ public static class ODApiClient
     static readonly JsonSerializerSettings Json = new JsonSerializerSettings
     {
         MissingMemberHandling = MissingMemberHandling.Ignore,
-        NullValueHandling     = NullValueHandling.Ignore,
-        DateTimeZoneHandling  = DateTimeZoneHandling.Utc,
+        NullValueHandling = NullValueHandling.Ignore,
+        DateTimeZoneHandling = DateTimeZoneHandling.Utc,
     };
 
     /// <summary>GET {BaseUrl}{path} and deserialize the body. A 404 / empty body returns default(T).</summary>

@@ -132,7 +132,7 @@ public sealed class CircuitManipulator : MonoBehaviour
         }
 
         float k = 1f - Mathf.Exp(-Smoothing * dt);
-        _shownYaw   = Mathf.Lerp(_shownYaw, _yaw, k);
+        _shownYaw = Mathf.Lerp(_shownYaw, _yaw, k);
         _shownScale = Mathf.Lerp(_shownScale, _scale, k);
         Apply();
     }

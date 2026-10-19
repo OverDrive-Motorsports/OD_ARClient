@@ -23,16 +23,21 @@ public static class ODWeekendMockData
     public static WeekendData MotoGp => new WeekendData
     {
         championshipId = "motogp",
-        eventName      = "Gran Premio d’Italia",
-        accentColor    = new Color32(0xE8, 0x77, 0x22, 0xFF),
+        eventName = "Gran Premio d’Italia",
+        accentColor = new Color32(0xE8, 0x77, 0x22, 0xFF),
         circuit = new WeekendCircuit
         {
-            name = "Autodromo del Mugello", location = "Scarperia e San Piero · Italie",
-            lengthKm = 5.245f, totalLaps = 23,
+            name = "Autodromo del Mugello",
+            location = "Scarperia e San Piero · Italie",
+            lengthKm = 5.245f,
+            totalLaps = 23,
         },
         weather = new WeekendWeather
         {
-            airTempC = 18, trackTempC = 28, windKmh = -1, rainChancePercent = 10,
+            airTempC = 18,
+            trackTempC = 28,
+            windKmh = -1,
+            rainChancePercent = 10,
         },
         sessions = new List<WeekendSession>
         {

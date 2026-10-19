@@ -16,21 +16,21 @@ using UnityEngine;
 [Serializable]
 public struct OffSeasonEvent
 {
-    public string   name;       // "24 Heures du Mans"
-    public string   location;   // "Circuit de la Sarthe · France"
-    public int      round;      // Championship round number, 0 when unknown
+    public string name;       // "24 Heures du Mans"
+    public string location;   // "Circuit de la Sarthe · France"
+    public int round;      // Championship round number, 0 when unknown
     public DateTime startsAt;
 }
 
 // Not Unity-serialized: nullable members (Unity's serializer skips them).
 public class OffSeasonData
 {
-    public string          championshipId;
-    public string          championshipName;  // "WEC"
-    public string          headline;          // "World Endurance"
-    public Color           accentColor;
+    public string championshipId;
+    public string championshipName;  // "WEC"
+    public string headline;          // "World Endurance"
+    public Color accentColor;
     public OffSeasonEvent? nextEvent;          // null when the season is over
     /// <summary>Events after nextEvent, in chronological order.</summary>
-    public List<OffSeasonEvent>         calendar  = new();
+    public List<OffSeasonEvent> calendar = new();
     public List<SeasonStandingCategory> standings = new();
 }

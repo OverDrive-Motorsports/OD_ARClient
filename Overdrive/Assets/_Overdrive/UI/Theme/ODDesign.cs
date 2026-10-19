@@ -36,49 +36,49 @@ public static class ODDesign
 
     // ── Colours ─────────────────────────────────────────────────────────────
 
-    public static readonly Color Gold        = Hex("C9A84C");
-    public static readonly Color GoldText    = Hex("E3C97A");
-    public static readonly Color GoldLight   = Hex("F0D68A");
-    public static readonly Color Blue        = Hex("378ADD");
-    public static readonly Color BlueText    = Hex("7DB6F0");
-    public static readonly Color BlueSoft    = Hex("9CCBF5");
-    public static readonly Color Night       = Hex("15171C");
-    public static readonly Color Ink         = Hex("0B0C10");   // text on white
+    public static readonly Color Gold = Hex("C9A84C");
+    public static readonly Color GoldText = Hex("E3C97A");
+    public static readonly Color GoldLight = Hex("F0D68A");
+    public static readonly Color Blue = Hex("378ADD");
+    public static readonly Color BlueText = Hex("7DB6F0");
+    public static readonly Color BlueSoft = Hex("9CCBF5");
+    public static readonly Color Night = Hex("15171C");
+    public static readonly Color Ink = Hex("0B0C10");   // text on white
 
-    public static readonly Color Live        = Hex("FF453A");   // direct, erreur
-    public static readonly Color Green       = Hex("30D158");   // connecté, piste libre
-    public static readonly Color GreenText   = Hex("6BE08C");
-    public static readonly Color Orange      = Hex("FF9F0A");   // week-end en cours, attention
-    public static readonly Color OrangeText  = Hex("FFB340");
-    public static readonly Color Purple      = Hex("BF5AF2");   // meilleur tour
-    public static readonly Color PurpleText  = Hex("D59BF6");
+    public static readonly Color Live = Hex("FF453A");   // direct, erreur
+    public static readonly Color Green = Hex("30D158");   // connecté, piste libre
+    public static readonly Color GreenText = Hex("6BE08C");
+    public static readonly Color Orange = Hex("FF9F0A");   // week-end en cours, attention
+    public static readonly Color OrangeText = Hex("FFB340");
+    public static readonly Color Purple = Hex("BF5AF2");   // meilleur tour
+    public static readonly Color PurpleText = Hex("D59BF6");
     public static readonly Color Destructive = Hex("FF6B61");
-    public static readonly Color TyreSoft    = Hex("FF453A");
-    public static readonly Color TyreMedium  = Hex("FFD60A");
-    public static readonly Color TyreHard    = Hex("F2F2F7");
+    public static readonly Color TyreSoft = Hex("FF453A");
+    public static readonly Color TyreMedium = Hex("FFD60A");
+    public static readonly Color TyreHard = Hex("F2F2F7");
 
-    public static readonly Color Primary   = new Color(1f, 1f, 1f, .96f);
+    public static readonly Color Primary = new Color(1f, 1f, 1f, .96f);
     public static readonly Color Secondary = new Color(1f, 1f, 1f, .62f);
-    public static readonly Color Muted     = new Color(1f, 1f, 1f, .66f);
-    public static readonly Color Tertiary  = new Color(1f, 1f, 1f, .50f);
-    public static readonly Color RankText  = new Color(1f, 1f, 1f, .70f);
+    public static readonly Color Muted = new Color(1f, 1f, 1f, .66f);
+    public static readonly Color Tertiary = new Color(1f, 1f, 1f, .50f);
+    public static readonly Color RankText = new Color(1f, 1f, 1f, .70f);
     public static readonly Color ColumnText = new Color(1f, 1f, 1f, .58f);
 
-    public static readonly Color Plateau     = new Color(1f, 1f, 1f, .07f);
-    public static readonly Color Recessed    = new Color(0f, 0f, 0f, .22f);
-    public static readonly Color Divider     = new Color(1f, 1f, 1f, .08f);
+    public static readonly Color Plateau = new Color(1f, 1f, 1f, .07f);
+    public static readonly Color Recessed = new Color(0f, 0f, 0f, .22f);
+    public static readonly Color Divider = new Color(1f, 1f, 1f, .08f);
     public static readonly Color DividerStrong = new Color(1f, 1f, 1f, .10f);
-    public static readonly Color Avatar      = new Color(1f, 1f, 1f, .10f);
+    public static readonly Color Avatar = new Color(1f, 1f, 1f, .10f);
 
-    public static readonly Color ButtonFill     = new Color(1f, 1f, 1f, .14f);
-    public static readonly Color ButtonHover    = new Color(1f, 1f, 1f, .26f);
-    public static readonly Color ButtonPressed  = new Color(1f, 1f, 1f, .34f);
+    public static readonly Color ButtonFill = new Color(1f, 1f, 1f, .14f);
+    public static readonly Color ButtonHover = new Color(1f, 1f, 1f, .26f);
+    public static readonly Color ButtonPressed = new Color(1f, 1f, 1f, .34f);
     public static readonly Color ButtonDisabled = new Color(1f, 1f, 1f, .07f);
     public static readonly Color IconButtonFill = new Color(1f, 1f, 1f, .12f);
 
     public static readonly Color SegmentTrack = new Color(0f, 0f, 0f, .22f);
-    public static readonly Color SegmentOn    = new Color(1f, 1f, 1f, .24f);
-    public static readonly Color SwitchOff    = new Color(1f, 1f, 1f, .16f);
+    public static readonly Color SegmentOn = new Color(1f, 1f, 1f, .24f);
+    public static readonly Color SwitchOff = new Color(1f, 1f, 1f, .16f);
 
     // ── Shapes & type (design px) ───────────────────────────────────────────
 
@@ -96,13 +96,13 @@ public static class ODDesign
     {
         switch (Normalise(id))
         {
-            case "f1":      colour = Hex("E10600"); dark = Hex("4A0200"); return;
-            case "motogp":  colour = Hex("FF6A00"); dark = Hex("5A2400"); return;
-            case "wec":     colour = Hex("4C86FF"); dark = Hex("0E2766"); return;
-            case "fe":      colour = Hex("22B8AC"); dark = Hex("0A3C39"); return;
+            case "f1": colour = Hex("E10600"); dark = Hex("4A0200"); return;
+            case "motogp": colour = Hex("FF6A00"); dark = Hex("5A2400"); return;
+            case "wec": colour = Hex("4C86FF"); dark = Hex("0E2766"); return;
+            case "fe": colour = Hex("22B8AC"); dark = Hex("0A3C39"); return;
             case "indycar": colour = Hex("8A5CF6"); dark = Hex("2A1661"); return;
-            case "wrc":     colour = Hex("2FBF71"); dark = Hex("0A3320"); return;
-            default:        colour = Blue;          dark = Night;         return;
+            case "wrc": colour = Hex("2FBF71"); dark = Hex("0A3320"); return;
+            default: colour = Blue; dark = Night; return;
         }
     }
 
@@ -301,9 +301,9 @@ public static class ODDesign
         switch (style)
         {
             case ODStatusStyle.Weekend: fill = WithAlpha(Orange, .24f); dot = Orange; glow = true; return;
-            case ODStatusStyle.Live:    fill = WithAlpha(Live, .28f);   dot = Live;   glow = true; return;
-            case ODStatusStyle.Replay:  fill = WithAlpha(Blue, .26f);   dot = BlueSoft; glow = false; return;
-            default:                    fill = new Color(1f, 1f, 1f, .12f); dot = new Color(1f, 1f, 1f, .60f); glow = false; return;
+            case ODStatusStyle.Live: fill = WithAlpha(Live, .28f); dot = Live; glow = true; return;
+            case ODStatusStyle.Replay: fill = WithAlpha(Blue, .26f); dot = BlueSoft; glow = false; return;
+            default: fill = new Color(1f, 1f, 1f, .12f); dot = new Color(1f, 1f, 1f, .60f); glow = false; return;
         }
     }
 

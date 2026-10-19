@@ -23,13 +23,14 @@ public static class ODOffSeasonMockData
     /// </summary>
     public static OffSeasonData Wec => new OffSeasonData
     {
-        championshipId   = "wec",
+        championshipId = "wec",
         championshipName = "WEC",
-        headline         = "World Endurance",
-        accentColor      = new Color32(0x4A, 0x90, 0xD9, 0xFF),
+        headline = "World Endurance",
+        accentColor = new Color32(0x4A, 0x90, 0xD9, 0xFF),
         nextEvent = new OffSeasonEvent
         {
-            name = "24 Heures du Mans", location = "Circuit de la Sarthe · France",
+            name = "24 Heures du Mans",
+            location = "Circuit de la Sarthe · France",
             startsAt = DateTime.Now.AddDays(12).AddHours(4).AddMinutes(37),
         },
         calendar = new List<OffSeasonEvent>

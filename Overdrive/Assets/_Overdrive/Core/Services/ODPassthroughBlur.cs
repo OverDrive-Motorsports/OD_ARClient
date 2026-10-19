@@ -44,24 +44,24 @@ public sealed class ODPassthroughBlur : MonoBehaviour
     const int PanoWidth = 256, PanoHeight = 128;
     const float PanoWeight = .65f;   // share of each new frame: smooths the 10-fps stream and exposure changes
 
-    const int   CameraFramerate = 10;
-    const float StopDelay       = 2f;   // seconds without a glass page before the camera stops
+    const int CameraFramerate = 10;
+    const float StopDelay = 2f;   // seconds without a glass page before the camera stops
 
     [Tooltip("Set when the camera texture turns out to be stored top-down on device.")]
     public bool flipY;
 
     // Globals read by the OD/UI Glass shader.
-    static readonly int PanoTexId    = Shader.PropertyToID("_ODPanoTex");
+    static readonly int PanoTexId = Shader.PropertyToID("_ODPanoTex");
     static readonly int PanoOriginId = Shader.PropertyToID("_ODPanoOrigin");
-    static readonly int ReadyId      = Shader.PropertyToID("_ODBlurReady");
+    static readonly int ReadyId = Shader.PropertyToID("_ODBlurReady");
     // Panorama pass inputs.
-    static readonly int CamTexId       = Shader.PropertyToID("_CamTex");
+    static readonly int CamTexId = Shader.PropertyToID("_CamTex");
     static readonly int WorldToLocalId = Shader.PropertyToID("_CamWorldToLocal");
-    static readonly int IntrinsicsId   = Shader.PropertyToID("_CamIntrinsics");
-    static readonly int CropId         = Shader.PropertyToID("_CamCrop");
-    static readonly int FlipId         = Shader.PropertyToID("_CamFlipY");
-    static readonly int WeightId       = Shader.PropertyToID("_Weight");
-    static readonly int OffsetId       = Shader.PropertyToID("_Offset");
+    static readonly int IntrinsicsId = Shader.PropertyToID("_CamIntrinsics");
+    static readonly int CropId = Shader.PropertyToID("_CamCrop");
+    static readonly int FlipId = Shader.PropertyToID("_CamFlipY");
+    static readonly int WeightId = Shader.PropertyToID("_Weight");
+    static readonly int OffsetId = Shader.PropertyToID("_Offset");
 
     static ODPassthroughBlur _instance;
     static readonly System.Collections.Generic.HashSet<Object> _users = new System.Collections.Generic.HashSet<Object>();
@@ -112,10 +112,10 @@ public sealed class ODPassthroughBlur : MonoBehaviour
         _instance = go.AddComponent<ODPassthroughBlur>();
         var camera = go.AddComponent<PassthroughCameraAccess>();
         camera.enabled = false;   // MaxFramerate refuses changes while the component is enabled, even on an inactive object
-        camera.CameraPosition      = PassthroughCameraAccess.CameraPositionType.Left;
+        camera.CameraPosition = PassthroughCameraAccess.CameraPositionType.Left;
         camera.RequestedResolution = new Vector2Int(320, 240);   // smallest stream
-        camera.MaxFramerate        = CameraFramerate;
-        camera.enabled             = true;   // OnEnable runs when the object is activated below
+        camera.MaxFramerate = CameraFramerate;
+        camera.enabled = true;   // OnEnable runs when the object is activated below
         _instance._camera = camera;
 
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -207,9 +207,9 @@ public sealed class ODPassthroughBlur : MonoBehaviour
             intrinsics.PrincipalPoint.x, intrinsics.PrincipalPoint.y));
 
         // Sensor region actually covered by the current resolution (PassthroughCameraAccess.CalcSensorCropRegion).
-        Vector2 sensor  = intrinsics.SensorResolution;
+        Vector2 sensor = intrinsics.SensorResolution;
         Vector2 current = _camera.CurrentResolution;
-        Vector2 scale   = new Vector2(current.x / sensor.x, current.y / sensor.y);
+        Vector2 scale = new Vector2(current.x / sensor.x, current.y / sensor.y);
         scale /= Mathf.Max(scale.x, scale.y);
         _pano.SetVector(CropId, new Vector4(sensor.x * (1f - scale.x) * .5f, sensor.y * (1f - scale.y) * .5f,
             sensor.x * scale.x, sensor.y * scale.y));
@@ -251,7 +251,7 @@ public sealed class ODPassthroughBlur : MonoBehaviour
     {
         if (_panoFront != null) return;
         _panoFront = NewPanorama();
-        _panoBack  = NewPanorama();
+        _panoBack = NewPanorama();
     }
 
     static RenderTexture NewTarget(int width, int height)
@@ -259,7 +259,7 @@ public sealed class ODPassthroughBlur : MonoBehaviour
         var rt = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32)
         {
             filterMode = FilterMode.Bilinear,
-            wrapMode   = TextureWrapMode.Clamp,
+            wrapMode = TextureWrapMode.Clamp,
         };
         rt.Create();
         return rt;
@@ -270,10 +270,10 @@ public sealed class ODPassthroughBlur : MonoBehaviour
     {
         var rt = new RenderTexture(PanoWidth, PanoHeight, 0, RenderTextureFormat.ARGB32)
         {
-            filterMode       = FilterMode.Bilinear,
-            wrapModeU        = TextureWrapMode.Repeat,
-            wrapModeV        = TextureWrapMode.Clamp,
-            useMipMap        = true,
+            filterMode = FilterMode.Bilinear,
+            wrapModeU = TextureWrapMode.Repeat,
+            wrapModeV = TextureWrapMode.Clamp,
+            useMipMap = true,
             autoGenerateMips = true,
         };
         rt.Create();

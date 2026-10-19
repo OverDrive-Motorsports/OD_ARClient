@@ -16,30 +16,30 @@ using UnityEngine;
 [Serializable]
 public struct LiveEntry
 {
-    public int    position;
+    public int position;
     public string name;
     public string code;           // "VER" — derived from the name when empty
     public string teamName;
-    public Color  teamColor;
+    public Color teamColor;
     public string gap;            // "Leader", "+3.4s", "+1 tour"
     public string tyreCompound;   // "S", "M", "H", "I", "W"
-    public int    tyreAgeLaps;    // -1 when unknown
-    public int    pitStops;       // -1 when unknown
+    public int tyreAgeLaps;    // -1 when unknown
+    public int pitStops;       // -1 when unknown
     public string lastLap;        // "1:13.884"
-    public bool   isFastestLap;   // shown in purple
+    public bool isFastestLap;   // shown in purple
 }
 
 [Serializable]
 public class LiveSessionData
 {
-    public string          championshipId;
-    public string          sessionName;   // "Course"
-    public string          circuitName;   // "Circuit de Monaco"
-    public string          conditions;    // "38°C · Ensoleillé"
-    public Color           accentColor;
-    public int             currentLap;
-    public int             totalLaps;     // 0 when unknown (timed sessions)
-    public string          trackStatus;   // "Piste libre", "Safety Car", "Drapeau rouge"...
+    public string championshipId;
+    public string sessionName;   // "Course"
+    public string circuitName;   // "Circuit de Monaco"
+    public string conditions;    // "38°C · Ensoleillé"
+    public Color accentColor;
+    public int currentLap;
+    public int totalLaps;     // 0 when unknown (timed sessions)
+    public string trackStatus;   // "Piste libre", "Safety Car", "Drapeau rouge"...
     /// <summary>Running order, P1 first — any count.</summary>
     public List<LiveEntry> entries = new();
 }

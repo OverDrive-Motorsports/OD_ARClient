@@ -130,10 +130,10 @@ public sealed class ODReplayCatalog : MonoBehaviour
         for (int i = 0; i < _replays.Count; i++)
             entries[i] = new Entry
             {
-                id        = _replays[i].id,
+                id = _replays[i].id,
                 grandPrix = _replays[i].grandPrix,
-                session   = _replays[i].sessionName,
-                season    = _replays[i].season,
+                session = _replays[i].sessionName,
+                season = _replays[i].season,
             };
 
         if (_replays.Count > 0) ApplyTheme(_replays[0].championshipId);
@@ -257,9 +257,9 @@ public sealed class ODReplayCatalog : MonoBehaviour
 
     private static ODReplayTile.Info TileInfo(ReplaySummary replay, bool saved) => new ODReplayTile.Info
     {
-        title  = replay.grandPrix,
+        title = replay.grandPrix,
         detail = replay.date != default ? $"{replay.sessionName} · {replay.date:dd/MM/yyyy}" : replay.sessionName,
-        saved  = saved,
+        saved = saved,
     };
 
     /// <summary>French name of the championship whatever the source ("Formula 1" in the mocks).</summary>

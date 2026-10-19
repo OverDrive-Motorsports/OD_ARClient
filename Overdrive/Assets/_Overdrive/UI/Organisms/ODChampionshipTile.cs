@@ -24,8 +24,8 @@ public class ODChampionshipTile : MonoBehaviour, IPointerEnterHandler, IPointerE
     public struct Info
     {
         public string id, code, name, subtitle, round, next;
-        public float  progress;    // season progress, 0..1
-        public bool   live, available;
+        public float progress;    // season progress, 0..1
+        public bool live, available;
     }
 
     /// <summary>Poster size in design px (3 columns x 2 rows in the 1920 x 1200 window).</summary>
@@ -38,13 +38,13 @@ public class ODChampionshipTile : MonoBehaviour, IPointerEnterHandler, IPointerE
     const float HoverBrighten = .06f, PressScale = .985f;
     static readonly Color RimRest = new Color(1f, 1f, 1f, .14f), RimHover = new Color(1f, 1f, 1f, .38f);
 
-    Info              _info;
+    Info _info;
     ODHomepageSurface _surface;
-    CanvasGroup       _group;
-    Color             _topLeft, _bottomRight;
+    CanvasGroup _group;
+    Color _topLeft, _bottomRight;
 
     float _hover, _press, _fade, _introTime, _introDelay;
-    bool  _hovered, _pressed;
+    bool _hovered, _pressed;
 
     public Info Data => _info;
 

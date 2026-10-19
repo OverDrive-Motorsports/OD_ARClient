@@ -21,7 +21,7 @@ public class ODTabBar : MonoBehaviour
 {
     public struct Tab
     {
-        public string                  label;
+        public string label;
         public ODNavigationIcon.Symbol icon;
         public Tab(string label, ODNavigationIcon.Symbol icon) { this.label = label; this.icon = icon; }
     }
@@ -29,28 +29,28 @@ public class ODTabBar : MonoBehaviour
     // Spring tuning: (stiffness, damping). Damping ratio ~0.7 → one soft overshoot.
     const float SlideK = 300f, SlideC = 26f;     // selection pill
     const float ScaleK = 420f, ScaleC = 22f;     // item hover / press
-    const float GlowK  = 220f, GlowC  = 30f;     // text / icon colour
+    const float GlowK = 220f, GlowC = 30f;     // text / icon colour
     const float IntroK = 260f, IntroC = 24f;     // bar appearance
 
     const float HoverScale = 1.06f, PressScale = .92f, HoverLift = 3f;
     const float StretchPerSpeed = .035f, MaxStretch = 46f;
 
-    static readonly Color ActiveText   = Color.white;
+    static readonly Color ActiveText = Color.white;
     static readonly Color InactiveText = new Color(1f, 1f, 1f, .66f);
-    static readonly Color HoverText    = new Color(1f, 1f, 1f, .92f);
+    static readonly Color HoverText = new Color(1f, 1f, 1f, .92f);
 
-    Button[]          _buttons;
-    ODTabBarItem[]    _items;
-    Graphic[]         _labels;
+    Button[] _buttons;
+    ODTabBarItem[] _items;
+    Graphic[] _labels;
     ODNavigationIcon[] _icons;
-    float[]           _iconBaseY;
-    ODSpring[]          _scale, _lift, _tint;
+    float[] _iconBaseY;
+    ODSpring[] _scale, _lift, _tint;
 
     ODHomepageSurface _selection;
-    CanvasGroup       _group;
-    ODSpring          _pillX, _pillW, _intro;
-    int               _active = -1;
-    bool              _placed;
+    CanvasGroup _group;
+    ODSpring _pillX, _pillW, _intro;
+    int _active = -1;
+    bool _placed;
 
     /// <summary>Restyles <paramref name="bar"/> (a row of buttons laid out by a HorizontalLayoutGroup).</summary>
     public static ODTabBar Attach(RectTransform bar, Button[] buttons, Tab[] tabs)
@@ -80,7 +80,7 @@ public class ODTabBar : MonoBehaviour
         glass.raycastTarget = false;
         ODChampionshipTheme.ApplyBar(glass);
         glass.cornerRadius = height * .5f;
-        glass.shadowSize   = 22f;
+        glass.shadowSize = 22f;
 
         // Selection pill: lighter glass that glides (and stretches) under the active tab.
         var selectionRect = ODRuntimeUI.Rect(bar, "Selection", 0f, 0f, 10f, 10f);
@@ -88,13 +88,13 @@ public class ODTabBar : MonoBehaviour
         selectionRect.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
         _selection = selectionRect.gameObject.AddComponent<ODHomepageSurface>();
         _selection.raycastTarget = false;
-        _selection.glass       = true;
+        _selection.glass = true;
         // Design ornament: the selected control sits on a white 22 % capsule.
-        _selection.topLeft     = new Color(1f, 1f, 1f, .22f);
+        _selection.topLeft = new Color(1f, 1f, 1f, .22f);
         _selection.bottomRight = new Color(1f, 1f, 1f, .22f);
-        _selection.sheen       = 0f;
-        _selection.rimWidth    = 0f;
-        _selection.shadowSize  = 0f;
+        _selection.sheen = 0f;
+        _selection.rimWidth = 0f;
+        _selection.shadowSize = 0f;
         _selection.gameObject.SetActive(false);
 
         int n = buttons.Length;
@@ -117,7 +117,7 @@ public class ODTabBar : MonoBehaviour
             if (outline != null) outline.enabled = false;
 
             var label = button.transform.Find("Label")?.GetComponent<TextMeshProUGUI>();
-            var icon  = button.GetComponentInChildren<ODNavigationIcon>(true);
+            var icon = button.GetComponentInChildren<ODNavigationIcon>(true);
             if (i < tabs.Length)
             {
                 if (label != null)

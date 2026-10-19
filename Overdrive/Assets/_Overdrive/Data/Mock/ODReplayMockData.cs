@@ -55,10 +55,10 @@ public static class ODReplayMockData
             if (race.summary.id != id) continue;
             return new ReplayDetail
             {
-                summary   = race.summary,
-                location  = race.location,
+                summary = race.summary,
+                location = race.location,
                 totalLaps = race.laps,
-                results   = new List<LiveEntry>(race.top5),
+                results = new List<LiveEntry>(race.top5),
             };
         }
         return null;
@@ -66,14 +66,14 @@ public static class ODReplayMockData
 
     static ReplaySummary Summary(string id, string grandPrix, string session, string circuit, DateTime date) => new ReplaySummary
     {
-        id               = id,
-        championshipId   = "formula_1",
+        id = id,
+        championshipId = "formula_1",
         championshipName = "Formula 1",
-        grandPrix        = grandPrix,
-        sessionName      = session,
-        season           = date.Year.ToString(),
-        circuit          = circuit,
-        date             = date,
+        grandPrix = grandPrix,
+        sessionName = session,
+        season = date.Year.ToString(),
+        circuit = circuit,
+        date = date,
     };
 
     static LiveEntry[] Top5(params (string name, string team, int rgb, string gap)[] rows)
@@ -82,13 +82,13 @@ public static class ODReplayMockData
         for (int i = 0; i < rows.Length; i++)
             entries[i] = new LiveEntry
             {
-                position    = i + 1,
-                name        = rows[i].name,
-                teamName    = rows[i].team,
-                teamColor   = new Color32((byte)(rows[i].rgb >> 16), (byte)(rows[i].rgb >> 8), (byte)rows[i].rgb, 0xFF),
-                gap         = i == 0 ? "1er" : ODChampionshipMapper.FormatGap(rows[i].gap),
+                position = i + 1,
+                name = rows[i].name,
+                teamName = rows[i].team,
+                teamColor = new Color32((byte)(rows[i].rgb >> 16), (byte)(rows[i].rgb >> 8), (byte)rows[i].rgb, 0xFF),
+                gap = i == 0 ? "1er" : ODChampionshipMapper.FormatGap(rows[i].gap),
                 tyreAgeLaps = -1,
-                pitStops    = -1,
+                pitStops = -1,
             };
         return entries;
     }

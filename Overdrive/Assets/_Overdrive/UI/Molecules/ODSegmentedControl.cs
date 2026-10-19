@@ -20,7 +20,7 @@ public class ODSegmentedControl : MonoBehaviour
 {
     const float SlideK = 340f, SlideC = 30f;
 
-    static readonly Color IdleText  = new Color(1f, 1f, 1f, .66f);
+    static readonly Color IdleText = new Color(1f, 1f, 1f, .66f);
     static readonly Color HoverText = new Color(1f, 1f, 1f, .92f);
 
     float Inset;

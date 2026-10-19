@@ -85,7 +85,7 @@ public sealed class ODHomepageSurface : RoundedImage
         float y = Mathf.InverseLerp(rect.yMin, rect.yMax, position.y);
         float t = (x + 1f - y) * .5f;
         Color tint = !useMiddle ? Color.Lerp(topLeft, bottomRight, t)
-                   : t < .5f    ? Color.Lerp(topLeft, middle, t * 2f)
+                   : t < .5f ? Color.Lerp(topLeft, middle, t * 2f)
                                 : Color.Lerp(middle, bottomRight, (t - .5f) * 2f);
         if (glass && sheen > 0f)
         {

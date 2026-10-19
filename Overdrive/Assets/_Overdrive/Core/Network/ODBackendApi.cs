@@ -16,7 +16,7 @@ using UnityEngine.Networking;
 public static class ODBackendApi
 {
     const string Championship = "/v1/championship";
-    const string RaceData     = "/v1/race-data";
+    const string RaceData = "/v1/race-data";
 
     static string Esc(string value) => UnityWebRequest.EscapeURL(value ?? "");
 

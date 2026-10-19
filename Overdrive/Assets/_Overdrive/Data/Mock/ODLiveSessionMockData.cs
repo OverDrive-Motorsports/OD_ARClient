@@ -19,13 +19,13 @@ public static class ODLiveSessionMockData
     public static LiveSessionData Formula1 => new LiveSessionData
     {
         championshipId = "formula_1",
-        sessionName    = "Course",
-        circuitName    = "Circuit de Monaco",
-        conditions     = "38°C · Ensoleillé",
-        accentColor    = new Color32(0xE8, 0x00, 0x00, 0xFF),
-        currentLap     = 42,
-        totalLaps      = 78,
-        trackStatus    = null,
+        sessionName = "Course",
+        circuitName = "Circuit de Monaco",
+        conditions = "38°C · Ensoleillé",
+        accentColor = new Color32(0xE8, 0x00, 0x00, 0xFF),
+        currentLap = 42,
+        totalLaps = 78,
+        trackStatus = null,
         entries = new List<LiveEntry>
         {
             Entry(1,  "Verstappen", "Red Bull Racing", 0x3671C6, "Leader", "M"),
@@ -44,13 +44,13 @@ public static class ODLiveSessionMockData
 
     static LiveEntry Entry(int position, string name, string team, int rgb, string gap, string tyre) => new LiveEntry
     {
-        position     = position,
-        name         = name,
-        teamName     = team,
-        teamColor    = new Color32((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb, 0xFF),
-        gap          = gap,
+        position = position,
+        name = name,
+        teamName = team,
+        teamColor = new Color32((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb, 0xFF),
+        gap = gap,
         tyreCompound = tyre,
-        tyreAgeLaps  = -1,   // not in the mobile mock
-        pitStops     = -1,   // not in the mobile mock
+        tyreAgeLaps = -1,   // not in the mobile mock
+        pitStops = -1,   // not in the mobile mock
     };
 }

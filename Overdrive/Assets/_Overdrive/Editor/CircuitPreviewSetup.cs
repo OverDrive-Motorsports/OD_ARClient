@@ -23,7 +23,8 @@ public static class CircuitPreviewSetup
     private static readonly string[] Labels = { "Baku", "Jeddah", "Yas Marina" };
 
     [Serializable] private class Materials { public MaterialData[] materials; }
-    [Serializable] private class MaterialData
+    [Serializable]
+    private class MaterialData
     {
         public string name;
         public float[] color;

@@ -151,8 +151,8 @@ public static class ChampionshipPageScreenBuilder
         if (tmp != null)
         {
             tmp.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
-            tmp.overflowMode       = TMPro.TextOverflowModes.Ellipsis;
-            tmp.alignment          = TMPro.TextAlignmentOptions.MidlineLeft;
+            tmp.overflowMode = TMPro.TextOverflowModes.Ellipsis;
+            tmp.alignment = TMPro.TextAlignmentOptions.MidlineLeft;
         }
     }
 }

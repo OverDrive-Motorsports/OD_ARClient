@@ -25,25 +25,25 @@ public class ChampionshipSummaryDto
     public string name;
     public string provider;
     public string category;
-    public int    season;
-    public bool   isActive;
+    public int season;
+    public bool isActive;
 }
 
 /// <summary>GET /championships/{code}/events, GET /events/{eventId}. status: scheduled | live | finished.</summary>
 public class EventSummaryDto
 {
-    public string   eventId;
-    public string   championshipId;
-    public string   championshipCode;
-    public int      seasonYear;
-    public int?     roundNumber;
-    public string   name;
-    public string   officialName;
-    public string   circuit;
-    public string   location;
-    public string   countryName;
-    public string   countryCode;
-    public string   status;
+    public string eventId;
+    public string championshipId;
+    public string championshipCode;
+    public int seasonYear;
+    public int? roundNumber;
+    public string name;
+    public string officialName;
+    public string circuit;
+    public string location;
+    public string countryName;
+    public string countryCode;
+    public string status;
     public DateTime startDate;
     public DateTime endDate;
 }
@@ -51,14 +51,14 @@ public class EventSummaryDto
 /// <summary>GET /events/{eventId}/sessions. type: race | sprint | quali | practice — status: scheduled | live | finished.</summary>
 public class SessionSummaryDto
 {
-    public string    sessionId;
-    public string    eventId;
-    public string    type;
-    public string    status;
-    public string    name;
-    public string    circuit;
-    public string    broadcastUrl;
-    public DateTime  startTime;
+    public string sessionId;
+    public string eventId;
+    public string type;
+    public string status;
+    public string name;
+    public string circuit;
+    public string broadcastUrl;
+    public DateTime startTime;
     public DateTime? endTime;
 }
 
@@ -66,7 +66,7 @@ public class SessionSummaryDto
 public class DriverSummaryDto
 {
     public string id;
-    public int    driverNumber;
+    public int driverNumber;
     public string fullName;
     public string firstName;
     public string lastName;
@@ -80,17 +80,17 @@ public class DriverSummaryDto
 /// <summary>GET /sessions/{sessionId}/datasets/{dataset} — the generic envelope.</summary>
 public class SessionDatasetDto<TRow>
 {
-    public string     sessionId;
-    public string     dataset;
-    public int        count;
+    public string sessionId;
+    public string dataset;
+    public int count;
     public List<TRow> data;
 }
 
 /// <summary>Row of the "championship_drivers" dataset (OpenF1 championship_drivers + driver enrichment).</summary>
 public class DriverStandingRowDto
 {
-    public int    driver_number;
-    public int?   position_current;
+    public int driver_number;
+    public int? position_current;
     public float? points_current;
     public string driver_name;
     public string team_name;
@@ -101,21 +101,21 @@ public class DriverStandingRowDto
 public class TeamStandingRowDto
 {
     public string team_name;
-    public int?   position_current;
+    public int? position_current;
     public float? points_current;
 }
 
 /// <summary>Row of the "session_result" dataset (OpenF1 session_result + driver enrichment).</summary>
 public class SessionResultRowDto
 {
-    public int    driver_number;
-    public int?   position;
-    public int?   number_of_laps;
+    public int driver_number;
+    public int? position;
+    public int? number_of_laps;
     /// <summary>Seconds behind the winner, or a string like "+1 LAP" — kept raw.</summary>
     public object gap_to_leader;
-    public bool   dnf;
-    public bool   dns;
-    public bool   dsq;
+    public bool dnf;
+    public bool dns;
+    public bool dsq;
     public string driver_name;
     public string team_name;
     public string team_color;

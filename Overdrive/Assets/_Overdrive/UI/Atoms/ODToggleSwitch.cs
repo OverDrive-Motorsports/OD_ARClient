@@ -18,7 +18,7 @@ public class ODToggleSwitch : MonoBehaviour
     public static readonly float Width = ODDesign.Px(84f), Height = ODDesign.Px(48f);
     static readonly float Knob = ODDesign.Px(40f), Gap = ODDesign.Px(4f);
 
-    static readonly Color OnColor  = ODDesign.Blue;
+    static readonly Color OnColor = ODDesign.Blue;
     static readonly Color OffColor = ODDesign.SwitchOff;
 
     public event Action<bool> Changed;

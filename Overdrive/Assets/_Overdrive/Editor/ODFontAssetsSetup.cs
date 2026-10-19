@@ -54,7 +54,7 @@ public static class ODFontAssetsSetup
 
             // The atlas and material must live inside the asset, or they're lost on reload.
             asset.atlasTextures[0].name = weight + " Atlas";
-            asset.material.name         = weight + " Material";
+            asset.material.name = weight + " Material";
             AssetDatabase.AddObjectToAsset(asset.atlasTextures[0], asset);
             AssetDatabase.AddObjectToAsset(asset.material, asset);
 
