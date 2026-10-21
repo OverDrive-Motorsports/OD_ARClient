@@ -147,7 +147,7 @@ public class ODMenuOverlay : MonoBehaviour
         TextMeshProUGUI labelTmp = labelGO.AddComponent<TextMeshProUGUI>();
         labelTmp.text = item.label;
         labelTmp.alignment = TextAlignmentOptions.MidlineLeft;
-        labelTmp.enableWordWrapping = false;
+        labelTmp.textWrappingMode = TextWrappingModes.NoWrap;
         ODLabel labelLbl = labelGO.AddComponent<ODLabel>();
         labelLbl.textStyle = ODLabel.TextStyle.Body;
         labelGO.AddComponent<LayoutElement>().flexibleWidth = 1f;

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Oculus.Interaction;
 
 /// <summary>
@@ -15,6 +16,22 @@ public class WindowHandle : MonoBehaviour
     public float pillWidth = 0.12f;   // world-space metres
     public float pillThickness = 0.014f;
     public float belowOffset = 0.022f;
+    [Tooltip("Use a local-space handle position for a horizontal tabletop model.")]
+    public bool customPillPosition;
+    public Vector3 pillLocalPosition;
+    [Tooltip("Visible window inside a larger canvas: the pill follows its bottom edge (visionOS-style) instead of the canvas'.")]
+    public RectTransform followTarget;
+    [Tooltip("Gap (m) between the followed window's bottom edge and the pill.")]
+    public float followGap = 0.02f;
+    /// <summary>
+    /// Design window bar (Canva "Fenêtre, barre & ornement"): 320 x 18 px under a
+    /// 1920-px window, i.e. 1/6 of the window width, white 62 % at rest. Same on every
+    /// window; a constant so stale serialized scene values can't override it.
+    /// </summary>
+    static readonly Vector2 BarSize = new Vector2(0.224f, 0.0126f);
+    static readonly Color BarIdle = new Color(1f, 1f, 1f, .62f);
+    static readonly Color BarHover = new Color(1f, 1f, 1f, .90f);
+    static readonly Color BarGrab = new Color(1f, 1f, 1f, 1f);
 
     public Color idleColor = new Color(1f, 1f, 1f, 0.85f);
     public Color hoverColor = new Color(0.85f, 0.70f, 0.20f, 1f);
@@ -26,9 +43,13 @@ public class WindowHandle : MonoBehaviour
     [Tooltip("Fingertip proximity grab radius (m)")]
     public float proximityRadius = 0.07f;
 
+    /// <summary>A ray or fingertip is on the bar (ornaments appear while it is).</summary>
+    public bool IsHovered { get; private set; }
+    public bool IsGrabbed => _grabbed;
+
     // ── runtime ───────────────────────────────────────────────────────────────
     private Transform _pill;
-    private Material _pillMat;
+    private RoundedImage _pillImage;
 
     private bool _grabbed;
     private RayInteractor _grabRay;
@@ -61,34 +82,54 @@ public class WindowHandle : MonoBehaviour
         else CheckGrabStart();
     }
 
+    private void OnDisable()
+    {
+        // A window hidden during a grab must not keep following the old ray
+        // when it opens again (notably the circuit preview next to the player).
+        EndGrab();
+    }
+
+    private void LateUpdate() => FollowTarget();
+
     // ── pill ────────────────────────────────────────────────────────────────────
+    /// <summary>
+    /// visionOS window bar: a flat UI capsule (fully rounded ends) drawn on the
+    /// canvas itself, not a 3D cylinder. Never a raycast target — grabbing is
+    /// detected geometrically below, so the ISDK ray still reaches the UI.
+    /// </summary>
     private void BuildPill()
     {
-        var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        go.name = "WindowHandlePill";
-        go.layer = 2; // Ignore Raycast → ISDK ray passes through, stays visible
-
-        var col = go.GetComponent<Collider>();
-        if (col != null) Destroy(col);
-
-        go.transform.SetParent(transform, false);
+        var go = new GameObject("WindowHandlePill", typeof(RectTransform));
+        go.layer = 2; // Ignore Raycast
+        var rect = (RectTransform)go.transform;
+        rect.SetParent(transform, false);
+        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
 
         float inv = 1f / Mathf.Max(transform.lossyScale.x, 0.0001f);
+        rect.sizeDelta = BarSize * inv;   // same bar on every window
+
         float halfH = GetComponent<RectTransform>().rect.height * 0.5f;
+        rect.localPosition = customPillPosition ? pillLocalPosition : new Vector3(0f, -halfH - followGap * inv, 0f);
 
-        go.transform.localPosition = new Vector3(0f, -halfH - belowOffset * inv, 0f);
-        go.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
-        go.transform.localScale = new Vector3(
-            pillThickness * inv * 0.5f,
-            pillWidth * inv * 0.5f,
-            pillThickness * inv * 0.5f);
-
-        var shader = Shader.Find("Universal Render Pipeline/Unlit");
-        if (shader == null) shader = Shader.Find("Unlit/Color");
-        _pillMat = new Material(shader);
-        _pillMat.color = idleColor;
-        go.GetComponent<Renderer>().material = _pillMat;
+        _pillImage = go.AddComponent<RoundedImage>();
+        _pillImage.cornerRadius = BarSize.y * inv * .5f;
+        _pillImage.cornerSegments = 12;
+        _pillImage.raycastTarget = false;
         _pill = go.transform;
+        SetColor(idleColor);
+        FollowTarget();
+    }
+
+    /// <summary>Keeps the pill centred just under the followed window, whose size changes between pages.</summary>
+    private void FollowTarget()
+    {
+        if (_pill == null || followTarget == null || customPillPosition || !followTarget.gameObject.activeInHierarchy) return;
+
+        var corners = new Vector3[4];
+        followTarget.GetWorldCorners(corners);   // 0 = bottom-left, 3 = bottom-right
+        Vector3 bottomCentre = transform.InverseTransformPoint((corners[0] + corners[3]) * .5f);
+        float inv = 1f / Mathf.Max(transform.lossyScale.x, 0.0001f);
+        _pill.localPosition = new Vector3(bottomCentre.x, bottomCentre.y - followGap * inv, 0f);
     }
 
     // ── grab detection ────────────────────────────────────────────────────────
@@ -147,6 +188,7 @@ public class WindowHandle : MonoBehaviour
             }
         }
 
+        IsHovered = hover;
         SetColor(hover ? hoverColor : idleColor);
     }
 
@@ -191,6 +233,7 @@ public class WindowHandle : MonoBehaviour
 
     private void EndGrab()
     {
+        IsHovered = false;
         _grabbed = false; _proxGrab = false;
         _grabRay = null; _proxHand = null;
         SetColor(idleColor);
@@ -229,5 +272,10 @@ public class WindowHandle : MonoBehaviour
         return hand.transform.position;
     }
 
-    private void SetColor(Color c) { if (_pillMat != null) _pillMat.color = c; }
+    private void SetColor(Color c)
+    {
+        if (_pillImage == null) return;
+        // Same on every window: white 62 % at rest, lit on gaze, full white while grabbed.
+        _pillImage.color = c == idleColor ? BarIdle : c == grabColor ? BarGrab : BarHover;
+    }
 }

@@ -232,7 +232,7 @@ public static class SearchPanelScreenBuilder
             hlg.childControlWidth = true; hlg.childForceExpandWidth = true;
             hlg.childControlHeight = true; hlg.childForceExpandHeight = true;
             var lbl = Label(chip.transform, "Label", s, 14f, FontStyles.Normal, Txt, TextAlignmentOptions.Center);
-            lbl.GetComponent<TextMeshProUGUI>().enableWordWrapping = false;
+            lbl.GetComponent<TextMeshProUGUI>().textWrappingMode = TextWrappingModes.NoWrap;
         }
     }
 
