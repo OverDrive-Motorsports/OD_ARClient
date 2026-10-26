@@ -1,204 +1,191 @@
-using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
-using TMPro;
 
-/// <summary>
-/// Controls the floating video player window: play/pause, ±10s skip,
-/// scrub bar, and back-to-menu. Opened by clicking a race thumbnail
-/// in the main menu grid. The window is draggable via WindowHandle.
-/// </summary>
-public class VideoPlayerController : MonoBehaviour
+/// <summary>Course-owned TV panel. Never replaces or hides the course window.</summary>
+public sealed class VideoPlayerController : MonoBehaviour
 {
-    public static VideoPlayerController Instance { get; private set; }
-
-    [Header("References (auto-wired by builder)")]
+    public ODSportPage course;
     public VideoPlayer videoPlayer;
-    public Slider scrubSlider;
-    public TextMeshProUGUI playPauseLabel;
-    public TextMeshProUGUI timeLabel;
+    public GameObject videoPanel;
+    public GameObject standingsPanel;
     public TextMeshProUGUI titleLabel;
-    public Canvas menuCanvas;     // main menu to return to
+    public TextMeshProUGUI playPauseLabel;
+    public TextMeshProUGUI playbackStatus;
+    public TextMeshProUGUI standingsHeading;
+    public TextMeshProUGUI volumeLabel;
+    public Button playPauseButton;
+    public Button[] tvButtons;
+    public Slider volumeSlider;
+    public ScrollRect standingsScroll;
+    public float volume = .7f;
 
-    [Header("Live Standings")]
-    [Tooltip("The RankingWidget shown next to the video (auto-found if empty)")]
-    public GameObject rankingWidget;
-    [Tooltip("Horizontal offset of the ranking widget from the player (metres)")]
-    public float rankingSideOffset = 1.0f;
+    public bool IsVisible => videoPanel != null && videoPanel.activeSelf;
+    public bool WantsPlayback => _wantsPlayback;
+    private bool _bound;
+    private bool _wantsPlayback;
+    private string _context;
+    private double _resumeTime;
 
-    private CanvasGroup _cg;
-    private bool _seeking;
+    private void Awake() => Initialize();
 
-    private void Awake()
+    public void Initialize()
     {
-        Instance = this;
-        _cg = GetComponent<CanvasGroup>();
-        if (_cg == null) _cg = gameObject.AddComponent<CanvasGroup>();
-
-        if (menuCanvas == null)
-        {
-            var go = GameObject.Find("OverdriveMenuCanvas");
-            if (go != null) menuCanvas = go.GetComponent<Canvas>();
-        }
-
-        // Find the ranking widget even if it is inactive in the scene
-        if (rankingWidget == null)
-        {
-            var mgr = FindFirstObjectByType<RaceRankingManager>(FindObjectsInactive.Include);
-            if (mgr != null) rankingWidget = mgr.gameObject;
-        }
-
-        if (scrubSlider != null)
-            scrubSlider.onValueChanged.AddListener(OnScrub);
-
-        // Buttons must be wired at RUNTIME: editor-time AddListener calls are
-        // not serialized into the scene, so they'd be dead in a build.
-        WireButton("VideoSurface/BackButton", BackToMenu);
-        WireButton("PlayPause", TogglePlayPause);
-        WireButton("Rewind10", () => SkipSeconds(-10f));
-        WireButton("Forward10", () => SkipSeconds(+10f));
-
-        gameObject.SetActive(false);
-    }
-
-    private void WireButton(string path, UnityEngine.Events.UnityAction action)
-    {
-        var t = transform.Find(path);
-        if (t == null) { Debug.LogWarning("[VideoPlayer] Button not found: " + path); return; }
-        var btn = t.GetComponent<Button>();
-        if (btn == null) return;
-        btn.onClick.RemoveAllListeners();
-        btn.onClick.AddListener(action);
-    }
-
-    // ── open / close ─────────────────────────────────────────────────────────
-    public void Open(string title)
-    {
-        gameObject.SetActive(true);
-
-        if (titleLabel != null) titleLabel.text = title;
-
-        // Take the menu's place in space, then hide the menu
-        if (menuCanvas != null)
-        {
-            transform.position = menuCanvas.transform.position;
-            transform.rotation = menuCanvas.transform.rotation;
-            menuCanvas.gameObject.SetActive(false);
-        }
-        else
-        {
-            PlaceInFrontOfUser();
-        }
-
+        if (_bound) return;
+        _bound = true;
+        if (tvButtons != null)
+            foreach (var button in tvButtons) button?.onClick.AddListener(ToggleVideo);
+        playPauseButton?.onClick.AddListener(TogglePlayPause);
+        volumeSlider?.onValueChanged.AddListener(SetVolume);
         if (videoPlayer != null)
         {
-            videoPlayer.time = 0;
-            videoPlayer.Play();
+            videoPlayer.prepareCompleted += Prepared;
+            videoPlayer.errorReceived += PlaybackError;
+            videoPlayer.loopPointReached += PlaybackEnded;
         }
-        UpdatePlayLabel();
-        ShowRanking();
-
-        // Fade only (no scale): the root's own localScale is the baked 0.001
-        // world-space canvas scale, so UITransitions must not touch transform here.
-        StopAllCoroutines();
-        StartCoroutine(UITransitions.FadeScaleIn(_cg, null));
+        SetVolume(volume);
+        HideVideo();
     }
 
-    public void BackToMenu()
+    public void Configure(ODSportPage.Mode mode, string context, string title)
     {
-        StopAllCoroutines();
-        StartCoroutine(BackToMenuRoutine());
-    }
-
-    private IEnumerator BackToMenuRoutine()
-    {
-        yield return UITransitions.FadeScaleOut(_cg, null);
-
-        if (videoPlayer != null) videoPlayer.Stop();
-
-        if (rankingWidget != null) rankingWidget.SetActive(false);
-
-        if (menuCanvas != null)
+        Initialize();
+        bool session = mode == ODSportPage.Mode.LiveSession || mode == ODSportPage.Mode.Replay;
+        if (_context != context)
         {
-            menuCanvas.transform.position = transform.position;
-            menuCanvas.transform.rotation = transform.rotation;
-            menuCanvas.gameObject.SetActive(true);
+            HideVideo();
+            if (Application.isPlaying && videoPlayer != null) videoPlayer.Stop();
+            _resumeTime = 0;
+            _context = context;
+            if (standingsScroll != null) standingsScroll.verticalNormalizedPosition = 1;
         }
-        gameObject.SetActive(false);
+        if (standingsPanel != null) standingsPanel.SetActive(session);
+        if (standingsHeading != null) standingsHeading.text = mode == ODSportPage.Mode.Replay
+            ? "Classement de la course" : "Classement de la session";
+        if (titleLabel != null) titleLabel.text = (mode == ODSportPage.Mode.Replay ? "TV Replay" : "TV Live") + " · " + title;
+        if (!session) HideVideo();
     }
 
-    /// <summary>Places the standings widget beside the video and shows it.</summary>
-    private void ShowRanking()
+    public void ToggleVideo()
     {
-        if (rankingWidget == null) return;
-
-        rankingWidget.transform.position =
-            transform.position + transform.right * rankingSideOffset;
-        rankingWidget.transform.rotation = transform.rotation;
-        rankingWidget.SetActive(true);
+        if (course == null || !course.isActiveAndEnabled ||
+            (course.currentMode != ODSportPage.Mode.LiveSession && course.currentMode != ODSportPage.Mode.Replay)) return;
+        if (IsVisible) { HideVideo(); return; }
+        videoPanel.SetActive(true);
+        videoPanel.GetComponent<ODCourseVideoDock>()?.PlaceIfNeeded();
+        var canvas = videoPanel.GetComponent<Canvas>();
+        if (canvas != null) canvas.worldCamera = Camera.main;
+        _wantsPlayback = true;
+        if (Application.isPlaying && videoPlayer != null)
+        {
+            if (videoPlayer.isPrepared) { ApplyVolume(); videoPlayer.Play(); }
+            else videoPlayer.Prepare();
+        }
+        if (playbackStatus != null) playbackStatus.text = videoPlayer != null && videoPlayer.isPrepared
+            ? "Vidéo mock · Pas de flux connecté" : "Vidéo mock · Chargement…";
+        UpdateControls();
     }
 
-    // ── transport controls ────────────────────────────────────────────────────
+    public void HideVideo()
+    {
+        _wantsPlayback = false;
+        if (Application.isPlaying && videoPlayer != null && videoPlayer.isPrepared)
+        {
+            _resumeTime = videoPlayer.time >= videoPlayer.length - .1 ? 0 : videoPlayer.time;
+            videoPlayer.Pause();
+        }
+        if (videoPanel != null) videoPanel.SetActive(false);
+        UpdateControls();
+    }
+
     public void TogglePlayPause()
     {
+        if (!IsVisible) return;
+        _wantsPlayback = !_wantsPlayback;
+        if (Application.isPlaying && videoPlayer != null)
+        {
+            if (!_wantsPlayback) videoPlayer.Pause();
+            else if (videoPlayer.isPrepared) videoPlayer.Play();
+            else videoPlayer.Prepare();
+        }
+        UpdateControls();
+    }
+
+    public void SetVolume(float value)
+    {
+        volume = Mathf.Clamp01(value);
+        volumeSlider?.SetValueWithoutNotify(volume);
+        if (volumeLabel != null) volumeLabel.text = Mathf.RoundToInt(volume * 100) + "%";
+        ApplyVolume();
+    }
+
+    private void ApplyVolume()
+    {
+        if (!Application.isPlaying || videoPlayer == null || !videoPlayer.isPrepared) return;
+        for (ushort i = 0; i < videoPlayer.controlledAudioTrackCount; i++)
+        {
+            if (videoPlayer.audioOutputMode == VideoAudioOutputMode.Direct) videoPlayer.SetDirectAudioVolume(i, volume);
+            else if (videoPlayer.audioOutputMode == VideoAudioOutputMode.AudioSource)
+            {
+                var source = videoPlayer.GetTargetAudioSource(i);
+                if (source != null) source.volume = volume;
+            }
+        }
+    }
+
+    private void Prepared(VideoPlayer player)
+    {
+        ApplyVolume();
+        if (_resumeTime > 0 && player.canSetTime) player.time = _resumeTime;
+        if (IsVisible && _wantsPlayback) player.Play();
+        if (playbackStatus != null) playbackStatus.text = "Vidéo mock · Pas de flux connecté";
+        UpdateControls();
+    }
+
+    private void PlaybackError(VideoPlayer player, string message)
+    {
+        _wantsPlayback = false;
+        if (playbackStatus != null) playbackStatus.text = "Vidéo indisponible · Réessayer avec Lecture";
+        Debug.LogWarning("[Course TV] " + message);
+        UpdateControls();
+    }
+
+    private void PlaybackEnded(VideoPlayer player) { _wantsPlayback = false; UpdateControls(); }
+
+    private void UpdateControls()
+    {
+        if (playPauseLabel != null) playPauseLabel.text = _wantsPlayback ? "Pause" : "Lecture";
+        if (tvButtons == null) return;
+        foreach (var button in tvButtons)
+        {
+            if (button == null) continue;
+            var colors = button.colors;
+            // Neutral frosted white (ODChampionshipTheme): readable on every championship gradient.
+            colors.normalColor = colors.selectedColor = IsVisible
+                ? new Color(1f, 1f, 1f, .38f) : new Color(1f, 1f, 1f, .14f);
+            button.colors = colors;
+        }
+    }
+
+    private void OnDisable()
+    {
+        HideVideo();
+        if (Application.isPlaying && videoPlayer != null) videoPlayer.Stop();
+        _context = null;
+        _resumeTime = 0;
+    }
+
+    private void OnDestroy()
+    {
+        if (!_bound) return;
+        if (tvButtons != null)
+            foreach (var button in tvButtons) button?.onClick.RemoveListener(ToggleVideo);
+        playPauseButton?.onClick.RemoveListener(TogglePlayPause);
+        volumeSlider?.onValueChanged.RemoveListener(SetVolume);
         if (videoPlayer == null) return;
-        if (videoPlayer.isPlaying) videoPlayer.Pause();
-        else videoPlayer.Play();
-        UpdatePlayLabel();
-    }
-
-    public void SkipSeconds(float delta)
-    {
-        if (videoPlayer == null || videoPlayer.length <= 0) return;
-        videoPlayer.time = Mathf.Clamp((float)videoPlayer.time + delta,
-                                       0f, (float)videoPlayer.length - 0.1f);
-    }
-
-    // ── scrub bar ─────────────────────────────────────────────────────────────
-    private void OnScrub(float normalized)
-    {
-        if (_seeking || videoPlayer == null || videoPlayer.length <= 0) return;
-        _seeking = true;
-        videoPlayer.time = normalized * videoPlayer.length;
-        _seeking = false;
-    }
-
-    private void Update()
-    {
-        if (videoPlayer == null || videoPlayer.length <= 0) return;
-
-        float norm = (float)(videoPlayer.time / videoPlayer.length);
-
-        // SetValueWithoutNotify avoids seek feedback loop while playing
-        if (scrubSlider != null && !_seeking)
-            scrubSlider.SetValueWithoutNotify(norm);
-
-        if (timeLabel != null)
-            timeLabel.text = Fmt(videoPlayer.time) + " / " + Fmt(videoPlayer.length);
-    }
-
-    // ── helpers ───────────────────────────────────────────────────────────────
-    private void UpdatePlayLabel()
-    {
-        if (playPauseLabel != null)
-            playPauseLabel.text = (videoPlayer != null && videoPlayer.isPlaying) ? "❚❚" : "▶";
-    }
-
-    private static string Fmt(double t)
-    {
-        int m = (int)(t / 60), s = (int)(t % 60);
-        return $"{m:0}:{s:00}";
-    }
-
-    private void PlaceInFrontOfUser()
-    {
-        var cam = Camera.main;
-        if (cam == null) return;
-        Vector3 fwd = cam.transform.forward; fwd.y = 0f;
-        if (fwd.sqrMagnitude < 0.001f) fwd = Vector3.forward;
-        fwd.Normalize();
-        transform.position = cam.transform.position + fwd * 1.6f;
-        transform.rotation = Quaternion.LookRotation(fwd, Vector3.up);
+        videoPlayer.prepareCompleted -= Prepared;
+        videoPlayer.errorReceived -= PlaybackError;
+        videoPlayer.loopPointReached -= PlaybackEnded;
     }
 }

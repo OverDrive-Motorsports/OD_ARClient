@@ -136,3 +136,17 @@ local.properties
 Library/
 Packages/
 UserSettings/
+
+# === OVERDRIVE LOCAL CONFIG ===
+# Backend URL + gateway token (see ODApiConfig.cs)
+Overdrive/Assets/_Overdrive/Core/Resources/ODApiConfig.asset
+Overdrive/Assets/_Overdrive/Core/Resources/ODApiConfig.asset.meta
+
+# Unity build output: Burst debug symbols (never shipped, regenerated on every build)
+*_BurstDebugInformation_DoNotShip/
+
+# Local screenshots used while working on the UI
+/Overdrive/Captures/
+
+# Per-machine Unity Dev Agent settings (server address + access token)
+Overdrive/Assets/Resources/DevAgentSettings.asset

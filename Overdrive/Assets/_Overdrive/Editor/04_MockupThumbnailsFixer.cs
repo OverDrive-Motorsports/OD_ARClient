@@ -12,7 +12,7 @@ using TMPro;
 /// Fills the Races grid with the mockup thumbnails from
 /// Assets/_Overdrive/DevAssets/Miniature — one card per image, as if real video
 /// thumbnails had been fetched from the backend. Each card is clickable
-/// and opens the VideoPlayerCanvas. Re-runnable.
+/// and routes to the course page. Re-runnable.
 /// </summary>
 public static class MockupThumbnailsFixer
 {
@@ -163,7 +163,7 @@ public static class MockupThumbnailsFixer
         lTxt.fontStyle = FontStyles.Bold;
         lTxt.color = Txt;
         lTxt.alignment = TextAlignmentOptions.MidlineLeft;
-        lTxt.enableWordWrapping = false;
+        lTxt.textWrappingMode = TextWrappingModes.NoWrap;
         lTxt.overflowMode = TextOverflowModes.Ellipsis;
         lTxt.raycastTarget = false;
 

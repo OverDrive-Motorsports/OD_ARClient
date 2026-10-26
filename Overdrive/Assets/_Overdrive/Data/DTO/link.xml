@@ -1,0 +1,11 @@
+<!--
+  DTOs are only ever instantiated by Newtonsoft.Json through reflection, so
+  IL2CPP managed code stripping would otherwise remove their fields and
+  constructors on device builds. Every DTO class name ends with "Dto".
+-->
+<linker>
+  <assembly fullname="Assembly-CSharp">
+    <type fullname="*Dto" preserve="all" />
+    <type fullname="*Dto`1" preserve="all" />
+  </assembly>
+</linker>

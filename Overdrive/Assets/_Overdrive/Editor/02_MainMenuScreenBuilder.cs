@@ -7,7 +7,7 @@ using TMPro;
 /// BUILD ORDER — Tier 02 (Screens). Requires: 01_ODUIBuilder (UITheme.asset only —
 /// this screen builds its own GameObjects from scratch, no ODCard/ODButton prefabs).
 /// Downstream: 03_SearchPanelScreenBuilder, 03_ProfilePanelScreenBuilder,
-/// 03_VideoPlayerScreenBuilder (soft) all attach to the hierarchy this class saves,
+/// Other legacy screen builders attach to the hierarchy this class saves,
 /// so re-run this BEFORE any of them if OverdriveMenuPanel.prefab doesn't exist yet.
 /// </summary>
 public static class MainMenuScreenBuilder
