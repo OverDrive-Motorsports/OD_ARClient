@@ -18,8 +18,8 @@ public class OverdriveMainMenu : MonoBehaviour
     public bool externalNavigation;
 
     [Header("Homepage")]
+    [Tooltip("The scene's homepage slot; replaced at startup by the runtime Home page (ODHomePage).")]
     public GameObject homepagePanel;
-    public Vector2 homepageSize = new Vector2(1200f, 880f);
 
     [Header("Category directory and selected sport")]
     public GameObject categoriesPanel;
@@ -77,7 +77,14 @@ public class OverdriveMainMenu : MonoBehaviour
 
         // visionOS density: a roomier window; page labels are scaled down to match (ODChampionshipTheme.TypeScale).
         transform.localScale = Vector3.one * WindowScale;
-        ODChampionshipTheme.ScaleType(transform.Find("OverdriveHomepage"));
+
+        // The Home (Canva 2.1) is drawn at runtime from the design system: the scene's placeholder only gives its slot.
+        if (homepagePanel != null && homepagePanel.GetComponent<ODHomePage>() == null)
+        {
+            var placeholder = homepagePanel;
+            homepagePanel = ODHomePage.Create((RectTransform)placeholder.transform, this).gameObject;
+            Destroy(placeholder);
+        }
 
         // The menu canvas is larger than the visible window: keep the drag pill under the window itself.
         var handle = GetComponentInParent<WindowHandle>();
@@ -142,7 +149,7 @@ public class OverdriveMainMenu : MonoBehaviour
         var background = GetComponent<Image>();
         if (background != null) background.enabled = !visible;
         // Pages drawn from the design system share its 16:10 window (ODDesign.WindowSize).
-        ((RectTransform)transform).sizeDelta = visible ? homepageSize : ODDesign.WindowSize;
+        ((RectTransform)transform).sizeDelta = ODDesign.WindowSize;
     }
 
     public void ShowCategories() => SelectNav(1);

@@ -16,5 +16,5 @@ DevAssets/
 └── F1-Logo.png  (recovered from an orphaned Assets/Assets/ folder, unclear origin — worth checking if still needed)
 ```
 
-These assets are consumed by `Data/Mock/ODMockData.cs` and the UI display
+These assets are consumed by `DevAssets/ODMockData.cs` and the UI display
 components (e.g. `VideoPlayerController` in `Logic/Video/`).

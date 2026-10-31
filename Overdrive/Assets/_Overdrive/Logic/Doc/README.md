@@ -21,7 +21,7 @@ Logic/
 
 Groups the former `Scripts/UI/` controllers that already did orchestration
 (not just display): menu loading, ranking management, search, video
-playback. They currently rely on the mocks in `Data/Mock/ODMockData.cs`
+playback. They currently rely on the mocks in `DevAssets/ODMockData.cs`
 while waiting for a real backend.
 
 See [UI-Refresh-Pattern.md](./UI-Refresh-Pattern.md) for how a screen should

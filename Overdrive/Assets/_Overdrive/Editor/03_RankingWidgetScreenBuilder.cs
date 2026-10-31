@@ -221,7 +221,7 @@ public static class RankingWidgetScreenBuilder
         var t = go.AddComponent<TextMeshProUGUI>();
         t.text = txt; t.fontSize = size; t.fontStyle = style;
         t.color = color; t.alignment = align; t.raycastTarget = false;
-        t.enableWordWrapping = false;
+        t.textWrappingMode = TextWrappingModes.NoWrap;
         return go;
     }
 }
