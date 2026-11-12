@@ -28,8 +28,8 @@ using UnityEngine.UI;
 /// (modePanels) — this component only fills content. Display only: buttons
 /// raise events, Logic decides what they do.
 ///
-/// The live running order (CourseStandings) is deliberately not touched: it is
-/// driven by RaceRankingManager until the panel is connected to live timing.
+/// The running order table (CourseStandings) is filled by RaceRankingManager,
+/// fed by ODSportPage (live data, replay results or replay playback).
 /// </summary>
 public partial class ODChampionshipPanel : MonoBehaviour
 {
@@ -200,6 +200,43 @@ public partial class ODChampionshipPanel : MonoBehaviour
         BindPodium(Child(replaySection, "Podium"), data.results);
         BindLapProgress(circuit, JoinNonEmpty(" · ", data.location, data.totalLaps > 0 ? $"{data.totalLaps} tours" : null), "", 1f);
         BindTrackStatus(circuit, null);
+    }
+
+    /// <summary>The replay card's video screen: the track map is drawn over it during playback.</summary>
+    public RectTransform ReplayScreen
+    {
+        get
+        {
+            Resolve();
+            return Child(Child(replaySection, "ReplayHero"), "Screen");
+        }
+    }
+
+    /// <summary>"Regarder le replay" was pressed (capsule or video screen) on the replay page.</summary>
+    public event System.Action ReplayWatchPressed;
+
+    /// <summary>Replay playback starts: the table shows the running order with the live columns (tyres, stops, last lap).</summary>
+    public void BeginReplayPlayback()
+    {
+        Resolve();
+        if (_state != State.Replay) return;
+        SetCourseColumns(replay: false);
+        var heading = transform.Find("CourseStandings/Heading")?.GetComponent<TextMeshProUGUI>();
+        if (heading != null) heading.text = "Classement en course";
+    }
+
+    /// <summary>Replay playback: the podium follows the running order at the replay time.</summary>
+    public void ShowReplayFrame(LiveSessionData frame)
+    {
+        Resolve();
+        if (_state == State.Replay) BindPodium(Child(replaySection, "Podium"), frame != null ? frame.entries : null);
+    }
+
+    /// <summary>Replay playback: "Tour 12 / 56 · 0:21:45" on the circuit card.</summary>
+    public void SetReplayProgress(string text)
+    {
+        Resolve();
+        if (_state == State.Replay) SetText(Child(replaySection, "Circuit"), "LapProgress", text);
     }
 
     /// <summary>Background from the championship, pill from the state, cards as glass.</summary>

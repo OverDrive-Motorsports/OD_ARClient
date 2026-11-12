@@ -34,6 +34,9 @@ public class ODApiConfig : ScriptableObject
     [Tooltip("Per-request timeout, in seconds.")]
     public int timeoutSeconds = 8;
 
+    [Tooltip("A replay download gives up after this many seconds without receiving data (the backend builds the whole file before sending it).")]
+    public int downloadStallSeconds = 60;
+
     [Tooltip("Polling period of the live session, in seconds (the backend has no WebSocket yet).")]
     public float livePollSeconds = 5f;
 

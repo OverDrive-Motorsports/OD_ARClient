@@ -83,7 +83,7 @@ public sealed class VideoPlayerController : MonoBehaviour
             else videoPlayer.Prepare();
         }
         if (playbackStatus != null) playbackStatus.text = videoPlayer != null && videoPlayer.isPrepared
-            ? "Vidéo mock · Pas de flux connecté" : "Vidéo mock · Chargement…";
+            ? "Vidéo d'exemple · Pas de flux connecté" : "Vidéo d'exemple · Chargement…";
         UpdateControls();
     }
 
@@ -139,7 +139,7 @@ public sealed class VideoPlayerController : MonoBehaviour
         ApplyVolume();
         if (_resumeTime > 0 && player.canSetTime) player.time = _resumeTime;
         if (IsVisible && _wantsPlayback) player.Play();
-        if (playbackStatus != null) playbackStatus.text = "Vidéo mock · Pas de flux connecté";
+        if (playbackStatus != null) playbackStatus.text = "Vidéo d'exemple · Pas de flux connecté";
         UpdateControls();
     }
 

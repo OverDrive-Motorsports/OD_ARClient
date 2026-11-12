@@ -61,7 +61,7 @@ public partial class ODChampionshipPanel
         }
 
         // Right side, from the right edge: "Replays" capsule (gallery access, every state but the
-        // replay page itself), status pill, then the demo-mode capsule.
+        // replay page itself), status pill, then the live lap.
         float right = GRight;
         var replay = transform.Find("ReplayCatalogButton");
         if (replay != null)
@@ -87,12 +87,6 @@ public partial class ODChampionshipPanel
             // Right edge kept by ApplyStatus, which sizes the pill to its text.
             D.Place(statusPill.transform, right - 300f, HeaderMid - 32f, 300f, 64f);
         }
-        var demo = transform.Find("DemoModeButton");
-        if (demo != null)
-        {
-            D.Place(demo, right - 300f - 20f - 330f, HeaderMid - 26f, 330f, 52f);
-            StyleCapsule(demo, D.ButtonKind.Secondary, 17f);
-        }
         _headerLap = D.Text(transform, "HeaderLap", "", right - 300f - 20f - 260f, HeaderMid - 32f, 260f, 64f, 30f, D.Weight.SemiBold,
             new Color(1f, 1f, 1f, .80f), TextAlignmentOptions.MidlineRight);
         _headerLap.gameObject.SetActive(false);
@@ -100,7 +94,7 @@ public partial class ODChampionshipPanel
 
     /// <summary>
     /// Status pill against the right edge — or left of the "Replays" capsule when it shows
-    /// (every state but the replay page) — then the demo capsule / live lap to its left.
+    /// (every state but the replay page) — then the live lap to its left.
     /// </summary>
     void AfterStatus(string lap)
     {
@@ -113,19 +107,12 @@ public partial class ODChampionshipPanel
         float pillRight = replayShown ? replay.anchoredPosition.x / D.Scale - 16f : GRight;
         D.Place(pill, pillRight - pillW, HeaderMid - 32f, pillW, 64f);
         float pillLeft = pillRight - pillW;
-        var demo = transform.Find("DemoModeButton") as RectTransform;
         bool showLap = !string.IsNullOrEmpty(lap);
         if (_headerLap != null)
         {
             _headerLap.gameObject.SetActive(showLap);
             _headerLap.text = lap;
             D.Place(_headerLap.transform, pillLeft - 20f - 260f, HeaderMid - 32f, 260f, 64f);
-        }
-        if (demo != null)
-        {
-            float w = demo.rect.width / D.Scale;
-            float x = pillLeft - 20f - w - (showLap ? 280f : 0f);
-            D.Place(demo, x, HeaderMid - 26f, w, 52f);
         }
     }
 
@@ -323,7 +310,7 @@ public partial class ODChampionshipPanel
         screen.raycastTarget = true;
         var screenButton = screen.gameObject.AddComponent<Button>();
         screenButton.transition = Selectable.Transition.None;
-        if (watch != null) screenButton.onClick.AddListener(() => watch.GetComponent<Button>()?.onClick.Invoke());
+        screenButton.onClick.AddListener(() => PressWatch(watch));
         const float disc = 104f;
         var play = D.Fill(screen.transform, "Play", (LiveLeftW - 72f - disc) * .5f, (ReplayScreenH - disc) * .5f, disc, disc,
             new Color(1f, 1f, 1f, .92f), disc * .5f);
@@ -334,7 +321,7 @@ public partial class ODChampionshipPanel
 
         float watchW = 330f;
         var primary = D.Button(hero, "Watch", "", 36f, ReplayButtonsY, watchW, 68f, D.ButtonKind.Primary);
-        if (watch != null) primary.onClick.AddListener(() => watch.GetComponent<Button>()?.onClick.Invoke());
+        primary.onClick.AddListener(() => PressWatch(watch));
         var watchIcon = D.Rect(primary.transform, "Icon", 34f, 24f, 20f, 20f).gameObject.AddComponent<ODNavigationIcon>();
         watchIcon.symbol = ODNavigationIcon.Symbol.Play;
         watchIcon.color = D.Ink;
@@ -376,6 +363,13 @@ public partial class ODChampionshipPanel
         }
     }
 
+    /// <summary>"Regarder le replay" (capsule or screen): the TV switches on, then the page starts the replay.</summary>
+    void PressWatch(Transform tvButton)
+    {
+        tvButton?.GetComponent<Button>()?.onClick.Invoke();
+        if (_state == State.Replay) ReplayWatchPressed?.Invoke();
+    }
+
     /// <summary>
     /// Live: tyre / stops / last lap columns. Replay: final result, those columns
     /// hidden (the result has none). Rows built later from the template inherit it.
@@ -394,11 +388,15 @@ public partial class ODChampionshipPanel
         var rows = card.Find("StandingsScroll/Viewport/Rows");
         if (rows == null) return;
         foreach (Transform row in rows)
+        {
             foreach (var name in new[] { "Tyre", "Stops", "LastLap" })
             {
                 var cell = row.Find(name);
                 if (cell != null) cell.gameObject.SetActive(!replay);
             }
+            // Shown again by RaceRankingManager when the entry has a compound.
+            if (replay) row.Find("TyreBadge")?.gameObject.SetActive(false);
+        }
     }
 
     void LayoutCourseStandings()
@@ -422,7 +420,7 @@ public partial class ODChampionshipPanel
         // Columns (design: Pos · avatar · Pilote · Pneu · Arr. · Écart · Dernier tour).
         float y = 104f;
         string[] names = { "Column0", "Column1", "Column2", "Column3", "Column4" };
-        float[] xs = { 164f, 624f, 754f, 832f, 930f };
+        float[] xs = { 164f, 624f, 754f, 832f, 970f };   // = the row cells' x + 40 (the list's inset)
         float[] ws = { 300f, 112f, 60f, 120f, 150f };
         for (int i = 0; i < names.Length; i++)
         {
@@ -442,6 +440,16 @@ public partial class ODChampionshipPanel
             D.Place(scroll, 40f, y + 42f, w - 80f, ContentH - (y + 42f) - 36f);
             var rect = scroll.GetComponent<ScrollRect>();
             if (rect != null) rect.verticalScrollbar = null;   // design: no scroll bar, the list scrolls with the ray
+            // The builder's viewport was narrower than the rows (room for the old scroll bar), and its
+            // mask cut the right-aligned last lap: it fills the scroll view, the rows its width.
+            if (scroll.Find("Viewport") is RectTransform viewport)
+            {
+                viewport.anchorMin = Vector2.zero;
+                viewport.anchorMax = Vector2.one;
+                viewport.offsetMin = viewport.offsetMax = Vector2.zero;
+                if (viewport.Find("Rows") is RectTransform list)
+                    list.sizeDelta = new Vector2(D.Px(w - 80f), list.sizeDelta.y);
+            }
         }
 
         // Row template: transparent row, divider at the bottom, design columns.
@@ -454,6 +462,8 @@ public partial class ODChampionshipPanel
             if (row != template && row.GetComponent<RaceStandingCard>() != null) StyleRaceRow((RectTransform)row, w - 80f, rowH);
     }
 
+    const float TyreBadge = 36f, TyreRing = 4f;
+
     static void StyleRaceRow(RectTransform row, float w, float h)
     {
         if (row.Find("RowDivider") != null) return;
@@ -464,7 +474,15 @@ public partial class ODChampionshipPanel
         var dot = row.Find("TeamDot");
         if (dot != null) { D.Place(dot, 58f, (h - 48f) * .5f, 48f, 48f); var r = dot.GetComponent<RoundedImage>(); if (r != null) r.cornerRadius = D.Px(24f); }
         PlaceRow(row, "CodeText", 124f, 420f, h, 25f, D.Weight.SemiBold, D.Primary, TextAlignmentOptions.MidlineLeft);
-        PlaceRow(row, "Tyre", 584f, 112f, h, 19f, D.Weight.SemiBold, D.Muted, TextAlignmentOptions.MidlineLeft);
+        // Tyre: compound badge (coloured ring + letter, set by RaceRankingManager), then the tyre age.
+        var badge = D.Fill(row, "TyreBadge", 584f, (h - TyreBadge) * .5f, TyreBadge, TyreBadge, Color.white, TyreBadge * .5f);
+        badge.raycastTarget = false;
+        var hole = D.Fill(badge.transform, "Hole", TyreRing, TyreRing, TyreBadge - TyreRing * 2f, TyreBadge - TyreRing * 2f, D.Hex("16171C"), (TyreBadge - TyreRing * 2f) * .5f);
+        hole.raycastTarget = false;
+        var letter = D.Text(badge.transform, "Letter", "", 0f, 0f, TyreBadge, TyreBadge, 17f, D.Weight.Bold, Color.white, TextAlignmentOptions.Center);
+        letter.raycastTarget = false;
+        badge.gameObject.SetActive(false);
+        PlaceRow(row, "Tyre", 584f + TyreBadge + 10f, 112f - TyreBadge - 10f, h, 19f, D.Weight.SemiBold, D.Muted, TextAlignmentOptions.MidlineLeft);
         PlaceRow(row, "Stops", 714f, 60f, h, 22f, D.Weight.Regular, D.Primary, TextAlignmentOptions.Midline);
         PlaceRow(row, "GapText", 792f, 120f, h, 24f, D.Weight.SemiBold, D.GoldText, TextAlignmentOptions.MidlineRight);
         PlaceRow(row, "LastLap", 930f, 150f, h, 23f, D.Weight.Regular, D.Primary, TextAlignmentOptions.MidlineRight);

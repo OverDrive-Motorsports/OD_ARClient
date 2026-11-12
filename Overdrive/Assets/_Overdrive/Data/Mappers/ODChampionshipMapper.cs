@@ -194,16 +194,16 @@ public static class ODChampionshipMapper
     // ═══════════════════════════════════════════════════════════════════════
 
     public static ReplaySummary ToReplaySummary(ChampionshipSummaryDto championship, string championshipCode,
-        EventSummaryDto evt, SessionSummaryDto session) => new ReplaySummary
+        ReplayCatalogEntryDto entry) => new ReplaySummary
         {
-            id = session.sessionId,
+            id = entry.sessionId,
             championshipId = championshipCode,
             championshipName = ChampionshipName(championship, championshipCode),
-            grandPrix = evt.name,
-            sessionName = SessionName(session),
-            season = (evt.seasonYear > 0 ? evt.seasonYear : session.startTime.Year).ToString(),
-            circuit = string.IsNullOrEmpty(evt.circuit) ? evt.location : evt.circuit,
-            date = session.startTime.ToLocalTime(),
+            grandPrix = entry.eventName,
+            sessionName = SessionName(entry.type, entry.name),
+            season = (entry.seasonYear > 0 ? entry.seasonYear : entry.startTime.Year).ToString(),
+            circuit = entry.circuit,
+            date = entry.startTime.ToLocalTime(),
         };
 
     public static ReplayDetail ToReplayDetail(ReplaySummary summary, EventSummaryDto evt,
@@ -261,15 +261,23 @@ public static class ODChampionshipMapper
     }
 
     /// <summary>Backend session types → French labels used across the app.</summary>
-    public static string SessionName(SessionSummaryDto session)
+    public static string SessionName(SessionSummaryDto session) =>
+        session == null ? "Session" : SessionName(session.type, session.name);
+
+    /// <param name="type">race | sprint | quali | practice</param>
+    /// <param name="name">Backend name: "Race", "Sprint Qualifying", "Practice 2"...</param>
+    public static string SessionName(string type, string name)
     {
-        if (session == null) return "Session";
-        string name = session.name ?? "";
-        switch (session.type)
+        name ??= "";
+        // OpenF1 types a sprint as "Race" and its shootout as "Qualifying": the name tells them apart.
+        bool sprint = name.IndexOf("sprint", StringComparison.OrdinalIgnoreCase) >= 0;
+        bool quali = name.IndexOf("quali", StringComparison.OrdinalIgnoreCase) >= 0
+                  || name.IndexOf("shootout", StringComparison.OrdinalIgnoreCase) >= 0;
+        switch (type)
         {
-            case "race": return "Course";
-            case "sprint": return name.IndexOf("quali", StringComparison.OrdinalIgnoreCase) >= 0 ? "Qualifs sprint" : "Sprint";
-            case "quali": return "Qualifications";
+            case "race": return sprint ? "Sprint" : "Course";
+            case "sprint": return quali ? "Qualifs sprint" : "Sprint";
+            case "quali": return sprint ? "Qualifs sprint" : "Qualifications";
             case "practice":
                 string digits = new string(name.Where(char.IsDigit).ToArray());
                 return string.IsNullOrEmpty(digits) ? "Essais libres" : "EL" + digits;
@@ -334,7 +342,7 @@ public static class ODChampionshipMapper
         return $"{(int)t.TotalMinutes}:{t.Seconds:00}.{t.Milliseconds:000}";
     }
 
-    static string CompoundLetter(string compound)
+    internal static string CompoundLetter(string compound)
     {
         if (string.IsNullOrEmpty(compound)) return "";
         switch (compound.ToUpperInvariant())

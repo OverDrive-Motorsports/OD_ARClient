@@ -55,7 +55,7 @@ public static class ODChampionshipTheme
         bottomRight = ODDesign.Gold,
     };
 
-    /// <summary>Accepts backend codes ("f1") and mock ids ("formula_1", "wec", "motogp").</summary>
+    /// <summary>Accepts backend codes ("f1") and championship ids ("formula_1", "wec", "motogp").</summary>
     public static Palette NeutralPalette => Neutral;
 
     public static Palette For(string championshipId)
@@ -158,25 +158,6 @@ public static class ODChampionshipTheme
         surface.shadowSize = 30f;
         surface.shadowAlpha = .30f;
         Rim(surface, 1.5f, .22f, .12f);
-        surface.SetVerticesDirty();
-    }
-
-    /// <summary>
-    /// A single card tinted with its championship (e.g. its tile on the categories
-    /// page). <paramref name="muted"/> keeps a hint of the colour for championships
-    /// that aren't available yet.
-    /// </summary>
-    public static void ApplyTile(ODHomepageSurface surface, Palette palette, bool muted = false)
-    {
-        if (surface == null) return;
-        surface.glass = true;
-        surface.useMiddle = false;
-        surface.topLeft = Glass(palette.topLeft, muted ? .40f : .85f, muted ? .62f : .78f);
-        surface.bottomRight = Glass(palette.middle, .30f, muted ? .52f : .62f);
-        surface.sheen = .06f;
-        surface.shadowSize = 0f;
-        surface.cornerRadius = PlatterRadius;
-        Rim(surface, 1.25f, .14f, .02f);
         surface.SetVerticesDirty();
     }
 

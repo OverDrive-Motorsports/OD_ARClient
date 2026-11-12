@@ -3,9 +3,10 @@
  ## OverDrive 2026
  ## All Technical rights reserved
  ##
- ## ODChampionshipDataService - Loads what the championship panel and the
- ## replay gallery display, from the backend (Core) or from the mobile mocks
- ## (Data/Mock), and decides the panel state from the event/session statuses.
+ ## ODChampionshipDataService - Loads what the championship panel displays
+ ## from the backend (Core), decides the panel state from the event/session
+ ## statuses, and turns backend errors into user-facing text. Replays live in
+ ## ODReplayService.
  ##
  */
 
@@ -36,18 +37,9 @@ public class ChampionshipSnapshot
     public SessionSummaryDto liveSession;
 }
 
-/// <summary>
-/// Backend vs demo data. Starts on the backend; switches to the mobile mocks
-/// for the rest of the app session once the user picks them in the error popup.
-/// </summary>
-public static class ODDataSource
-{
-    public static bool UseMocks { get; set; }
-}
-
 public static class ODChampionshipDataService
 {
-    /// <summary>How many past events are scanned for standings / replays (one request each).</summary>
+    /// <summary>How many past events are scanned for standings (one request each).</summary>
     const int MaxPastEventsScanned = 12;
 
     static string Code => ODApiConfig.Instance.championshipCode;
@@ -63,9 +55,11 @@ public static class ODChampionshipDataService
     public static async Task<ChampionshipSnapshot> LoadAsync()
     {
         DateTime now = DateTime.UtcNow;
-        var championships = await ODBackendApi.GetChampionships();
-        var championship = championships?.FirstOrDefault(c => c.championshipCode == Code);
-        var events = (await ODBackendApi.GetEvents(Code) ?? new List<EventSummaryDto>()).OrderBy(e => e.startDate).ToList();
+        var championshipsTask = ODBackendApi.GetChampionships();
+        var eventsTask = ODBackendApi.GetEvents(Code);
+        await Task.WhenAll(championshipsTask, eventsTask);
+        var championship = championshipsTask.Result?.FirstOrDefault(c => c.championshipCode == Code);
+        var events = (eventsTask.Result ?? new List<EventSummaryDto>()).OrderBy(e => e.startDate).ToList();
 
         var current = events.FirstOrDefault(e => e.status == "live")
                    ?? events.FirstOrDefault(e => e.startDate <= now && now <= e.endDate && e.status != "finished");
@@ -84,12 +78,13 @@ public static class ODChampionshipDataService
                     liveSession = liveSession,
                 };
 
-            var standings = await LoadSeasonStandingsAsync(events, now);
-            var weather = await LoadLatestWeatherAsync(sessions);
+            var standingsTask = LoadSeasonStandingsAsync(events, now);
+            var weatherTask = LoadLatestWeatherAsync(sessions);
+            await Task.WhenAll(standingsTask, weatherTask);
             return new ChampionshipSnapshot
             {
                 state = ChampionshipViewState.Weekend,
-                weekend = ODChampionshipMapper.ToWeekend(Code, current, sessions, weather, standings),
+                weekend = ODChampionshipMapper.ToWeekend(Code, current, sessions, weatherTask.Result, standingsTask.Result),
             };
         }
 
@@ -159,41 +154,6 @@ public static class ODChampionshipDataService
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Replays
-    // ═══════════════════════════════════════════════════════════════════════
-
-    /// <summary>Finished races and sprints, most recent first.</summary>
-    public static async Task<List<ReplaySummary>> LoadReplaysAsync()
-    {
-        DateTime now = DateTime.UtcNow;
-        var championships = await ODBackendApi.GetChampionships();
-        var championship = championships?.FirstOrDefault(c => c.championshipCode == Code);
-        var events = await ODBackendApi.GetEvents(Code) ?? new List<EventSummaryDto>();
-
-        var replays = new List<ReplaySummary>();
-        foreach (var evt in events.Where(e => e.status == "finished" || e.endDate < now)
-                                  .OrderByDescending(e => e.startDate)
-                                  .Take(MaxPastEventsScanned))
-        {
-            var sessions = await ODBackendApi.GetEventSessions(evt.eventId);
-            if (sessions == null) continue;
-            foreach (var session in sessions.Where(s => (s.type == "race" || s.type == "sprint") && s.status == "finished")
-                                            .OrderByDescending(s => s.startTime))
-                replays.Add(ODChampionshipMapper.ToReplaySummary(championship, Code, evt, session));
-        }
-        return replays;
-    }
-
-    public static async Task<ReplayDetail> LoadReplayDetailAsync(ReplaySummary summary)
-    {
-        var resultTask = ODBackendApi.GetSessionResult(summary.id);
-        var driversTask = ODBackendApi.GetSessionDrivers(summary.id);
-        await Task.WhenAll(resultTask, driversTask);
-        return ODChampionshipMapper.ToReplayDetail(summary, null, resultTask.Result?.data,
-            ODChampionshipMapper.DriverLookup(driversTask.Result));
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
     // Errors → user-facing text
     // ═══════════════════════════════════════════════════════════════════════
 
@@ -220,8 +180,10 @@ public static class ODChampionshipDataService
                     return "Le gateway refuse la connexion (401). Vérifie le token dans ODApiConfig.";
                 case ODApiErrorKind.InvalidResponse:
                     return "Le backend a répondu dans un format inattendu.";
+                case ODApiErrorKind.HttpError when api.StatusCode >= 502 && api.StatusCode <= 504:
+                    return $"Le gateway répond, mais un service du backend est indisponible (HTTP {api.StatusCode}{(api.Code != null ? " · " + api.Code : "")}).";
                 default:
-                    return $"Le backend a renvoyé une erreur (HTTP {api.StatusCode}).";
+                    return $"Le backend a renvoyé une erreur (HTTP {api.StatusCode}{(api.Code != null ? " · " + api.Code : "")}).";
             }
         return "Erreur inattendue : " + error.Message;
     }

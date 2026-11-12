@@ -4,12 +4,14 @@
  ## All Technical rights reserved
  ##
  ## ODBackendApi - Typed gateway endpoints used by the championship panel
- ## and the replay gallery. One method per route, returning DTOs exactly as
+ ## and the replays. One method per route, returning DTOs exactly as
  ## the backend sends them. Route list: OD_Backend/gateway/ROUTES.md
  ##
  */
 
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine.Networking;
 
@@ -60,4 +62,13 @@ public static class ODBackendApi
 
     public static Task<List<RaceWeatherSampleDto>> GetWeather(string sessionId)
         => ODApiClient.Get<List<RaceWeatherSampleDto>>($"{RaceData}/sessions/{Esc(sessionId)}/race/weather");
+
+    /// <summary>Sessions of the championship that can be replayed, newest first. Null when the championship is unknown.</summary>
+    public static Task<List<ReplayCatalogEntryDto>> GetReplays(string championshipCode)
+        => ODApiClient.Get<List<ReplayCatalogEntryDto>>($"{RaceData}/championships/{Esc(championshipCode)}/replays");
+
+    /// <summary>The whole session (telemetry with x/y/z, positions, laps, stints, pit stops, radio,
+    /// race control, weather) written to <paramref name="filePath"/> as the backend's JSON.</summary>
+    public static Task DownloadReplay(string sessionId, string filePath, IProgress<ulong> progress, CancellationToken token)
+        => ODApiClient.Download($"{RaceData}/sessions/{Esc(sessionId)}/race/replay", filePath, progress, token);
 }
