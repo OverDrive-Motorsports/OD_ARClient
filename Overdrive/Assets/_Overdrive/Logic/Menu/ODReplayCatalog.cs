@@ -8,8 +8,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Replay gallery, reached from the "Replays" button of the championship page.
-/// Cards are generated from data — finished sessions from the backend, or the
-/// mobile mocks once the user picks the demo data — in two sections: "Replays"
+/// Cards are generated from the backend's replayable sessions, in two sections: "Replays"
 /// (everything available) and "Mes replays" (saved with the card's star, kept
 /// on the headset), both filtered by the search field. Simple cards, no motion
 /// (ODReplayTile). Picking one opens the championship page in its replay
@@ -22,8 +21,8 @@ public sealed class ODReplayCatalog : MonoBehaviour
     {
         public string id;
         public string grandPrix;
-        public string session = "Course";
-        public string season = "2024";
+        public string session;
+        public string season;
         public Button openButton;
     }
 
@@ -66,7 +65,7 @@ public sealed class ODReplayCatalog : MonoBehaviour
         if (subtitle == null) subtitle = transform.Find("Subtitle")?.GetComponent<TextMeshProUGUI>();
         if (notice == null) notice = transform.Find("DemoNotice")?.GetComponent<TextMeshProUGUI>();
 
-        // The prefab's demo cards are hidden: cards are built from data (ODReplayTile).
+        // The prefab's placeholder cards are hidden: cards are built from data (ODReplayTile).
         foreach (var entry in entries)
             if (entry?.openButton != null) entry.openButton.gameObject.SetActive(false);
         entries = Array.Empty<Entry>();
@@ -76,14 +75,13 @@ public sealed class ODReplayCatalog : MonoBehaviour
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Data — backend or mobile mocks
+    // Data — backend
     // ═══════════════════════════════════════════════════════════════════════
 
     private void Populate()
     {
-        ApplyTheme(ODDataSource.UseMocks ? "formula_1" : ODApiConfig.Instance.championshipCode);
-        if (ODDataSource.UseMocks) Bind(ODReplayMockData.Catalog, demo: true);
-        else LoadFromBackend();
+        ApplyTheme(ODApiConfig.Instance.championshipCode);
+        LoadFromBackend();
     }
 
     private async void LoadFromBackend()
@@ -92,15 +90,15 @@ public sealed class ODReplayCatalog : MonoBehaviour
         SetLabel(notice, "Chargement des replays…");
         try
         {
-            var replays = await ODChampionshipDataService.LoadReplaysAsync();
-            if (this == null || version != _loadVersion || ODDataSource.UseMocks) return;
+            var replays = await ODReplayService.LoadCatalogAsync();
+            if (this == null || version != _loadVersion) return;
 
             if (replays.Count == 0)
             {
-                ShowError("Aucun replay", "Le backend répond mais ne contient aucune course terminée. Lance une ingestion OpenF1, ou affiche les données de démo.");
+                ShowError("Aucun replay", "Le backend répond mais n'a aucune session rejouable : il faut une ingestion OpenF1 avec la télémétrie et les positions (car_data + location).");
                 return;
             }
-            Bind(replays, demo: false);
+            Bind(replays);
         }
         catch (Exception error)
         {
@@ -113,17 +111,10 @@ public sealed class ODReplayCatalog : MonoBehaviour
     private void ShowError(string title, string message)
     {
         SetLabel(notice, "");
-        ODBackendErrorPopup.Show((RectTransform)transform, title, message,
-            onRetry: LoadFromBackend,
-            onUseMocks: () =>
-            {
-                ODDataSource.UseMocks = true;
-                _loadVersion++;
-                Bind(ODReplayMockData.Catalog, demo: true);
-            });
+        ODBackendErrorPopup.Show((RectTransform)transform, title, message, onRetry: LoadFromBackend);
     }
 
-    private void Bind(List<ReplaySummary> replays, bool demo)
+    private void Bind(List<ReplaySummary> replays)
     {
         _replays = replays.OrderByDescending(r => r.date).ToList();   // most recent first
         entries = new Entry[_replays.Count];
@@ -139,7 +130,7 @@ public sealed class ODReplayCatalog : MonoBehaviour
         if (_replays.Count > 0) ApplyTheme(_replays[0].championshipId);
         string championship = _replays.Count > 0 ? ChampionshipLabel(_replays[0]) : "Formule 1";
         SetLabel(subtitle, $"{championship} · {_replays.Count} replay{(_replays.Count > 1 ? "s" : "")} disponible{(_replays.Count > 1 ? "s" : "")}");
-        SetLabel(notice, demo ? "Données de démonstration (OD_Mobile)" : "Données du backend · Vidéos non connectées");
+        SetLabel(notice, "Données du backend · Vidéos non connectées");
         Render();
     }
 
@@ -262,7 +253,7 @@ public sealed class ODReplayCatalog : MonoBehaviour
         saved = saved,
     };
 
-    /// <summary>French name of the championship whatever the source ("Formula 1" in the mocks).</summary>
+    /// <summary>French name of the championship whatever the source spelling ("Formula 1").</summary>
     private static string ChampionshipLabel(ReplaySummary replay) =>
         ODDesign.Normalise(replay.championshipId) == "f1" ? "Formule 1" : replay.championshipName ?? "";
 

@@ -106,9 +106,7 @@ public static class ODDesign
         }
     }
 
-    public static Color ChampionshipColour(string id) { Championship(id, out Color c, out _); return c; }
-
-    /// <summary>Backend codes ("f1"), mock ids ("formula_1") and names ("World Endurance").</summary>
+    /// <summary>Backend codes ("f1"), championship ids ("formula_1") and names ("World Endurance").</summary>
     public static string Normalise(string id)
     {
         string s = (id ?? "").ToLowerInvariant().Replace("_", "").Replace("-", "").Replace(" ", "");
@@ -281,15 +279,6 @@ public static class ODDesign
         icon.symbol = symbol;
         icon.color = kind == ButtonKind.Gold ? GoldLight : Color.white;
         icon.raycastTarget = false;
-        return button;
-    }
-
-    /// <summary>"Plus d'options": round button with three dots.</summary>
-    public static Button MoreButton(Transform parent, string name, float x, float y, float size = 68f)
-    {
-        var button = Button(parent, name, "", x, y, size, size, ButtonKind.Icon);
-        for (int i = -1; i <= 1; i++)
-            Fill(button.transform, "Dot" + (i + 1), size * .5f + i * 10.5f - 3.5f, size * .5f - 3.5f, 7f, 7f, Color.white, 3.5f);
         return button;
     }
 

@@ -148,9 +148,11 @@ public class ODChampionshipTile : MonoBehaviour, IPointerEnterHandler, IPointerE
 
         // Bottom block: name, subtitle, season line.
         float y = H - Pad;
-        D.Fill(face, "Progress", Pad, y - 8f, W - Pad * 2f, 8f, new Color(0f, 0f, 0f, .30f), 4f);
         if (info.progress > 0f)
+        {
+            D.Fill(face, "Progress", Pad, y - 8f, W - Pad * 2f, 8f, new Color(0f, 0f, 0f, .30f), 4f);
             D.Fill(face, "ProgressFill", Pad, y - 8f, Mathf.Max(8f, (W - Pad * 2f) * Mathf.Clamp01(info.progress)), 8f, Color.white, 4f);
+        }
         y -= 8f + 12f + 28f;
         D.Text(face, "Round", info.round, Pad, y, (W - Pad * 2f) * .5f, 28f, 20f, D.Weight.SemiBold);
         D.Text(face, "Next", info.available ? info.next : "Bientôt dans OverDrive", Pad + (W - Pad * 2f) * .5f, y, (W - Pad * 2f) * .5f, 28f, 20f,

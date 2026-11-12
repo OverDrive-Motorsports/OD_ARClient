@@ -4,13 +4,14 @@
  ## All Technical rights reserved
  ##
  ## ODApiClient - Thin async HTTP client for the OverDrive gateway: adds the
- ## Bearer token, applies the timeout, deserializes JSON into DTOs and turns
- ## every failure into an ODApiException. Knows nothing about UI or Logic.
+ ## Bearer token, applies the timeout, deserializes JSON into DTOs (off the
+ ## main thread), streams large bodies to disk and turns every failure into
+ ## an ODApiException. Knows nothing about UI or Logic.
  ##
  */
 
 using System;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -33,23 +34,38 @@ public class ODApiException : Exception
     public ODApiErrorKind Kind { get; }
     public long StatusCode { get; }
     public string Url { get; }
+    /// <summary>Backend error code ("UPSTREAM_UNAVAILABLE", "SESSION_NOT_FOUND"...), null when the body had none.</summary>
+    public string Code { get; }
 
-    public ODApiException(ODApiErrorKind kind, string url, long statusCode, string message, Exception inner = null)
+    public ODApiException(ODApiErrorKind kind, string url, long statusCode, string message, Exception inner = null, string code = null)
         : base(message, inner)
     {
         Kind = kind;
         Url = url;
         StatusCode = statusCode;
+        Code = code;
     }
 }
 
+/// <summary>Error body written by every backend service (shared/apierror).</summary>
+public class ApiErrorBodyDto
+{
+    public ApiErrorDto error;
+}
+
+public class ApiErrorDto
+{
+    public string code;
+    public string message;
+}
+
 /// <summary>
-/// Every call runs on Unity's main thread (UnitySynchronizationContext), so
-/// callers can touch scene objects right after an await.
+/// Calls start and finish on Unity's main thread (UnitySynchronizationContext),
+/// so callers can touch scene objects right after an await.
 /// </summary>
 public static class ODApiClient
 {
-    static readonly JsonSerializerSettings Json = new JsonSerializerSettings
+    public static readonly JsonSerializerSettings Json = new JsonSerializerSettings
     {
         MissingMemberHandling = MissingMemberHandling.Ignore,
         NullValueHandling = NullValueHandling.Ignore,
@@ -59,86 +75,121 @@ public static class ODApiClient
     /// <summary>GET {BaseUrl}{path} and deserialize the body. A 404 / empty body returns default(T).</summary>
     public static async Task<T> Get<T>(string path)
     {
-        string body = await Send(UnityWebRequest.kHttpVerbGET, path, null, allowNotFound: true);
-        return Parse<T>(path, body);
-    }
+        using var request = CreateRequest(path, ODApiConfig.Instance.timeoutSeconds);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        await Send(request);
+        if (ThrowIfFailed(request, allowNotFound: true)) return default;
 
-    /// <summary>POST a JSON body (or none) and deserialize the response.</summary>
-    public static async Task<T> Post<T>(string path, object payload = null)
-    {
-        string json = payload != null ? JsonConvert.SerializeObject(payload, Json) : null;
-        string body = await Send(UnityWebRequest.kHttpVerbPOST, path, json, allowNotFound: false);
-        return Parse<T>(path, body);
-    }
-
-    /// <summary>Gateway liveness — /health is open (no token). Never throws.</summary>
-    public static async Task<bool> IsReachable()
-    {
+        string body = request.downloadHandler.text;
+        if (string.IsNullOrWhiteSpace(body)) return default;
         try
         {
-            await Send(UnityWebRequest.kHttpVerbGET, "/health", null, allowNotFound: false);
-            return true;
+            // Off the main thread: a few hundred kB of JSON would otherwise cost frames on the headset.
+            return await Task.Run(() => JsonConvert.DeserializeObject<T>(body, Json));
         }
-        catch (ODApiException)
+        catch (Exception e)
         {
-            return false;
+            throw new ODApiException(ODApiErrorKind.InvalidResponse, request.url, 200, $"Invalid JSON for {typeof(T).Name}: {e.Message}", e);
         }
     }
 
-    static async Task<string> Send(string method, string path, string jsonBody, bool allowNotFound)
+    /// <summary>
+    /// GET {BaseUrl}{path} straight into <paramref name="filePath"/>, never holding the body in memory.
+    /// Reports the bytes received so far (the backend streams without Content-Length). Gives up when
+    /// nothing arrives for ODApiConfig.downloadStallSeconds; cancelling aborts the request. Throws an
+    /// ODApiException (or OperationCanceledException) on failure — the caller deletes the partial file.
+    /// </summary>
+    public static async Task Download(string path, string filePath, IProgress<ulong> progress, CancellationToken token)
     {
         var config = ODApiConfig.Instance;
-        string url = config.BaseUrl + path;
+        using var request = CreateRequest(path, 0);   // no overall timeout: a full race takes a while
+        request.downloadHandler = new DownloadHandlerFile(filePath) { removeFileOnAbort = true };
 
-        using var request = new UnityWebRequest(url, method);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.timeout = Mathf.Max(1, config.timeoutSeconds);
+        var operation = request.SendWebRequest();
+        ulong received = 0;
+        float lastByteAt = Time.realtimeSinceStartup;
+        bool stalled = false;
+        while (!operation.isDone)
+        {
+            if (token.IsCancellationRequested) { request.Abort(); break; }
+            if (request.downloadedBytes != received)
+            {
+                received = request.downloadedBytes;
+                lastByteAt = Time.realtimeSinceStartup;
+                progress?.Report(received);
+            }
+            else if (Time.realtimeSinceStartup - lastByteAt > Mathf.Max(1, config.downloadStallSeconds))
+            {
+                stalled = true;
+                request.Abort();
+                break;
+            }
+            await Task.Yield();   // next frame (UnitySynchronizationContext), in Play mode and in the Editor
+        }
+
+        token.ThrowIfCancellationRequested();
+        if (stalled)
+            throw new ODApiException(ODApiErrorKind.Unreachable, request.url, 0, $"No data for {config.downloadStallSeconds}s");
+        ThrowIfFailed(request, allowNotFound: false);
+        progress?.Report(request.downloadedBytes);
+    }
+
+    static UnityWebRequest CreateRequest(string path, int timeoutSeconds)
+    {
+        var config = ODApiConfig.Instance;
+        var request = new UnityWebRequest(config.BaseUrl + path, UnityWebRequest.kHttpVerbGET);
+        request.timeout = Mathf.Max(0, timeoutSeconds);
         request.SetRequestHeader("Accept", "application/json");
         if (!string.IsNullOrEmpty(config.authToken))
             request.SetRequestHeader("Authorization", "Bearer " + config.authToken);
-        if (jsonBody != null)
-        {
-            request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(jsonBody));
-            request.SetRequestHeader("Content-Type", "application/json");
-        }
+        return request;
+    }
 
+    static async Task Send(UnityWebRequest request)
+    {
         try
         {
             await request.SendWebRequest();
         }
-        catch (Exception e) when (!(e is ODApiException))
+        catch (Exception e)
         {
             // Awaiting a failed UnityWebRequest doesn't throw on its own; this
             // only catches unexpected errors (e.g. "Insecure connection not allowed").
-            throw new ODApiException(ODApiErrorKind.Unreachable, url, 0, e.Message, e);
+            throw new ODApiException(ODApiErrorKind.Unreachable, request.url, 0, e.Message, e);
         }
+    }
 
+    /// <summary>Throws for any failed request; returns true for a tolerated 404.</summary>
+    static bool ThrowIfFailed(UnityWebRequest request, bool allowNotFound)
+    {
         long status = request.responseCode;
         switch (request.result)
         {
             case UnityWebRequest.Result.Success:
-                return request.downloadHandler.text;
+                return false;
 
             case UnityWebRequest.Result.ProtocolError:
-                if (allowNotFound && status == 404) return null;
+                if (allowNotFound && status == 404) return true;
+                var error = ReadError(request);
                 throw new ODApiException(status == 401 ? ODApiErrorKind.Unauthorized : ODApiErrorKind.HttpError,
-                    url, status, $"HTTP {status} — {request.downloadHandler.text}");
+                    request.url, status, $"HTTP {status} — {error?.message ?? "no details"}", code: error?.code);
 
             default:
-                throw new ODApiException(ODApiErrorKind.Unreachable, url, status, request.error);
+                throw new ODApiException(ODApiErrorKind.Unreachable, request.url, status, request.error);
         }
     }
 
-    static T Parse<T>(string url, string body)
+    /// <summary>The backend's { "error": { code, message } } body, when the handler kept it in memory.</summary>
+    static ApiErrorDto ReadError(UnityWebRequest request)
     {
-        if (string.IsNullOrWhiteSpace(body) || body.Trim() == "null") return default;
+        if (!(request.downloadHandler is DownloadHandlerBuffer buffer)) return null;
         try
         {
-            return JsonConvert.DeserializeObject<T>(body, Json);
+            return JsonConvert.DeserializeObject<ApiErrorBodyDto>(buffer.text, Json)?.error;
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            throw new ODApiException(ODApiErrorKind.InvalidResponse, url, 200, $"Invalid JSON for {typeof(T).Name}: {e.Message}", e);
+            return null;
         }
     }
 }

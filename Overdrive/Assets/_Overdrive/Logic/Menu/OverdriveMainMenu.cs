@@ -332,8 +332,7 @@ public class OverdriveMainMenu : MonoBehaviour
         rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
         rt.offsetMin = rt.offsetMax = Vector2.zero;
 
-        go.AddComponent<Image>().color = UITheme.Instance != null
-            ? UITheme.Instance.subtleColor : new Color(0.20f, 0.25f, 0.32f, 0.5f);
+        go.AddComponent<Image>().color = new Color(0.20f, 0.25f, 0.32f, 0.5f);
 
         var textGO = new GameObject("Label");
         textGO.transform.SetParent(go.transform, false);

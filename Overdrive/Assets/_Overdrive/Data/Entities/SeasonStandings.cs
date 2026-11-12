@@ -11,6 +11,13 @@
 using System;
 using System.Collections.Generic;
 
+/// <summary>Which table of a standings category is shown.</summary>
+public enum StandingType
+{
+    Drivers,
+    Teams
+}
+
 [Serializable]
 public struct SeasonStandingEntry
 {

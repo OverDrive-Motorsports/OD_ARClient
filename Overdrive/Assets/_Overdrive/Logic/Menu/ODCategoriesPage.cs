@@ -38,19 +38,20 @@ public sealed class ODCategoriesPage : MonoBehaviour
     private const string FavoritePrefix = "Overdrive.CategoryFavorite.";
 
     // Catalogue content, in card order (the design's order). Card ids stay the builder's
-    // ("f1", "coming-N"); only the F1 card opens for now. Season figures are illustrative.
+    // ("f1", "coming-N"); only the F1 card opens for now. No season figures (round, next
+    // race, progress, live) until the backend provides them per championship.
     private static readonly ODChampionshipTile.Info[] Championships =
     {
-        Tile("f1",      "F1",  "Formule 1",       "Monoplaces · 24 Grands Prix",        "Manche 19 / 24",  "États-Unis · dans 11 j", .79f, false),
-        Tile("motogp",  "MGP", "MotoGP",          "Grand Prix moto · 22 manches",       "Manche 19 / 22",  "Australie · ce week-end", .86f, true),
-        Tile("wec",     "WEC", "World Endurance", "Prototypes & GT · 8 manches",        "Manche 7 / 8",    "Bahreïn · dans 12 j",    .88f, false),
-        Tile("fe",      "FE",  "Formula E",       "Monoplaces électriques",             "Pré-saison",      "Tests · demain",         0f,   false),
-        Tile("indycar", "IC",  "IndyCar",         "Ovales & circuits routiers",         "Saison terminée", "Reprise en mars",        1f,   false),
-        Tile("wrc",     "WRC", "WRC",             "Championnat du monde des rallyes",   "Manche 13 / 14",  "Espagne · ce week-end",  .93f, false),
+        Tile("f1",      "F1",  "Formule 1",       "Monoplaces · 24 Grands Prix"),
+        Tile("motogp",  "MGP", "MotoGP",          "Grand Prix moto · 22 manches"),
+        Tile("wec",     "WEC", "World Endurance", "Prototypes & GT · 8 manches"),
+        Tile("fe",      "FE",  "Formula E",       "Monoplaces électriques"),
+        Tile("indycar", "IC",  "IndyCar",         "Ovales & circuits routiers"),
+        Tile("wrc",     "WRC", "WRC",             "Championnat du monde des rallyes"),
     };
 
-    private static ODChampionshipTile.Info Tile(string id, string code, string name, string subtitle, string round, string next, float progress, bool live) =>
-        new ODChampionshipTile.Info { id = id, code = code, name = name, subtitle = subtitle, round = round, next = next, progress = progress, live = live };
+    private static ODChampionshipTile.Info Tile(string id, string code, string name, string subtitle) =>
+        new ODChampionshipTile.Info { id = id, code = code, name = name, subtitle = subtitle, round = "", next = "" };
 
     private enum Scope { All, Favorites, Live }
     private Scope _scope;

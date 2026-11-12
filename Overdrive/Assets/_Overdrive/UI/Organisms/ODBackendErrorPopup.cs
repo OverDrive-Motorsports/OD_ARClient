@@ -4,9 +4,9 @@
  ## All Technical rights reserved
  ##
  ## ODBackendErrorPopup - Blocking popup shown over a page when the backend
- ## can't be reached: a message plus "Réessayer" and "Afficher les données de
- ## démo" in the design's Alerte layout (ODDesign). Built at runtime (no
- ## prefab). Display only: the caller decides what each button does.
+ ## can't be reached: a message plus "Réessayer" in the design's Alerte layout
+ ## (ODDesign). Built at runtime (no prefab). Display only: the caller decides
+ ## what retrying does.
  ##
  */
 
@@ -18,11 +18,11 @@ using UnityEngine.UI;
 public class ODBackendErrorPopup : MonoBehaviour
 {
     /// <summary>
-    /// Shows (or replaces) the popup covering <paramref name="host"/>. Either
-    /// callback closes the popup before running.
+    /// Shows (or replaces) the popup covering <paramref name="host"/>. The
+    /// button closes the popup before running <paramref name="onRetry"/>.
     /// </summary>
     public static ODBackendErrorPopup Show(RectTransform host, string title, string message,
-        UnityAction onRetry, UnityAction onUseMocks)
+        UnityAction onRetry)
     {
         Hide(host);
 
@@ -35,7 +35,7 @@ public class ODBackendErrorPopup : MonoBehaviour
         rect.SetAsLastSibling();
 
         var popup = root.AddComponent<ODBackendErrorPopup>();
-        popup.Build(title, message, onRetry, onUseMocks);
+        popup.Build(title, message, onRetry);
         return popup;
     }
 
@@ -47,11 +47,10 @@ public class ODBackendErrorPopup : MonoBehaviour
     }
 
     /// <summary>
-    /// Design "Alerte" (Canva 04): 800 x 560 card, radius 56, tinted icon disc,
-    /// centred title and message, then the main action (white) above the
-    /// secondary one (white 14 %), both 72-px capsules across the card.
+    /// Design "Alerte" (Canva 04): 800-wide card, radius 56, tinted icon disc,
+    /// centred title and message, then the action (white 72-px capsule across the card).
     /// </summary>
-    void Build(string title, string message, UnityAction onRetry, UnityAction onUseMocks)
+    void Build(string title, string message, UnityAction onRetry)
     {
         // Full-size overlay: dims the page and swallows every pointer hit behind the card.
         var overlay = gameObject.AddComponent<RoundedImage>();
@@ -59,7 +58,7 @@ public class ODBackendErrorPopup : MonoBehaviour
         overlay.cornerRadius = ODDesign.Px(ODDesign.WindowRadius);
         overlay.raycastTarget = true;
 
-        const float cw = 800f, ch = 560f;
+        const float cw = 800f, ch = 476f;
         var card = Centered(transform, "Card", ODDesign.Px(cw), ODDesign.Px(ch));
         var surface = card.gameObject.AddComponent<ODHomepageSurface>();
         surface.color = Color.white;
@@ -90,10 +89,8 @@ public class ODBackendErrorPopup : MonoBehaviour
         body.textWrappingMode = TextWrappingModes.Normal;
         body.overflowMode = TextOverflowModes.Ellipsis;
 
-        var retry = ODDesign.Button(card, "RetryButton", "Réessayer", 56f, ch - 44f - 72f * 2f - 12f, cw - 112f, 72f, ODDesign.ButtonKind.Primary);
+        var retry = ODDesign.Button(card, "RetryButton", "Réessayer", 56f, ch - 44f - 72f, cw - 112f, 72f, ODDesign.ButtonKind.Primary);
         retry.onClick.AddListener(() => { Destroy(gameObject); onRetry?.Invoke(); });
-        var mocks = ODDesign.Button(card, "MockButton", "Afficher les données de démo", 56f, ch - 44f - 72f, cw - 112f, 72f, ODDesign.ButtonKind.Secondary);
-        mocks.onClick.AddListener(() => { Destroy(gameObject); onUseMocks?.Invoke(); });
     }
 
     static RectTransform Centered(Transform parent, string name, float w, float h)

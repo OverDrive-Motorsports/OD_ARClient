@@ -15,7 +15,7 @@ using System.Collections.Generic;
 [Serializable]
 public struct ReplaySummary
 {
-    public string id;                 // backend sessionId, or a mock id
+    public string id;                 // backend sessionId
     public string championshipId;     // "f1", "formula_1" — drives the page colours
     public string championshipName;   // "Formule 1"
     public string grandPrix;          // "Grand Prix de Bahrein 2024"
@@ -31,6 +31,6 @@ public class ReplayDetail
     public ReplaySummary summary;
     public string location;    // "Sakhir, Bahrein"
     public int totalLaps;
-    /// <summary>Final classification, P1 first. "gap" holds the gap to the winner (or points for mocks).</summary>
+    /// <summary>Final classification, P1 first. "gap" holds the gap to the winner.</summary>
     public List<LiveEntry> results = new();
 }

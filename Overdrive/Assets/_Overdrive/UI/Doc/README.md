@@ -1,48 +1,21 @@
 # UI
 
-Responsible for visual display, organized as Atomic Design. Prefabs and
-scripts in this folder are **passive**: they display data and emit events
-(click, value change...), but never make decisions and never access the
-backend directly. [Logic](../../Logic/Doc/README.md) feeds the UI and reacts
-to its events.
-
-Detailed design system documentation: [OD_UI_DOCUMENTATION.md](OD_UI_DOCUMENTATION.md).
+Responsible for visual display. Scripts in this folder are **passive**: they
+display data and emit events (click, value change...), but never make
+decisions and never access the backend directly.
+[Logic](../../Logic/Doc/README.md) feeds the UI and reacts to its events.
 
 ## Structure
 
 ```
 UI/
-├── Atoms/       Simplest UI components (label, icon, live badge, rounded image...)
-├── Molecules/   Assemblies of atoms (button, input field, grid item...)
-├── Organisms/   Complex components (driver card, data table, navbar, modal...)
-├── Theme/       Theme ScriptableObject (colors, styles)
-├── Resources/   Theme assets loaded via Resources.Load (UITheme.asset)
-└── Prefabs/     Prefabs mirroring Atoms/Molecules/Organisms + Screens/ (full screens)
+├── Atoms/       Small runtime graphics (RoundedImage, ODHomepageSurface, ODNavigationIcon, ODTrackLine, ODToggleSwitch, ODFadeIn)
+├── Molecules/   ODSegmentedControl, ContentGridItem
+├── Organisms/   Page sections (ODChampionshipPanel, tiles, profile, calendar, tab bar, replay track map, error popup...)
+├── Theme/       Design tokens and runtime builders (ODDesign, ODRuntimeUI, ODChampionshipTheme, ODSpring, ODTypeScaled)
+├── Resources/   Shaders and DM Sans font assets loaded via Resources.Load
+└── Prefabs/     Screens/ — the full-screen prefabs placed in the scene
 ```
-
-## Current state
-
-Content mostly comes from the former `OD_UI/` (Atomic Design already in
-place) merged with the visual scripts that used to live in `Scripts/UI/`
-(`RoundedImage`, `ContentGridItem`, `ContentGridView`, `RaceStandingCard`),
-which are genuinely display components and had no better home.
-
-`Prefabs/Screens/` groups full-screen prefabs (as opposed to reusable
-Atoms/Molecules/Organisms components): `OverdriveMenuPanel`, `HomeNavScreen`
-(persistent bottom nav + home mini-window), `ChampionshipPage` (an empty
-skeleton — see below).
-
-`Molecules/ODWeatherWidget.cs` and `Molecules/ODMapWidget.cs` are dedicated
-"big" widgets for weather and circuit location — the map widget is a
-placeholder for now (just shows "Carte" + the location), meant to be swapped
-for a real interactive map later.
-
-`Molecules/ODStandingsWidget.cs` is a generic standings card with a built-in
-Pilotes/Écuries toggle. It has no dedicated prefab: it's built entirely at
-runtime (`ODStandingsWidget.Create(...)`) by
-[ChampionshipPageController](../../Logic/Doc/README.md), one instance per
-category found in whatever `ChampionshipData.standings` list it's given —
-it has no idea which championship it's rendering.
 
 ## Design system (OverDrive VR v2)
 
@@ -70,14 +43,16 @@ navigation bar follow the Canva design "OverDrive VR – v2" (pages
   `Organisms/ODChampionshipPanel.Layout.cs`, `Organisms/ODChampionshipTile.cs`,
   `Organisms/ODProfileView.cs`, `Logic/Menu/ODCategoriesPage.cs`,
   `Logic/Menu/ODReplayCatalog.cs`.
-- Replays: the championship header's "▶ Replays" capsule (every state, backend
-  or demo data) opens the gallery: a search field, then two sections,
+- Replays: the championship header's "▶ Replays" capsule (every state but the
+  replay page) opens the gallery: a search field, then two sections,
   "Replays" (everything available) and "Mes replays" (saved with the card's
   star, kept on the headset in PlayerPrefs — no user endpoint yet). Simple
   glass cards, no motion (`Organisms/ODReplayTile.cs`). Picking one shows the
   broadcast page (championship panel in its replay state: video card,
   podium, circuit line, "Résultat final"), whose back arrow returns to the
-  gallery. The demo button only cycles hors week-end / week-end / live.
+  gallery. The championship state (hors week-end / week-end / live) is
+  decided by the backend data; without the backend, a popup offers to retry.
+  Only the profile and settings pages still show placeholder content.
 
 ## Allowed dependencies
 
