@@ -278,12 +278,14 @@ public class ReplayTests
         var leader = new ReplayCar
         {
             lapStart = new[] { float.NaN, 0f, 90f, 180f },
-            sector1 = new[] { float.NaN, 30f, 30f }, sector2 = new[] { float.NaN, 30f, 30f },
+            sector1 = new[] { float.NaN, 30f, 30f },
+            sector2 = new[] { float.NaN, 30f, 30f },
         };
         var car = new ReplayCar
         {
             lapStart = new[] { float.NaN, 0f, 100f, 200f },
-            sector1 = new[] { float.NaN, 20f, 20f }, sector2 = new[] { float.NaN, 40f, 40f },
+            sector1 = new[] { float.NaN, 20f, 20f },
+            sector2 = new[] { float.NaN, 40f, 40f },
         };
 
         Assert.AreEqual("", ODReplayMapper.Gap(car, leader, 10f), "before the end of sector 1");
