@@ -355,7 +355,7 @@ public static class ODChampionshipMapper
         return ColorUtility.TryParseHtmlString(value, out var color) ? color : Color.white;
     }
 
-    static string ChampionshipName(ChampionshipSummaryDto championship, string code)
+    public static string ChampionshipName(ChampionshipSummaryDto championship, string code)
     {
         if (!string.IsNullOrEmpty(championship?.name)) return championship.name;
         return code == "f1" ? "Formule 1" : (code ?? "").ToUpperInvariant();

@@ -158,17 +158,12 @@ public static class VideoPlayerScreenBuilder
         // ── Controller wiring ─────────────────────────────────────────────────
         var ctrl = root.AddComponent<VideoPlayerController>();
         ctrl.videoPlayer = vp;
-        ctrl.scrubSlider = slider;
         ctrl.playPauseLabel = play.transform.Find("Label").GetComponent<TextMeshProUGUI>();
-        ctrl.timeLabel = time.GetComponent<TextMeshProUGUI>();
         ctrl.titleLabel = title.GetComponent<TextMeshProUGUI>();
-        var menuGO = GameObject.Find("OverdriveMenuCanvas");
-        if (menuGO != null) ctrl.menuCanvas = menuGO.GetComponent<Canvas>();
 
-        backBtn.onClick.AddListener(ctrl.BackToMenu);
+        // Scrub, time label, back and skip are no longer driven by VideoPlayerController (the course TV owns them).
+        backBtn.onClick.AddListener(ctrl.HideVideo);
         play.GetComponent<Button>().onClick.AddListener(ctrl.TogglePlayPause);
-        rew.GetComponent<Button>().onClick.AddListener(() => ctrl.SkipSeconds(-10f));
-        fwd.GetComponent<Button>().onClick.AddListener(() => ctrl.SkipSeconds(+10f));
 
         // ── Draggable pill handle ─────────────────────────────────────────────
         root.AddComponent<WindowHandle>();
@@ -284,7 +279,7 @@ public static class VideoPlayerScreenBuilder
         var t = go.AddComponent<TextMeshProUGUI>();
         t.text = txt; t.fontSize = size; t.fontStyle = style;
         t.color = color; t.alignment = align; t.raycastTarget = false;
-        t.enableWordWrapping = false;
+        t.textWrappingMode = TextWrappingModes.NoWrap;
         if (stretch) StretchRT(go);
         return go;
     }

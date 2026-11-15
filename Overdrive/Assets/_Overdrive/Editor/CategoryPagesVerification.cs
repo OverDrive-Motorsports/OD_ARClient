@@ -169,9 +169,9 @@ public static class CategoryPagesVerification
             sport.replayButton.onClick.Invoke();
             nav.homepageButton.onClick.Invoke();
             Check(menu.homepagePanel.activeSelf && !directory.gameObject.activeSelf && !sport.gameObject.activeSelf && !catalog.gameObject.activeSelf, "Returning to Homepage failed.");
-            Check(menu.homepagePanel.GetComponentsInChildren<TextMeshProUGUI>(true).Length == 4, "Homepage content changed.");
+            Check(menu.homepagePanel.GetComponent<ODHomePage>() != null, "Homepage is not the runtime Home page.");
             Check(overflow.Count == 0, "Text overflow: " + string.Join(", ", overflow));
-            return "PASS: wrist/category/profile/home navigation, favorites/search, four exclusive F1 modes, replay button in every mode, catalogue/back preserving state, all six replay selections and metadata, catalogue scrolling, F1 default restored, Homepage unchanged, text bounds. Eight isolated screenshots captured.";
+            return "PASS: wrist/category/profile/home navigation, favorites/search, four exclusive F1 modes, replay button in every mode, catalogue/back preserving state, all six replay selections and metadata, catalogue scrolling, F1 default restored, runtime Home page, text bounds. Eight isolated screenshots captured.";
         }
         finally { EditorSceneManager.ClosePreviewScene(preview); }
     }

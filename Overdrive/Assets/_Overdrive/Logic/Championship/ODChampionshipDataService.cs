@@ -67,6 +67,18 @@ public static class ODChampionshipDataService
         var championship = championships?.FirstOrDefault(c => c.championshipCode == Code);
         var events = (await ODBackendApi.GetEvents(Code) ?? new List<EventSummaryDto>()).OrderBy(e => e.startDate).ToList();
 
+        // The session pinned in ODApiConfig wins when it's live, whatever the event dates say.
+        var pinned = await LoadPinnedAsync();
+        if (pinned.session != null && pinned.session.status == "live" && pinned.evt != null)
+            return new ChampionshipSnapshot
+            {
+                hasData = true,
+                state = ChampionshipViewState.Live,
+                live = await LoadLiveAsync(pinned.evt, pinned.session),
+                liveEvent = pinned.evt,
+                liveSession = pinned.session,
+            };
+
         var current = events.FirstOrDefault(e => e.status == "live")
                    ?? events.FirstOrDefault(e => e.startDate <= now && now <= e.endDate && e.status != "finished");
 
@@ -119,7 +131,7 @@ public static class ODChampionshipDataService
     }
 
     /// <summary>Standings after the most recent finished race that has standings data.</summary>
-    static async Task<SeasonStandingCategory> LoadSeasonStandingsAsync(List<EventSummaryDto> events, DateTime now)
+    public static async Task<SeasonStandingCategory> LoadSeasonStandingsAsync(List<EventSummaryDto> events, DateTime now)
     {
         var past = events.Where(e => e.status == "finished" || e.endDate < now)
                          .OrderByDescending(e => e.startDate)
@@ -171,6 +183,12 @@ public static class ODChampionshipDataService
         var events = await ODBackendApi.GetEvents(Code) ?? new List<EventSummaryDto>();
 
         var replays = new List<ReplaySummary>();
+
+        // The session pinned in ODApiConfig comes first, whatever its type (it may not be a race).
+        var pinned = await LoadPinnedAsync();
+        if (pinned.session != null && pinned.evt != null && pinned.session.status != "scheduled")
+            replays.Add(ODChampionshipMapper.ToReplaySummary(championship, Code, pinned.evt, pinned.session));
+
         foreach (var evt in events.Where(e => e.status == "finished" || e.endDate < now)
                                   .OrderByDescending(e => e.startDate)
                                   .Take(MaxPastEventsScanned))
@@ -179,9 +197,21 @@ public static class ODChampionshipDataService
             if (sessions == null) continue;
             foreach (var session in sessions.Where(s => (s.type == "race" || s.type == "sprint") && s.status == "finished")
                                             .OrderByDescending(s => s.startTime))
-                replays.Add(ODChampionshipMapper.ToReplaySummary(championship, Code, evt, session));
+                if (replays.All(r => r.id != session.sessionId))
+                    replays.Add(ODChampionshipMapper.ToReplaySummary(championship, Code, evt, session));
         }
         return replays;
+    }
+
+    /// <summary>Session set in ODApiConfig.sessionKey and its event; nulls when unset or unknown to the backend (404).</summary>
+    static async Task<(SessionSummaryDto session, EventSummaryDto evt)> LoadPinnedAsync()
+    {
+        string id = ODApiConfig.Instance.PinnedSessionId;
+        if (id == null) return (null, null);
+        var session = await ODBackendApi.GetSession(id);
+        if (session == null) return (null, null);
+        var evt = string.IsNullOrEmpty(session.eventId) ? null : await ODBackendApi.GetEvent(session.eventId);
+        return (session, evt);
     }
 
     public static async Task<ReplayDetail> LoadReplayDetailAsync(ReplaySummary summary)
