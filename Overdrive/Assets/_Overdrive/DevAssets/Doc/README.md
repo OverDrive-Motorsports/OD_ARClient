@@ -1,6 +1,6 @@
 # DevAssets
 
-Prototyping/demo assets, unrelated to production logic: images and videos
+Prototyping/demo assets, unrelated to production logic: images
 used to populate the UI during development while waiting for real content
 from the backend.
 
@@ -11,10 +11,11 @@ Renamed from `DataMockup/`:
 ```
 DevAssets/
 ├── Miniature/   Demo images (F1 driver/race thumbnails)
-├── Video/       Demo video for the video player
-├── VideoRenderTexture.renderTexture
+├── VideoRenderTexture.renderTexture  TV output surface (not a video file)
 └── F1-Logo.png  (recovered from an orphaned Assets/Assets/ folder, unclear origin — worth checking if still needed)
 ```
 
-These assets are consumed by `Data/Mock/ODMockData.cs` and the UI display
-components (e.g. `VideoPlayerController` in `Logic/Video/`).
+The former bundled demo MP4 has been removed. Video playback now resolves
+the selected session/driver broadcast through the backend Dev endpoints;
+there is no local video fallback. The RenderTexture is still required to
+display the main stream and must not be deleted with the clip.

@@ -73,8 +73,9 @@ how a screen should hold and refresh these.
 - `Mappers/ODChampionshipMapper` converts DTOs into entities (pure functions).
 - `Mock/` — `ODOffSeasonMockData`, `ODWeekendMockData`, `ODLiveSessionMockData`
   and `ODReplayMockData` are ported from OD_Mobile and shown when the backend
-  is unreachable and the user picks the demo data. `ODMockData.cs` (moved from
-  `OD_UI/Dev/`) still feeds the older widgets.
+  is unreachable and the user picks the demo data. The legacy UI samples in
+  `DevAssets/Mocks/ODMockData.cs` live outside this Data assembly so they can
+  reference the older UI component types without introducing a circular assembly dependency.
 
 ## Allowed dependencies
 

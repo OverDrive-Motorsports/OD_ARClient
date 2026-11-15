@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,15 +20,38 @@ public sealed class VideoPlayerController : MonoBehaviour
     public Button playPauseButton;
     public Button[] tvButtons;
     public Slider volumeSlider;
+    public Slider scrubSlider;
+    public TextMeshProUGUI timeLabel;
+    // Kept for the historical Editor builder; navigation now belongs to the course.
+    [System.Obsolete("Legacy builder reference; hiding TV no longer changes the menu canvas.")]
+    public Canvas menuCanvas;
     public ScrollRect standingsScroll;
     public float volume = .7f;
 
     public bool IsVisible => videoPanel != null && videoPanel.activeSelf;
-    public bool WantsPlayback => _wantsPlayback;
+    public bool WantsPlayback => _wantsPlayback && (CurrentStream == null || CurrentStream.Loading || (CurrentStream.Ready && !CurrentStream.Finished));
+    public string SessionId => _sessionId;
+    public bool CatalogueLoading { get; private set; }
+    public VideoPlayer ActivePlayer => CurrentStream != null ? CurrentStream.Player : videoPlayer;
     private bool _bound;
     private bool _wantsPlayback;
     private string _context;
-    private double _resumeTime;
+    private string _sessionId;
+    private ODRemoteVideoStream _mainStream;
+    private int _catalogueVersion;
+    private bool _catalogueRequested;
+    private readonly Dictionary<int, ODRemoteVideoStream> _driverStreams = new Dictionary<int, ODRemoteVideoStream>();
+    private ODVideoPlayerView View => videoPanel != null ? videoPanel.GetComponent<ODVideoPlayerView>() : null;
+    private ODRemoteVideoStream CurrentStream => StreamForFeed(View != null ? View.PrimaryFeed : -1);
+
+    private ODRemoteVideoStream StreamForFeed(int feed)
+    {
+        if (feed < 0) return _mainStream;
+        int number = View != null ? View.DriverNumber(feed) : 0;
+        return _driverStreams.TryGetValue(number, out var stream) ? stream : null;
+    }
+    public Texture TextureForFeed(int feed) => StreamForFeed(feed)?.Texture;
+    public string StatusForFeed(int feed) => StreamForFeed(feed)?.Status ?? "Vidéo indisponible";
 
     private void Awake() => Initialize();
 
@@ -34,42 +59,53 @@ public sealed class VideoPlayerController : MonoBehaviour
     {
         if (_bound) return;
         _bound = true;
+        if (View != null) View.Bind(this);
         if (tvButtons != null)
             foreach (var button in tvButtons) button?.onClick.AddListener(ToggleVideo);
         playPauseButton?.onClick.AddListener(TogglePlayPause);
         volumeSlider?.onValueChanged.AddListener(SetVolume);
-        if (videoPlayer != null)
+        scrubSlider?.onValueChanged.AddListener(SeekNormalized);
+        if (videoPlayer != null && Application.isPlaying)
         {
-            videoPlayer.prepareCompleted += Prepared;
-            videoPlayer.errorReceived += PlaybackError;
-            videoPlayer.loopPointReached += PlaybackEnded;
+            _mainStream = new ODRemoteVideoStream(videoPlayer, false);
+            _mainStream.Changed += SourcesChanged;
         }
         SetVolume(volume);
         HideVideo();
     }
 
-    public void Configure(ODSportPage.Mode mode, string context, string title)
+    public void Configure(ODSportPage.Mode mode, string context, string title, string sessionId = null)
     {
         Initialize();
         bool session = mode == ODSportPage.Mode.LiveSession || mode == ODSportPage.Mode.Replay;
-        if (_context != context)
+        if (_context != context || _sessionId != sessionId)
         {
             HideVideo();
-            if (Application.isPlaying && videoPlayer != null) videoPlayer.Stop();
-            _resumeTime = 0;
+            ++_catalogueVersion; CatalogueLoading = false; _catalogueRequested = false;
+            if (View != null) View.ResetDriverCatalogue();
+            if (videoPanel != null)
+            {
+                var view = videoPanel.GetComponent<ODVideoPlayerView>();
+                if (view != null) view.ResetViews();
+            }
+            _mainStream?.Reset();
+            DisposeDriverStreams();
             _context = context;
+            _sessionId = sessionId;
             if (standingsScroll != null) standingsScroll.verticalNormalizedPosition = 1;
         }
         if (standingsPanel != null) standingsPanel.SetActive(session);
         if (standingsHeading != null) standingsHeading.text = mode == ODSportPage.Mode.Replay
             ? "Classement de la course" : "Classement de la session";
-        if (titleLabel != null) titleLabel.text = (mode == ODSportPage.Mode.Replay ? "TV Replay" : "TV Live") + " · " + title;
+        if (titleLabel != null) titleLabel.text = videoPanel != null && videoPanel.GetComponent<ODVideoPlayerView>() != null
+            ? title : (mode == ODSportPage.Mode.Replay ? "TV Replay" : "TV Live") + " · " + title;
         if (!session) HideVideo();
+        RefreshView();
     }
 
     public void ToggleVideo()
     {
-        if (course == null || !course.isActiveAndEnabled ||
+        if (videoPanel == null || course == null || !course.isActiveAndEnabled ||
             (course.currentMode != ODSportPage.Mode.LiveSession && course.currentMode != ODSportPage.Mode.Replay)) return;
         if (IsVisible) { HideVideo(); return; }
         videoPanel.SetActive(true);
@@ -77,24 +113,17 @@ public sealed class VideoPlayerController : MonoBehaviour
         var canvas = videoPanel.GetComponent<Canvas>();
         if (canvas != null) canvas.worldCamera = Camera.main;
         _wantsPlayback = true;
-        if (Application.isPlaying && videoPlayer != null)
-        {
-            if (videoPlayer.isPrepared) { ApplyVolume(); videoPlayer.Play(); }
-            else videoPlayer.Prepare();
-        }
-        if (playbackStatus != null) playbackStatus.text = videoPlayer != null && videoPlayer.isPrepared
-            ? "Vidéo mock · Pas de flux connecté" : "Vidéo mock · Chargement…";
+        LoadDrivers();
+        if (View != null) View.SyncSources();
+        StartRequestedStreams();
         UpdateControls();
     }
 
     public void HideVideo()
     {
         _wantsPlayback = false;
-        if (Application.isPlaying && videoPlayer != null && videoPlayer.isPrepared)
-        {
-            _resumeTime = videoPlayer.time >= videoPlayer.length - .1 ? 0 : videoPlayer.time;
-            videoPlayer.Pause();
-        }
+        _mainStream?.Suspend();
+        foreach (var stream in _driverStreams.Values) stream.Suspend();
         if (videoPanel != null) videoPanel.SetActive(false);
         UpdateControls();
     }
@@ -102,60 +131,144 @@ public sealed class VideoPlayerController : MonoBehaviour
     public void TogglePlayPause()
     {
         if (!IsVisible) return;
-        _wantsPlayback = !_wantsPlayback;
-        if (Application.isPlaying && videoPlayer != null)
-        {
-            if (!_wantsPlayback) videoPlayer.Pause();
-            else if (videoPlayer.isPrepared) videoPlayer.Play();
-            else videoPlayer.Prepare();
-        }
+        _wantsPlayback = !WantsPlayback;
+        if (_wantsPlayback) StartRequestedStreams(retryFailed: true);
+        SetPlaybackOnStreams();
         UpdateControls();
     }
 
     public void SetVolume(float value)
     {
         volume = Mathf.Clamp01(value);
-        volumeSlider?.SetValueWithoutNotify(volume);
+        if (volumeSlider != null) volumeSlider.SetValueWithoutNotify(volume);
         if (volumeLabel != null) volumeLabel.text = Mathf.RoundToInt(volume * 100) + "%";
         ApplyVolume();
+        RefreshView();
+    }
+
+    public void SeekNormalized(float value)
+    {
+        var player = ActivePlayer;
+        if (player != null && player.isPrepared && player.canSetTime && player.length > 0)
+            player.time = Mathf.Clamp01(value) * player.length;
+    }
+
+    public void SkipSeconds(float seconds)
+    {
+        var player = ActivePlayer;
+        if (player != null && player.isPrepared && player.canSetTime)
+            player.time = System.Math.Max(0, System.Math.Min(player.length, player.time + seconds));
+    }
+
+    [System.Obsolete("Use HideVideo; the course remains visible.")]
+    public void BackToMenu() => HideVideo();
+
+    private void Update()
+    {
+        if (!IsVisible) return;
+        _mainStream?.Tick();
+        foreach (var stream in _driverStreams.Values) stream.Tick();
+        var player = ActivePlayer;
+        bool ready = player != null && player.isPrepared;
+        if (scrubSlider != null)
+        {
+            scrubSlider.interactable = ready && player.canSetTime && player.length > 0;
+            scrubSlider.SetValueWithoutNotify(ready && player.length > 0 ? (float)(player.time / player.length) : 0);
+        }
+        if (timeLabel != null)
+            timeLabel.text = ready ? System.TimeSpan.FromSeconds(System.Math.Max(0, player.time)).ToString(@"h\:mm\:ss") : "0:00:00";
     }
 
     private void ApplyVolume()
     {
-        if (!Application.isPlaying || videoPlayer == null || !videoPlayer.isPrepared) return;
-        for (ushort i = 0; i < videoPlayer.controlledAudioTrackCount; i++)
+        var current = CurrentStream;
+        _mainStream?.SetVolume(current == _mainStream ? volume : 0);
+        foreach (var stream in _driverStreams.Values) stream.SetVolume(stream == current ? volume : 0);
+    }
+
+    /// <summary>Only selected cameras allocate a decoder. Switching layout reuses the same streams.</summary>
+    public void SyncViews(IEnumerable<int> feeds, int primary)
+    {
+        if (!Application.isPlaying || View == null) return;
+        var numbers = new HashSet<int>(feeds.Append(primary).Where(i => i >= 0).Select(View.DriverNumber).Where(n => n > 0));
+        foreach (int number in _driverStreams.Keys.Where(n => !numbers.Contains(n)).ToArray())
+        { _driverStreams[number].Dispose(); _driverStreams.Remove(number); }
+        foreach (int number in numbers)
         {
-            if (videoPlayer.audioOutputMode == VideoAudioOutputMode.Direct) videoPlayer.SetDirectAudioVolume(i, volume);
-            else if (videoPlayer.audioOutputMode == VideoAudioOutputMode.AudioSource)
-            {
-                var source = videoPlayer.GetTargetAudioSource(i);
-                if (source != null) source.volume = volume;
-            }
+            if (_driverStreams.ContainsKey(number)) continue;
+            var go = new GameObject("DriverBroadcast_" + number);
+            go.transform.SetParent(transform, false);
+            var stream = new ODRemoteVideoStream(go.AddComponent<VideoPlayer>(), true);
+            stream.Changed += SourcesChanged; _driverStreams.Add(number, stream);
         }
+        if (IsVisible && _wantsPlayback) StartRequestedStreams();
+        UpdateControls();
     }
 
-    private void Prepared(VideoPlayer player)
+    private void StartRequestedStreams(bool retryFailed = false)
     {
+        if (!Application.isPlaying || !IsVisible) return;
+        if (_mainStream != null && (!_mainStream.Requested || (retryFailed && !_mainStream.Ready && !_mainStream.Loading)))
+            _ = _mainStream.LoadAsync(_sessionId);
+        foreach (var pair in _driverStreams)
+            if (!pair.Value.Requested || (retryFailed && !pair.Value.Ready && !pair.Value.Loading))
+                _ = pair.Value.LoadAsync(_sessionId, pair.Key);
+        SetPlaybackOnStreams();
         ApplyVolume();
-        if (_resumeTime > 0 && player.canSetTime) player.time = _resumeTime;
-        if (IsVisible && _wantsPlayback) player.Play();
-        if (playbackStatus != null) playbackStatus.text = "Vidéo mock · Pas de flux connecté";
-        UpdateControls();
     }
 
-    private void PlaybackError(VideoPlayer player, string message)
+    private async void LoadDrivers()
     {
-        _wantsPlayback = false;
-        if (playbackStatus != null) playbackStatus.text = "Vidéo indisponible · Réessayer avec Lecture";
-        Debug.LogWarning("[Course TV] " + message);
-        UpdateControls();
+        if (!Application.isPlaying || _catalogueRequested || string.IsNullOrWhiteSpace(_sessionId)) return;
+        _catalogueRequested = true; CatalogueLoading = true;
+        int version = ++_catalogueVersion;
+        RefreshView();
+        try
+        {
+            var drivers = await ODBackendApi.GetSessionDrivers(_sessionId);
+            if (this == null || version != _catalogueVersion) return;
+            if (drivers == null || drivers.Count == 0) _catalogueRequested = false;
+            if (View != null) View.SetDrivers(drivers);
+        }
+        catch (System.Exception)
+        {
+            if (this == null || version != _catalogueVersion) return;
+            _catalogueRequested = false; // Reopening retries; no invented backend participants.
+        }
+        if (this == null || version != _catalogueVersion) return;
+        CatalogueLoading = false; RefreshView();
     }
 
-    private void PlaybackEnded(VideoPlayer player) { _wantsPlayback = false; UpdateControls(); }
+    private void SetPlaybackOnStreams()
+    {
+        _mainStream?.SetPlayback(_wantsPlayback);
+        foreach (var stream in _driverStreams.Values) stream.SetPlayback(_wantsPlayback);
+    }
+    private void SourcesChanged()
+    {
+        if (this == null) return;
+        if (CurrentStream != null && CurrentStream.Finished) { _wantsPlayback = false; SetPlaybackOnStreams(); }
+        ApplyVolume(); UpdateControls();
+    }
+    private void DisposeDriverStreams()
+    {
+        foreach (var stream in _driverStreams.Values) stream.Dispose();
+        _driverStreams.Clear();
+    }
+
+    private void RefreshView()
+    {
+        // The independent TV can be destroyed before its course controller on scene shutdown.
+        if (videoPanel == null) return;
+        var view = videoPanel.GetComponent<ODVideoPlayerView>();
+        if (view != null) view.Refresh();
+    }
 
     private void UpdateControls()
     {
-        if (playPauseLabel != null) playPauseLabel.text = _wantsPlayback ? "Pause" : "Lecture";
+        if (playPauseLabel != null) playPauseLabel.text = WantsPlayback ? "Pause" : "Lecture";
+        if (playbackStatus != null) playbackStatus.text = StatusForFeed(View != null ? View.PrimaryFeed : -1);
+        RefreshView();
         if (tvButtons == null) return;
         foreach (var button in tvButtons)
         {
@@ -171,21 +284,22 @@ public sealed class VideoPlayerController : MonoBehaviour
     private void OnDisable()
     {
         HideVideo();
-        if (Application.isPlaying && videoPlayer != null) videoPlayer.Stop();
+        _mainStream?.Reset();
+        DisposeDriverStreams();
         _context = null;
-        _resumeTime = 0;
+        _sessionId = null;
+        ++_catalogueVersion; CatalogueLoading = false; _catalogueRequested = false;
     }
 
     private void OnDestroy()
     {
         if (!_bound) return;
         if (tvButtons != null)
-            foreach (var button in tvButtons) button?.onClick.RemoveListener(ToggleVideo);
-        playPauseButton?.onClick.RemoveListener(TogglePlayPause);
-        volumeSlider?.onValueChanged.RemoveListener(SetVolume);
-        if (videoPlayer == null) return;
-        videoPlayer.prepareCompleted -= Prepared;
-        videoPlayer.errorReceived -= PlaybackError;
-        videoPlayer.loopPointReached -= PlaybackEnded;
+            foreach (var button in tvButtons) if (button != null) button.onClick.RemoveListener(ToggleVideo);
+        if (playPauseButton != null) playPauseButton.onClick.RemoveListener(TogglePlayPause);
+        if (volumeSlider != null) volumeSlider.onValueChanged.RemoveListener(SetVolume);
+        if (scrubSlider != null) scrubSlider.onValueChanged.RemoveListener(SeekNormalized);
+        _mainStream?.Dispose();
+        DisposeDriverStreams();
     }
 }

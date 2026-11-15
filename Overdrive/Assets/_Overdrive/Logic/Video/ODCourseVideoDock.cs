@@ -5,6 +5,7 @@ public sealed class ODCourseVideoDock : MonoBehaviour
 {
     public RectTransform courseWindow;
     public Vector3 localOffset = new Vector3(-1524, 266, 0);
+    public float initialYaw = -12f;
 
     private bool _placed;
 
@@ -18,8 +19,12 @@ public sealed class ODCourseVideoDock : MonoBehaviour
     public void Align()
     {
         if (courseWindow == null) return;
-        transform.SetPositionAndRotation(courseWindow.TransformPoint(localOffset), courseWindow.rotation);
         transform.localScale = courseWindow.lossyScale;
+        var rect = (RectTransform)transform;
+        var center = (Vector3)rect.rect.center;
+        var worldCenter = courseWindow.TransformPoint(localOffset + center);
+        var rotation = courseWindow.rotation * Quaternion.Euler(0, initialYaw, 0);
+        transform.SetPositionAndRotation(worldCenter - rotation * Vector3.Scale(center, courseWindow.lossyScale), rotation);
         _placed = true;
     }
 }

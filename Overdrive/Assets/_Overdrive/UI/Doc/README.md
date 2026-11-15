@@ -79,6 +79,23 @@ navigation bar follow the Canva design "OverDrive VR – v2" (pages
   podium, circuit line, "Résultat final"), whose back arrow returns to the
   gallery. The demo button only cycles hors week-end / week-end / live.
 
+## Course TV multiview prototype
+
+- `Atoms/ODVideoIcon.cs` draws video icons without font glyphs.
+- `Organisms/ODVideoUI.cs` shares video surfaces, controls and layout helpers.
+- `Organisms/ODVideoPlayerView.cs` owns the main TV controls and the camera
+  picker: session participants come from the backend, in a clamped scroll
+  view with a draggable scrollbar. The 20-name demo catalogue remains when
+  participants are unavailable. Map and radio remain dummy buttons.
+- `Organisms/ODPilotVideoView.cs` displays either one onboard or a grouped
+  mosaic in its own root Canvas. Both follow the main TV until their own
+  white bar is grabbed; "Rattacher les vues" explicitly restores following.
+  Adding pilots subdivides the mosaic without replacing the main TV or
+  moving a detached mosaic. Each selected onboard binds to its own backend
+  URL, decoder and texture; an unavailable source never mirrors the main TV.
+- `OverdriveCourseTV`, `OverdrivePilotVideo` and `OverdriveViewPicker` are
+  separate saved screen prefabs, each with its own Meta ray/poke bridge.
+
 ## Allowed dependencies
 
 None towards Core/Data/Logic. UI may use Interaction only for input-related

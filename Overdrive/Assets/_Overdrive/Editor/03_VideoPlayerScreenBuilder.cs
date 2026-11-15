@@ -54,7 +54,6 @@ public static class VideoPlayerScreenBuilder
     }
 
     const string RT_PATH = "Assets/_Overdrive/DevAssets/VideoRenderTexture.renderTexture";
-    const string VIDEO_DIR = "Assets/_Overdrive/DevAssets/Video";
 
     public static void Build()
     {
@@ -75,15 +74,6 @@ public static class VideoPlayerScreenBuilder
             rt = new RenderTexture(1280, 720, 0);
             AssetDatabase.CreateAsset(rt, RT_PATH);
         }
-
-        // ── Video clip (first file in DataMockup/Video) ───────────────────────
-        VideoClip clip = null;
-        foreach (var guid in AssetDatabase.FindAssets("t:VideoClip", new[] { VIDEO_DIR }))
-        {
-            clip = AssetDatabase.LoadAssetAtPath<VideoClip>(AssetDatabase.GUIDToAssetPath(guid));
-            if (clip != null) break;
-        }
-        if (clip == null) Debug.LogWarning("[VideoPlayer] No VideoClip found in " + VIDEO_DIR);
 
         // ── Canvas root ───────────────────────────────────────────────────────
         var root = new GameObject("VideoPlayerCanvas");
@@ -109,7 +99,9 @@ public static class VideoPlayerScreenBuilder
         vp.targetTexture = rt;
         vp.audioOutputMode = VideoAudioOutputMode.Direct;
         vp.isLooping = false;
-        vp.clip = clip;
+        vp.clip = null;
+        vp.source = VideoSource.Url;
+        vp.url = "";
 
         var videoGO = NewGO("VideoSurface", root.transform);
         var vRT = videoGO.GetComponent<RectTransform>();
@@ -284,7 +276,7 @@ public static class VideoPlayerScreenBuilder
         var t = go.AddComponent<TextMeshProUGUI>();
         t.text = txt; t.fontSize = size; t.fontStyle = style;
         t.color = color; t.alignment = align; t.raycastTarget = false;
-        t.enableWordWrapping = false;
+        t.textWrappingMode = TextWrappingModes.NoWrap;
         if (stretch) StretchRT(go);
         return go;
     }

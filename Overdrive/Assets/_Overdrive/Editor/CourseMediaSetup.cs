@@ -26,6 +26,8 @@ public static class CourseMediaSetup
         television.playbackStatus = panel.transform.Find("PlaybackStatus").GetComponent<TextMeshProUGUI>();
         television.volumeSlider = panel.transform.Find("Volume").GetComponent<Slider>();
         television.volumeLabel = panel.transform.Find("VolumeValue").GetComponent<TextMeshProUGUI>();
+        var modern = panel.GetComponent<ODVideoPlayerView>();
+        if (modern != null) modern.Bind(television);
     }
 
     public static string SeparateInputCanvas()
@@ -94,8 +96,8 @@ public static class CourseMediaSetup
         if (AssetDatabase.LoadAssetAtPath<SceneAsset>(snapshot) == null && !EditorSceneManager.SaveScene(scene, snapshot, true))
             throw new InvalidOperationException("Snapshot failed.");
         var mediaSource = oldVideo.GetComponent<VideoPlayer>();
-        if (mediaSource == null || mediaSource.clip == null || mediaSource.targetTexture == null)
-            throw new InvalidOperationException("Mock clip or render texture missing.");
+        if (mediaSource == null || mediaSource.targetTexture == null)
+            throw new InvalidOperationException("Video player or render texture missing.");
         var root = PrefabUtility.LoadPrefabContents(SportPath);
         try
         {
@@ -209,11 +211,13 @@ public static class CourseMediaSetup
         raw.raycastTarget = false;
         television.videoPlayer = panel.gameObject.AddComponent<VideoPlayer>();
         var player = television.videoPlayer;
-        player.clip = source.clip;
+        player.clip = null;
+        player.source = VideoSource.Url;
+        player.url = "";
         player.targetTexture = source.targetTexture;
         player.renderMode = VideoRenderMode.RenderTexture;
         player.audioOutputMode = VideoAudioOutputMode.Direct;
-        player.controlledAudioTrackCount = (ushort)Mathf.Min((int)source.clip.audioTrackCount, 1);
+        player.controlledAudioTrackCount = 1;
         player.playOnAwake = false;
         player.waitForFirstFrame = true;
         player.isLooping = false;
@@ -243,8 +247,7 @@ public static class CourseMediaSetup
         television.volumeSlider.targetGraphic = handle;
         television.volumeSlider.navigation = new Navigation { mode = Navigation.Mode.None };
         television.volumeLabel = Text(panel, "VolumeValue", "70%", 628, 580, 80, 40, 23, true);
-        // Put the mock notice above the controls, away from the image.
-        television.playbackStatus = Text(panel, "PlaybackStatus", "Vidéo mock", 24, 62, 844, 20, 15, secondary: true);
+        television.playbackStatus = Text(panel, "PlaybackStatus", "Vidéo indisponible", 24, 62, 844, 20, 15, secondary: true);
 
         var pointable = panel.gameObject.AddComponent<PointableCanvas>();
         pointable.InjectCanvas(canvas);

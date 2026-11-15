@@ -43,6 +43,9 @@ public sealed class ODSportPage : MonoBehaviour
     private int _loadVersion;
     private int _replayVersion;
     private Mode _modeBeforeReplay = Mode.Weekend;
+    // Mock IDs are not valid backend sessions: never manufacture one for media requests.
+    public string VideoSessionId => ODDataSource.UseMocks ? null :
+        currentMode == Mode.Replay ? replayId : _snapshot?.liveSession?.sessionId;
 
     private void OnEnable()
     {
@@ -115,13 +118,14 @@ public sealed class ODSportPage : MonoBehaviour
     private void OnDisable()
     {
         ODPassthroughBlur.Release(this);
-        circuitPreview?.Hide();
+        // Unity objects can be destroyed before this page during scene shutdown.
+        if (circuitPreview != null) circuitPreview.Hide();
         _loadVersion++;   // drops in-flight loads and stops live polling; OnEnable reloads
     }
 
     public void SetMode(Mode mode)
     {
-        if (currentMode != mode) circuitPreview?.Hide();
+        if (currentMode != mode && circuitPreview != null) circuitPreview.Hide();
         currentMode = (Mode)Mathf.Clamp((int)mode, 0, 3);
         int index = (int)currentMode;
         if (modePanels != null)
@@ -139,7 +143,7 @@ public sealed class ODSportPage : MonoBehaviour
         // (championship palette + state style), applied by ShowModeContent below.
         if (television != null) television.Configure(currentMode,
             replay ? "replay:" + replayId + ":" + replayGrandPrix : "live:" + index + ":" + mockGrandPrix + ":" + mockSession,
-            replay ? replayGrandPrix : mockGrandPrix);
+            replay ? replayGrandPrix : mockGrandPrix, VideoSessionId);
         // States are cycled by hand only on demo data; on the backend the data decides.
         // The replay page has neither: its back arrow returns to the gallery.
         if (demoButton != null) demoButton.gameObject.SetActive(ODDataSource.UseMocks && !replay);

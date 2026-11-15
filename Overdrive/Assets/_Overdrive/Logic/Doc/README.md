@@ -32,6 +32,22 @@ prefab, and [RaceReplay-DownloadAndPlayback.md](./RaceReplay-DownloadAndPlayback
 for the different case of a full-race download consumed by seeking through
 a local timeline instead of being refreshed.
 
+## Backend video (Dev contract)
+
+- `Video/VideoPlayerController.cs` passes the selected backend session to
+  the TV, manages only selected pilot decoders, pauses/resumes views, keeps
+  auxiliary audio muted and applies transport controls to the promoted feed.
+- `Video/ODRemoteVideoStream.cs` resolves either the main `broadcastUrl`
+  (camelCase) or a driver's `broadcast_url` (snake_case), then prepares the
+  HTTP(S) media URL in a native VideoPlayer. Empty/invalid URLs, unavailable
+  backend and decoder failures show an unavailable state, never a local clip.
+  Generation checks ignore late replies on hide/session change/disposal;
+  closing a camera releases its decoder and allocated texture. The gateway
+  Bearer token belongs only to JSON calls and is never attached to media URLs.
+- `Menu/ODSportPage.VideoSessionId` uses the selected live session or replay
+  ID, not the display title or a fabricated mock session. The rest of the
+  app can still show demo data without playing a demo video.
+
 ## Allowed dependencies
 
 Logic is the only layer allowed to depend on everything: Core, Data, UI,

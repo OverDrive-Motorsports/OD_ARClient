@@ -4,6 +4,11 @@
   constructors on device builds. Every DTO class name ends with "Dto".
 -->
 <linker>
+  <assembly fullname="Overdrive.Data">
+    <type fullname="SessionBroadcastDto" preserve="all" />
+    <type fullname="DriverBroadcastDto" preserve="all" />
+    <type fullname="DriverSummaryDto" preserve="all" />
+  </assembly>
   <assembly fullname="Assembly-CSharp">
     <type fullname="*Dto" preserve="all" />
     <type fullname="*Dto`1" preserve="all" />
