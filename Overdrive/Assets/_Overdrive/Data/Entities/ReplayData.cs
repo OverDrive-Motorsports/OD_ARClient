@@ -17,9 +17,9 @@ public struct ReplaySummary
 {
     public string id;                 // backend sessionId
     public string championshipId;     // "f1", "formula_1" — drives the page colours
-    public string championshipName;   // "Formule 1"
-    public string grandPrix;          // "Grand Prix de Bahrein 2024"
-    public string sessionName;        // "Course", "Sprint"
+    public string championshipName;   // "Formula 1"
+    public string grandPrix;          // "Bahrain Grand Prix 2024"
+    public string sessionName;        // "Race", "Sprint"
     public string season;             // "2024"
     public string circuit;            // "Bahrain International Circuit"
     public DateTime date;

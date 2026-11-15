@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Replay gallery, reached from the "Replays" button of the championship page.
 /// Cards are generated from the backend's replayable sessions, in two sections: "Replays"
-/// (everything available) and "Mes replays" (saved with the card's star, kept
+/// (everything available) and "My replays" (saved with the card's star, kept
 /// on the headset), both filtered by the search field. Simple cards, no motion
 /// (ODReplayTile). Picking one opens the championship page in its replay
 /// state (the broadcast page).
@@ -87,7 +87,7 @@ public sealed class ODReplayCatalog : MonoBehaviour
     private async void LoadFromBackend()
     {
         int version = ++_loadVersion;
-        SetLabel(notice, "Chargement des replays…");
+        SetLabel(notice, "Loading replays…");
         try
         {
             var replays = await ODReplayService.LoadCatalogAsync();
@@ -95,7 +95,7 @@ public sealed class ODReplayCatalog : MonoBehaviour
 
             if (replays.Count == 0)
             {
-                ShowError("Aucun replay", "Le backend répond mais n'a aucune session rejouable : il faut une ingestion OpenF1 avec la télémétrie et les positions (car_data + location).");
+                ShowError("No replay", "The backend answers but has no replayable session: it needs an OpenF1 ingestion with telemetry and positions (car_data + location).");
                 return;
             }
             Bind(replays);
@@ -128,14 +128,14 @@ public sealed class ODReplayCatalog : MonoBehaviour
             };
 
         if (_replays.Count > 0) ApplyTheme(_replays[0].championshipId);
-        string championship = _replays.Count > 0 ? ChampionshipLabel(_replays[0]) : "Formule 1";
-        SetLabel(subtitle, $"{championship} · {_replays.Count} replay{(_replays.Count > 1 ? "s" : "")} disponible{(_replays.Count > 1 ? "s" : "")}");
-        SetLabel(notice, "Données du backend · Vidéos non connectées");
+        string championship = _replays.Count > 0 ? ChampionshipLabel(_replays[0]) : "Formula 1";
+        SetLabel(subtitle, $"{championship} · {_replays.Count} replay{(_replays.Count > 1 ? "s" : "")} available");
+        SetLabel(notice, "Backend data · Videos not connected");
         Render();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Sections — "Replays" (everything available) and "Mes replays" (saved
+    // Sections — "Replays" (everything available) and "My replays" (saved
     // with the star, kept on the headset: the backend has no user list yet)
     // ═══════════════════════════════════════════════════════════════════════
 
@@ -179,11 +179,11 @@ public sealed class ODReplayCatalog : MonoBehaviour
 
         float y = 0f;
         y = Section(content, "Replays", matches, y,
-            term.Length > 0 ? "Aucun replay ne correspond à ta recherche." : "Aucun replay disponible pour le moment.");
+            term.Length > 0 ? "No replay matches your search." : "No replay available yet.");
         y += SectionGap;
-        y = Section(content, "Mes replays", mine, y,
-            term.Length > 0 ? "Aucun de tes replays ne correspond à ta recherche."
-                            : "Aucun replay enregistré. Touche l'étoile d'un replay pour le retrouver ici.");
+        y = Section(content, "My replays", mine, y,
+            term.Length > 0 ? "None of your replays matches your search."
+                            : "No saved replay. Tap a replay's star to find it here.");
 
         content.sizeDelta = new Vector2(content.sizeDelta.x, ODDesign.Px(y));
         if (scroll != null)
@@ -236,7 +236,7 @@ public sealed class ODReplayCatalog : MonoBehaviour
         return Fold(haystack).Contains(Fold(term));
     }
 
-    /// <summary>Lower case without accents: "bahrein" finds "Bahreïn".</summary>
+    /// <summary>Lower case without accents: "sao paulo" finds "São Paulo".</summary>
     private static string Fold(string text)
     {
         var decomposed = (text ?? "").ToLowerInvariant().Normalize(System.Text.NormalizationForm.FormD);
@@ -253,9 +253,9 @@ public sealed class ODReplayCatalog : MonoBehaviour
         saved = saved,
     };
 
-    /// <summary>French name of the championship whatever the source spelling ("Formula 1").</summary>
+    /// <summary>Display name of the championship whatever the source spelling.</summary>
     private static string ChampionshipLabel(ReplaySummary replay) =>
-        ODDesign.Normalise(replay.championshipId) == "f1" ? "Formule 1" : replay.championshipName ?? "";
+        ODDesign.Normalise(replay.championshipId) == "f1" ? "Formula 1" : replay.championshipName ?? "";
 
     // ── Design layout (design px, 1920 x 1200 window) ──────────────────────
     // Header like the championship pages with a search field on the right,
@@ -356,7 +356,7 @@ public sealed class ODReplayCatalog : MonoBehaviour
 
         var area = ODDesign.Rect(field.transform, "TextArea", 64f, 0f, w - 64f - 28f, h);
         area.gameObject.AddComponent<RectMask2D>();
-        var placeholder = ODDesign.Text(area, "Placeholder", "Rechercher un replay", 0f, 0f, w - 92f, h, 22f, ODDesign.Weight.Regular, ODDesign.Tertiary);
+        var placeholder = ODDesign.Text(area, "Placeholder", "Search a replay", 0f, 0f, w - 92f, h, 22f, ODDesign.Weight.Regular, ODDesign.Tertiary);
         var text = ODDesign.Text(area, "Text", "", 0f, 0f, w - 92f, h, 22f, ODDesign.Weight.Regular, ODDesign.Primary);
         text.overflowMode = TextOverflowModes.Overflow;
 

@@ -56,21 +56,21 @@ public class ReplayTests
         Assert.AreEqual("openf1:session:9472", summary.id);
         Assert.AreEqual("f1", summary.championshipId);
         Assert.AreEqual("Bahrain Grand Prix", summary.grandPrix);
-        Assert.AreEqual("Course", summary.sessionName);
+        Assert.AreEqual("Race", summary.sessionName);
         Assert.AreEqual("2024", summary.season);
         Assert.AreEqual("Bahrain International Circuit", summary.circuit);
         Assert.AreEqual(Entry().startTime.ToLocalTime(), summary.date);
     }
 
-    [TestCase("race", "Race", "Course")]
+    [TestCase("race", "Race", "Race")]
     [TestCase("race", "Sprint", "Sprint")]
     [TestCase("sprint", "Sprint", "Sprint")]
-    [TestCase("sprint", "Sprint Qualifying", "Qualifs sprint")]
-    [TestCase("quali", "Sprint Shootout", "Qualifs sprint")]
-    [TestCase("quali", "Qualifying", "Qualifications")]
-    [TestCase("practice", "Practice 2", "EL2")]
-    [TestCase("practice", null, "Essais libres")]
-    public void SessionName_IsFrench(string type, string name, string expected)
+    [TestCase("sprint", "Sprint Qualifying", "Sprint Qualifying")]
+    [TestCase("quali", "Sprint Shootout", "Sprint Qualifying")]
+    [TestCase("quali", "Qualifying", "Qualifying")]
+    [TestCase("practice", "Practice 2", "FP2")]
+    [TestCase("practice", null, "Practice")]
+    public void SessionName_IsShortAndConsistent(string type, string name, string expected)
     {
         Assert.AreEqual(expected, ODChampionshipMapper.SessionName(type, name));
     }
@@ -235,7 +235,7 @@ public class ReplayTests
     public void Frame_IsTheRunningOrderAtThatTime()
     {
         var race = Race();
-        var summary = new ReplaySummary { championshipId = "f1", sessionName = "Course" };
+        var summary = new ReplaySummary { championshipId = "f1", sessionName = "Race" };
 
         var grid = ODReplayMapper.ToFrame(race, summary, Start - 10f);
         CollectionAssert.AreEqual(new[] { "NOR", "PIA" }, grid.entries.Select(e => e.code).ToArray());
@@ -265,7 +265,7 @@ public class ReplayTests
         var leader = new ReplayCar { lapStart = new[] { float.NaN, 0f, 60f, 120f, 180f, 240f } };
         var car = new ReplayCar { lapStart = new[] { float.NaN, 0f, 100f, 200f } };
 
-        Assert.AreEqual("+1 tour", ODReplayMapper.Gap(car, leader, 205f));
+        Assert.AreEqual("+1 lap", ODReplayMapper.Gap(car, leader, 205f));
         Assert.AreEqual("+40.0s", ODReplayMapper.Gap(car, leader, 100f), "on the line");
         Assert.AreEqual("+52.0s", ODReplayMapper.Gap(car, leader, 130f), "1.3 laps in: the leader was there at 78 s");
         Assert.AreEqual("", ODReplayMapper.Gap(car, leader, 50f), "no gap before the first timing line");

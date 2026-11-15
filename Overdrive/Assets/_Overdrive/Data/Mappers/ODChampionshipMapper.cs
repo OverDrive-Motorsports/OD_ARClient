@@ -228,7 +228,7 @@ public static class ODChampionshipMapper
                 teamColor = ParseColor(driver?.teamColor ?? row.team_color),
                 tyreAgeLaps = -1,
                 pitStops = -1,
-                gap = row.dnf ? "Abandon" : row.dns ? "Non partant" : row.dsq ? "Disqualifié"
+                gap = row.dnf ? "Retired" : row.dns ? "Did not start" : row.dsq ? "Disqualified"
                           : row.position == 1 ? "1er" : FormatGap(row.gap_to_leader),
             });
             if (row.position == 1 && row.number_of_laps.HasValue) detail.totalLaps = row.number_of_laps.Value;
@@ -260,7 +260,7 @@ public static class ODChampionshipMapper
         return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(last.ToLowerInvariant());
     }
 
-    /// <summary>Backend session types → French labels used across the app.</summary>
+    /// <summary>Backend session types → the short labels used across the app.</summary>
     public static string SessionName(SessionSummaryDto session) =>
         session == null ? "Session" : SessionName(session.type, session.name);
 
@@ -275,12 +275,12 @@ public static class ODChampionshipMapper
                   || name.IndexOf("shootout", StringComparison.OrdinalIgnoreCase) >= 0;
         switch (type)
         {
-            case "race": return sprint ? "Sprint" : "Course";
-            case "sprint": return quali ? "Qualifs sprint" : "Sprint";
-            case "quali": return sprint ? "Qualifs sprint" : "Qualifications";
+            case "race": return sprint ? "Sprint" : "Race";
+            case "sprint": return quali ? "Sprint Qualifying" : "Sprint";
+            case "quali": return sprint ? "Sprint Qualifying" : "Qualifying";
             case "practice":
                 string digits = new string(name.Where(char.IsDigit).ToArray());
-                return string.IsNullOrEmpty(digits) ? "Essais libres" : "EL" + digits;
+                return string.IsNullOrEmpty(digits) ? "Practice" : "FP" + digits;
             default: return string.IsNullOrEmpty(name) ? "Session" : name;
         }
     }
@@ -291,9 +291,9 @@ public static class ODChampionshipMapper
     static string Conditions(RaceWeatherSampleDto weather)
     {
         if (weather == null) return "";
-        string temp = weather.trackTemperature.HasValue ? $"Piste {weather.trackTemperature.Value:0}°C"
+        string temp = weather.trackTemperature.HasValue ? $"Track {weather.trackTemperature.Value:0}°C"
                     : weather.airTemperature.HasValue ? $"{weather.airTemperature.Value:0}°C" : "";
-        return JoinNonEmpty(" · ", temp, weather.rainfall ? "Pluie" : "Sec");
+        return JoinNonEmpty(" · ", temp, weather.rainfall ? "Rain" : "Dry");
     }
 
     /// <summary>
@@ -321,7 +321,7 @@ public static class ODChampionshipMapper
         }
     }
 
-    /// <summary>"3.456" → "+3.5s"; "+1 LAP" → "+1 tour"; empty → "".</summary>
+    /// <summary>"3.456" → "+3.5s"; "+1 LAP" → "+1 lap"; empty → "".</summary>
     public static string FormatGap(string raw)
     {
         if (string.IsNullOrWhiteSpace(raw)) return "";
@@ -331,7 +331,7 @@ public static class ODChampionshipMapper
         if (s.ToUpperInvariant().Contains("LAP"))
         {
             string n = new string(s.Where(char.IsDigit).ToArray());
-            return "+" + (string.IsNullOrEmpty(n) ? "1" : n) + (n == "1" || n == "" ? " tour" : " tours");
+            return "+" + (string.IsNullOrEmpty(n) ? "1" : n) + (n == "1" || n == "" ? " lap" : " laps");
         }
         return raw;
     }
@@ -366,7 +366,7 @@ public static class ODChampionshipMapper
     static string ChampionshipName(ChampionshipSummaryDto championship, string code)
     {
         if (!string.IsNullOrEmpty(championship?.name)) return championship.name;
-        return code == "f1" ? "Formule 1" : (code ?? "").ToUpperInvariant();
+        return code == "f1" ? "Formula 1" : (code ?? "").ToUpperInvariant();
     }
 
     static Color AccentFor(string code) => code == "f1" ? new Color32(0xE8, 0x00, 0x00, 0xFF) : new Color32(0x4A, 0x90, 0xD9, 0xFF);

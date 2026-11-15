@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
-/// <summary>Course-owned TV panel. Never replaces or hides the course window.</summary>
+/// <summary>Race-window TV panel. Never replaces or hides the race window.</summary>
 public sealed class VideoPlayerController : MonoBehaviour
 {
     public ODSportPage course;
@@ -62,7 +62,7 @@ public sealed class VideoPlayerController : MonoBehaviour
         }
         if (standingsPanel != null) standingsPanel.SetActive(session);
         if (standingsHeading != null) standingsHeading.text = mode == ODSportPage.Mode.Replay
-            ? "Classement de la course" : "Classement de la session";
+            ? "Race standings" : "Session standings";
         if (titleLabel != null) titleLabel.text = (mode == ODSportPage.Mode.Replay ? "TV Replay" : "TV Live") + " · " + title;
         if (!session) HideVideo();
     }
@@ -83,7 +83,7 @@ public sealed class VideoPlayerController : MonoBehaviour
             else videoPlayer.Prepare();
         }
         if (playbackStatus != null) playbackStatus.text = videoPlayer != null && videoPlayer.isPrepared
-            ? "Vidéo d'exemple · Pas de flux connecté" : "Vidéo d'exemple · Chargement…";
+            ? "Sample video · No stream connected" : "Sample video · Loading…";
         UpdateControls();
     }
 
@@ -139,14 +139,14 @@ public sealed class VideoPlayerController : MonoBehaviour
         ApplyVolume();
         if (_resumeTime > 0 && player.canSetTime) player.time = _resumeTime;
         if (IsVisible && _wantsPlayback) player.Play();
-        if (playbackStatus != null) playbackStatus.text = "Vidéo d'exemple · Pas de flux connecté";
+        if (playbackStatus != null) playbackStatus.text = "Sample video · No stream connected";
         UpdateControls();
     }
 
     private void PlaybackError(VideoPlayer player, string message)
     {
         _wantsPlayback = false;
-        if (playbackStatus != null) playbackStatus.text = "Vidéo indisponible · Réessayer avec Lecture";
+        if (playbackStatus != null) playbackStatus.text = "Video unavailable · Press Play to retry";
         Debug.LogWarning("[Course TV] " + message);
         UpdateControls();
     }
@@ -155,7 +155,7 @@ public sealed class VideoPlayerController : MonoBehaviour
 
     private void UpdateControls()
     {
-        if (playPauseLabel != null) playPauseLabel.text = _wantsPlayback ? "Pause" : "Lecture";
+        if (playPauseLabel != null) playPauseLabel.text = _wantsPlayback ? "Pause" : "Play";
         if (tvButtons == null) return;
         foreach (var button in tvButtons)
         {

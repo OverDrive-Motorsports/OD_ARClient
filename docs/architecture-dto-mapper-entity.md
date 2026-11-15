@@ -1,29 +1,29 @@
-# Architecture DTO / Mapper / Entity / Network — guide de portage
+# DTO / Mapper / Entity / Network architecture — porting guide
 
-Ce document décrit le pattern utilisé côté client AR (Unity) pour parler au
-backend, dans le but que l'équipe front mobile (Flutter) puisse reproduire
-la même logique. Le code d'exemple est en pseudocode proche de Dart, pas du
-C# — l'idée à copier est la structure et les règles, pas la syntaxe.
+This document describes the pattern the AR client (Unity) uses to talk to the
+backend, so that the mobile front-end team (Flutter) can reproduce the same
+logic. The sample code is Dart-like pseudocode, not C# — what to copy is the
+structure and the rules, not the syntax.
 
-## Vue d'ensemble
+## Overview
 
 ```
-Réseau (HTTP)  →  DTO  →  Mapper  →  Entity  →  UI
+Network (HTTP)  →  DTO  →  Mapper  →  Entity  →  UI
 ```
 
-Quatre rôles bien séparés, chacun avec une seule responsabilité :
+Four clearly separated roles, each with a single responsibility:
 
-| Couche | Rôle | Ne fait jamais |
+| Layer | Role | Never does |
 |---|---|---|
-| **DTO** | Miroir exact du JSON reçu | De la logique, de la validation |
-| **Mapper** | DTO → Entity, valide, gère les erreurs | Créer une nouvelle Entity à chaque appel |
-| **Entity** | Objet utilisable par l'app, stable dans le temps | Connaître la forme du JSON d'origine |
-| **Network** | Appelle l'API, désérialise, appelle le Mapper | Décider quoi faire du résultat (ça, c'est à l'écran/au controller) |
+| **DTO** | Exact mirror of the received JSON | Logic, validation |
+| **Mapper** | DTO → Entity, validates, handles errors | Create a new Entity on every call |
+| **Entity** | Object the app uses, stable over time | Know the shape of the original JSON |
+| **Network** | Calls the API, deserializes, calls the Mapper | Decide what to do with the result (that's the screen's/controller's job) |
 
-## 1. DTO — miroir du JSON, rien d'autre
+## 1. DTO — a mirror of the JSON, nothing else
 
-Une classe par forme de réponse JSON, avec les mêmes noms de champs que le
-backend (camelCase). Aucune méthode, aucune logique.
+One class per JSON response shape, with the same field names as the backend
+(camelCase). No methods, no logic.
 
 ```dart
 class ChampionshipDTO {
@@ -36,19 +36,17 @@ class ChampionshipDTO {
 }
 ```
 
-**Organisation des fichiers** : grouper plusieurs DTO liés dans un seul
-fichier par domaine plutôt qu'un fichier par endpoint (ex: tous les DTO du
-"catalogue championnat" ensemble) — évite l'explosion du nombre de
-fichiers pour un projet qui a beaucoup d'endpoints.
+**File layout**: group related DTOs in one file per domain rather than one
+file per endpoint (e.g. all the "championship catalogue" DTOs together) —
+this keeps the file count under control in a project with many endpoints.
 
-**Si deux endpoints renvoient la même forme** (ex: liste des events vs
-détail d'un event), ne pas dupliquer le DTO — un seul suffit, utilisé dans
-les deux cas.
+**If two endpoints return the same shape** (e.g. event list vs event
+detail), don't duplicate the DTO — one is enough, used in both cases.
 
-## 2. Entity — l'objet que l'app utilise vraiment
+## 2. Entity — the object the app actually uses
 
-Même liste de champs que le DTO en général, mais c'est un objet **stable,
-qui vit longtemps** (pas recréé à chaque appel réseau) :
+Usually the same fields as the DTO, but it is a **stable, long-lived**
+object (not recreated on every network call):
 
 ```dart
 class Championship {
@@ -61,25 +59,23 @@ class Championship {
 }
 ```
 
-Règle centrale : **une Entity n'est jamais remplacée, elle est modifiée sur
-place**. L'écran qui l'affiche en crée une instance une seule fois
-(`Championship()`), la garde en mémoire, et c'est cette même instance qui
-est mise à jour à chaque fetch. Pourquoi :
-- Évite de recréer des objets à chaque rafraîchissement (moins de pression
-  sur le garbage collector, important si un écran se rafraîchit souvent).
-- Toute référence gardée ailleurs (par l'UI, par un autre système) reste
-  valide après un refresh — pas besoin de la re-brancher.
+Core rule: **an Entity is never replaced, it is updated in place**. The
+screen that shows it creates one instance once (`Championship()`), keeps it,
+and that same instance is updated on every fetch. Why:
+- No objects recreated on every refresh (less garbage-collector pressure,
+  which matters when a screen refreshes often).
+- Any reference held elsewhere (by the UI, by another system) stays valid
+  after a refresh — no need to wire it again.
 
-Pour une **liste** d'entities (ex: liste de pilotes), même principe : la
-liste elle-même n'est jamais remplacée. On réconcilie son contenu (voir
-"EntityCollectionSync" plus bas) : les entrées déjà connues sont mises à
-jour, les nouvelles sont ajoutées, celles qui ont disparu de la réponse
-sont retirées.
+For a **list** of entities (e.g. a driver list), same principle: the list
+itself is never replaced. Its content is reconciled (see
+"EntityCollectionSync" below): known entries are updated, new ones are
+added, and the ones missing from the response are removed.
 
-## 3. Mapper — DTO vers Entity, avec validation minimale
+## 3. Mapper — DTO to Entity, with minimal validation
 
-Le mapper ne **crée jamais** d'Entity — il en reçoit une (déjà existante ou
-tout juste instanciée par l'appelant) et écrit dedans :
+The mapper **never creates** an Entity — it receives one (existing, or just
+instantiated by the caller) and writes into it:
 
 ```dart
 DataError? applyChampionshipDto(ChampionshipDTO dto, Championship target) {
@@ -98,28 +94,26 @@ DataError? applyChampionshipDto(ChampionshipDTO dto, Championship target) {
   target.provider = dto.provider ?? '';
   target.category = dto.category ?? '';
   target.isActive = dto.isActive;
-  return null; // succès
+  return null; // success
 }
 ```
 
-**Ce qui est validé** : uniquement le champ *identifiant* (celui qui sert
-de clé ailleurs dans l'app — ici `championshipCode`). S'il manque, ou s'il
-change alors que l'Entity avait déjà une identité, on retourne une erreur
-et on n'écrit rien. **Les champs cosmétiques ne sont jamais validés** —
-s'ils manquent, ils restent juste vides à l'affichage, ce n'est pas
-bloquant.
+**What is validated**: only the *identifier* field (the one used as a key
+elsewhere in the app — here `championshipCode`). If it is missing, or if it
+changes while the Entity already had an identity, an error is returned and
+nothing is written. **Cosmetic fields are never validated** — if they are
+missing, they simply show empty; it isn't blocking.
 
-**Si deux endpoints alimentent la même Entity avec des sous-ensembles de
-champs différents** (ex: liste de pilotes vs fiche pilote détaillée), on
-écrit deux fonctions de mapping distinctes qui écrivent chacune dans les
-mêmes champs de la même Entity — sans jamais écraser les champs que
-l'autre a déjà renseignés. C'est ce qui permet à une Entity de
-s'enrichir progressivement au fil de plusieurs appels.
+**If two endpoints feed the same Entity with different subsets of fields**
+(e.g. driver list vs detailed driver sheet), write two separate mapping
+functions that each write into the same Entity — never overwriting the
+fields the other one already filled. This is what lets an Entity get richer
+over several calls.
 
-### Réconciliation de listes (`EntityCollectionSync`)
+### List reconciliation (`EntityCollectionSync`)
 
-Pour une liste d'Entities alimentée par une liste de DTO, la logique
-générique (à écrire une seule fois, réutilisable pour toutes les listes) :
+For a list of Entities fed by a list of DTOs, the generic logic (written
+once, reused for every list):
 
 ```dart
 void syncList<TDto, TEntity, TKey>(
@@ -140,7 +134,7 @@ void syncList<TDto, TEntity, TKey>(
 
     final error = applyDto(dto, entity);
     if (error != null) {
-      logError(error); // on ignore cette entrée, le reste de la liste continue
+      logError(error); // skip this entry, the rest of the list goes on
       continue;
     }
 
@@ -152,51 +146,49 @@ void syncList<TDto, TEntity, TKey>(
 }
 ```
 
-Une entrée invalide est ignorée (loggée), elle ne fait pas échouer tout le
-reste de la liste.
+An invalid entry is skipped (and logged); it doesn't fail the rest of the
+list.
 
-## 4. Gestion des erreurs — un seul type, centralisé
+## 4. Error handling — one type, centralised
 
-Trois catégories seulement, qui couvrent tout :
+Only three categories, which cover everything:
 
 ```dart
 enum DataErrorKind { network, deserialize, validation }
 
 class DataError {
   final DataErrorKind kind;
-  final String source;   // nom du mapper/composant qui a produit l'erreur
+  final String source;   // name of the mapper/component that raised the error
   final String message;
   DataError(this.kind, this.source, this.message);
 
   @override
   String toString() => '[$source] $message';
 
-  // Un seul endroit qui décide de la gravité — pas dupliqué à chaque appel.
+  // One place decides the severity — not duplicated at every call site.
   void report() {
     if (kind == DataErrorKind.validation) {
-      logWarning(toString()); // une entrée ignorée, le reste va bien
+      logWarning(toString()); // one entry skipped, the rest is fine
     } else {
-      logError(toString());  // tout l'appel a échoué
+      logError(toString());  // the whole call failed
     }
   }
 }
 ```
 
-- `network` : requête injoignable, timeout, code HTTP d'erreur.
-- `deserialize` : réponse reçue mais JSON invalide/inattendu.
-- `validation` : réponse valide, mais un mapper refuse une entrée (champ
-  identifiant manquant/incohérent).
+- `network`: unreachable request, timeout, HTTP error code.
+- `deserialize`: response received but the JSON is invalid/unexpected.
+- `validation`: valid response, but a mapper rejects an entry (identifier
+  field missing/inconsistent).
 
-**Règle** : partout dans le code, on appelle `error.report()` — jamais un
-`log(...)` à la main. Si la politique de gravité change un jour, un seul
-fichier à modifier.
+**Rule**: everywhere in the code, call `error.report()` — never a manual
+`log(...)`. If the severity policy changes one day, only one file changes.
 
-## 5. Network — le client HTTP générique + les façades par domaine
+## 5. Network — the generic HTTP client + per-domain facades
 
-Deux niveaux :
+Two levels:
 
-**Client générique**, ne connaît aucun endpoint précis, juste "comment
-parler HTTP" :
+**Generic client**: knows no specific endpoint, only "how to speak HTTP":
 
 ```dart
 Future<void> apiGet<T>(
@@ -216,7 +208,7 @@ Future<void> apiGet<T>(
 
     T data;
     try {
-      data = deserialize<T>(response.body); // ex: via json_serializable / json.decode + fromJson
+      data = deserialize<T>(response.body); // e.g. via json_serializable / json.decode + fromJson
     } catch (e) {
       onError(DataError(DataErrorKind.deserialize, 'ApiClient',
           'GET $path returned unparseable JSON: $e'));
@@ -230,8 +222,8 @@ Future<void> apiGet<T>(
 }
 ```
 
-**Façade par domaine**, une méthode par endpoint, qui fetch le DTO puis
-applique le mapping sur l'Entity fournie par l'appelant :
+**Per-domain facade**: one method per endpoint, which fetches the DTO and
+then applies the mapping to the Entity provided by the caller:
 
 ```dart
 Future<void> getChampionships(
@@ -246,11 +238,11 @@ Future<void> getChampionships(
     }, onError);
 ```
 
-L'appelant (l'écran/le controller) fournit toujours la Liste/Entity qu'il
-possède déjà — la façade ne retourne jamais un nouvel objet, elle modifie
-celui qu'on lui passe (voir section 2).
+The caller (screen/controller) always provides the List/Entity it already
+owns — the facade never returns a new object, it updates the one it is given
+(see section 2).
 
-## 6. Comment un écran doit consommer tout ça
+## 6. How a screen consumes all this
 
 ```dart
 class StandingsScreen {
@@ -261,32 +253,31 @@ class StandingsScreen {
   }
 
   void _repaint() {
-    // Relit _standings (déjà à jour) et redessine les widgets - jamais
-    // de nouvelle liste assignée, toujours la même référence relue.
+    // Reads _standings again (already up to date) and redraws the widgets —
+    // never a new list assigned, always the same reference read again.
   }
 }
 ```
 
-- L'Entity/la liste est créée **une fois** par l'écran.
-- Chaque fetch réussi **modifie** cette même instance.
-- Le redessin (`_repaint`) est un appel explicite après chaque fetch réussi
-  — rien ne se redessine tout seul juste parce que des champs ont changé.
-- Pour une donnée qui doit rester à jour pendant qu'on regarde l'écran
-  (ex: classement live), on répète l'appel sur une boucle/timer — jamais
-  un flux qui pousse tout seul (sauf cas de flux serveur→client explicite
-  type SSE/WebSocket, hors sujet de ce document).
+- The Entity/list is created **once** by the screen.
+- Every successful fetch **updates** that same instance.
+- The redraw (`_repaint`) is an explicit call after each successful fetch —
+  nothing redraws by itself just because fields changed.
+- For data that must stay current while the screen is open (e.g. live
+  standings), repeat the call on a loop/timer — never a stream that pushes
+  by itself (except an explicit server→client stream such as SSE/WebSocket,
+  out of scope for this document).
 
-## Résumé des règles à respecter
+## Summary of the rules
 
-1. Le DTO mirror exactement le JSON — pas de logique dedans.
-2. L'Entity est créée une seule fois par écran, jamais recréée après.
-3. Le Mapper modifie une Entity existante, ne valide que le champ
-   identifiant, jamais les champs cosmétiques.
-4. Une liste d'Entities est réconciliée par clé (ajout/mise à
-   jour/suppression), jamais remplacée en bloc.
-5. Toute erreur passe par un type unique (`DataError`) avec 3 catégories
-   (`network`/`deserialize`/`validation`), et un seul point de décision
-   pour la gravité (`report()`).
-6. Le réseau a deux niveaux : un client générique qui ne connaît aucun
-   endpoint, et des façades par domaine qui connaissent les chemins et
-   appellent les mappers.
+1. The DTO mirrors the JSON exactly — no logic in it.
+2. The Entity is created once per screen, never recreated afterwards.
+3. The Mapper updates an existing Entity and validates only the identifier
+   field, never the cosmetic fields.
+4. A list of Entities is reconciled by key (add/update/remove), never
+   replaced wholesale.
+5. Every error goes through a single type (`DataError`) with 3 categories
+   (`network`/`deserialize`/`validation`), and one decision point for the
+   severity (`report()`).
+6. Networking has two levels: a generic client that knows no endpoint, and
+   per-domain facades that know the paths and call the mappers.

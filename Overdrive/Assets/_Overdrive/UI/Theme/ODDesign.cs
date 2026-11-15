@@ -45,12 +45,12 @@ public static class ODDesign
     public static readonly Color Night = Hex("15171C");
     public static readonly Color Ink = Hex("0B0C10");   // text on white
 
-    public static readonly Color Live = Hex("FF453A");   // direct, erreur
-    public static readonly Color Green = Hex("30D158");   // connecté, piste libre
+    public static readonly Color Live = Hex("FF453A");   // live, error
+    public static readonly Color Green = Hex("30D158");   // connected, track clear
     public static readonly Color GreenText = Hex("6BE08C");
-    public static readonly Color Orange = Hex("FF9F0A");   // week-end en cours, attention
+    public static readonly Color Orange = Hex("FF9F0A");   // weekend in progress, warning
     public static readonly Color OrangeText = Hex("FFB340");
-    public static readonly Color Purple = Hex("BF5AF2");   // meilleur tour
+    public static readonly Color Purple = Hex("BF5AF2");   // fastest lap
     public static readonly Color PurpleText = Hex("D59BF6");
     public static readonly Color Destructive = Hex("FF6B61");
     public static readonly Color TyreSoft = Hex("FF453A");

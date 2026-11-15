@@ -155,7 +155,7 @@ public class ODChampionshipTile : MonoBehaviour, IPointerEnterHandler, IPointerE
         }
         y -= 8f + 12f + 28f;
         D.Text(face, "Round", info.round, Pad, y, (W - Pad * 2f) * .5f, 28f, 20f, D.Weight.SemiBold);
-        D.Text(face, "Next", info.available ? info.next : "Bientôt dans OverDrive", Pad + (W - Pad * 2f) * .5f, y, (W - Pad * 2f) * .5f, 28f, 20f,
+        D.Text(face, "Next", info.available ? info.next : "Coming soon to OverDrive", Pad + (W - Pad * 2f) * .5f, y, (W - Pad * 2f) * .5f, 28f, 20f,
             D.Weight.Regular, new Color(1f, 1f, 1f, .82f), TextAlignmentOptions.MidlineRight);
         y -= 22f;
         D.Line(face, Pad, y, W - Pad * 2f, new Color(1f, 1f, 1f, .22f));

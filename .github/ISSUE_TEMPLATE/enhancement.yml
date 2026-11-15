@@ -1,13 +1,13 @@
-name: Amelioration
-description: Ameliorer une fonctionnalite existante
-title: "[Amelioration]: "
+name: Enhancement
+description: Improve an existing feature
+title: "[Enhancement]: "
 labels: ["enhancement"]
 body:
   - type: dropdown
     id: priority
     attributes:
-      label: Priorité
-      description: Importance de cette amélioration
+      label: Priority
+      description: How important this enhancement is
       options:
         - P0 - CRITICAL
         - P1 – HIGH
@@ -18,27 +18,27 @@ body:
   - type: textarea
     id: summary
     attributes:
-      label: Demande
-      description: Decris simplement ce que tu veux ameliorer.
+      label: Request
+      description: Briefly describe what you want to improve.
     validations:
       required: true
   - type: textarea
     id: reason
     attributes:
-      label: Pourquoi
-      description: Qu'est-ce qui ne va pas ou peut etre mieux ?
+      label: Why
+      description: What is wrong or could be better?
   - type: textarea
     id: links
     attributes:
-      label: Liens / exemples
-      description: Lien, capture, exemple si besoin.
+      label: Links / examples
+      description: Link, screenshot, example if needed.
   - type: checkboxes
     id: confirmation
     attributes:
-      label: Vérifications
-      description: Merci de confirmer
+      label: Checks
+      description: Please confirm
       options:
-        - label: Cette amélioration concerne une fonctionnalité existante
+        - label: This enhancement is about an existing feature
           required: true
-        - label: Ce n’est pas un bug bloquant
+        - label: This is not a blocking bug
           required: true

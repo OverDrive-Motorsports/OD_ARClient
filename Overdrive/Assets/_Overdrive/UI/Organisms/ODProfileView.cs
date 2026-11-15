@@ -3,9 +3,9 @@
  ## OverDrive 2026
  ## All Technical rights reserved
  ##
- ## ODProfileView - Profil / Réglages window (Canva pages 02.9 and 02.10).
- ## Profil: identity, headset, activity, favourites, saved spaces, data
- ## providers, account actions. Réglages: three columns — experience and
+ ## ODProfileView - Profile / Settings window (Canva pages 02.9 and 02.10).
+ ## Profile: identity, headset, activity, favourites, saved spaces, data
+ ## providers, account actions. Settings: three columns — experience and
  ## notifications, comfort and interaction, display and audio — saved
  ## automatically. Mock-up only: the values are placeholders and every
  ## control (switches, segmented controls, sliders, buttons) animates locally
@@ -41,13 +41,13 @@ public class ODProfileView : MonoBehaviour
         surface.raycastTarget = true;   // the window swallows rays like the other pages
         ODChampionshipTheme.ApplyBackground(surface, ODChampionshipTheme.NeutralPalette);
 
-        D.Caps(root, "Caps", "Compte", X0, Top, 600f, D.PageCaps);
-        _title = D.Text(root, "Heading", "Profil", X0, Top + 37f, 900f, 72f, D.TitleXL, D.Weight.Bold);
+        D.Caps(root, "Caps", "Account", X0, Top, 600f, D.PageCaps);
+        _title = D.Text(root, "Heading", "Profile", X0, Top + 37f, 900f, 72f, D.TitleXL, D.Weight.Bold);
 
-        // Profil / Réglages: the "mode" segmented control (solid white pill, dark text).
+        // Profile / Settings: the "mode" segmented control (solid white pill, dark text).
         float switchW = 330f;
         var tabs = ODSegmentedControl.Create(root, D.Px(1920f - X0 - switchW), D.Px(HeaderBottom - 72f), D.Px(switchW), D.Px(72f),
-            new[] { "Profil", "Réglages" }, 0, D.Px(23f), solidPill: true);
+            new[] { "Profile", "Settings" }, 0, D.Px(23f), solidPill: true);
         tabs.Changed += ShowTab;
 
         _profileTab = ODRuntimeUI.Stretch(root, "ProfileTab");
@@ -62,13 +62,13 @@ public class ODProfileView : MonoBehaviour
 
     void ShowTab(int index)
     {
-        _title.text = index == 0 ? "Profil" : "Réglages";
+        _title.text = index == 0 ? "Profile" : "Settings";
         _profileTab.gameObject.SetActive(index == 0);    // ODFadeIn plays on enable
         _settingsTab.gameObject.SetActive(index == 1);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Profil
+    // Profile
     // ═══════════════════════════════════════════════════════════════════════
 
     void BuildProfile(RectTransform tab)
@@ -79,15 +79,15 @@ public class ODProfileView : MonoBehaviour
         var avatar = D.Fill(identity, "Avatar", 40f, 27f, 96f, 96f, D.Hex("C9A84C"), 48f);
         D.Text(avatar.transform, "Initials", "CA", 0f, 0f, 96f, 96f, 34f, D.Weight.Bold, D.Hex("2A2008"), TextAlignmentOptions.Center);
         D.Text(identity, "Name", "ClemAlex", 164f, 34f, 1200f, 46f, 36f, D.Weight.Bold);
-        D.Text(identity, "Since", "Membre depuis mars 2026 · Compte OverDrive", 164f, 84f, 1200f, 30f, 21f, D.Weight.Regular, Grey(.64f));
+        D.Text(identity, "Since", "Member since March 2026 · OverDrive account", 164f, 84f, 1200f, 30f, 21f, D.Weight.Regular, Grey(.64f));
 
         y += 150f + 36f;
         float leftW = 820f, rightX = X0 + leftW + 32f, rightW = W - leftW - 32f;
 
         // Left column: headset, activity, favourites.
         var headset = Card(tab, "Headset", X0, y, leftW, 218f);
-        StatusPill(headset, 34f, 28f, "Connecté", D.Green, D.GreenText);
-        string[,] specs = { { "Batterie", "68 %" }, { "Stockage", "142 / 256 Go" }, { "Latence flux", "18 ms" }, { "Logiciel", "À jour" } };
+        StatusPill(headset, 34f, 28f, "Connected", D.Green, D.GreenText);
+        string[,] specs = { { "Battery", "68 %" }, { "Storage", "142 / 256 GB" }, { "Stream latency", "18 ms" }, { "Software", "Up to date" } };
         float tileW = (leftW - 68f - 14f * 3f) / 4f;
         for (int i = 0; i < 4; i++)
         {
@@ -98,8 +98,8 @@ public class ODProfileView : MonoBehaviour
 
         float ay = y + 218f + 28f;
         var activity = Card(tab, "Activity", X0, ay, leftW, 176f);
-        D.Caps(activity, "Caps", "Activité", 34f, 28f, 400f, 18f);
-        string[,] stats = { { "6 h 20", "regardées · 7 jours" }, { "9", "courses ce mois-ci" }, { "4", "week-ends d’affilée" } };
+        D.Caps(activity, "Caps", "Activity", 34f, 28f, 400f, 18f);
+        string[,] stats = { { "6 h 20", "watched · 7 days" }, { "9", "races this month" }, { "4", "weekends in a row" } };
         float statW = (leftW - 68f - 40f) / 3f;
         for (int i = 0; i < 3; i++)
         {
@@ -109,7 +109,7 @@ public class ODProfileView : MonoBehaviour
 
         float fy = ay + 176f + 28f;
         var favourites = Card(tab, "Favourites", X0, fy, leftW, Bottom - fy);
-        D.Caps(favourites, "Caps", "Favoris", 34f, 28f, 400f, 18f);
+        D.Caps(favourites, "Caps", "Favourites", 34f, 28f, 400f, 18f);
         string[] codes = { "F1", "WEC", "MGP" }, ids = { "f1", "wec", "motogp" };
         for (int i = 0; i < codes.Length; i++)
         {
@@ -121,7 +121,7 @@ public class ODProfileView : MonoBehaviour
 
         // Right column: saved spaces, providers, actions.
         var spaces = Card(tab, "Spaces", rightX, y, rightW, 24f + 84f * 3f + 12f);
-        string[,] rows = { { "Poste analyste", "TV, classement, 6 widgets télémétrie", "Actif" }, { "Mode simplifié", "Classement, écarts et faits de course", "" }, { "Soirée endurance", "TV, carte du circuit, relais", "" } };
+        string[,] rows = { { "Analyst desk", "TV, standings, 6 telemetry widgets", "Active" }, { "Simple mode", "Standings, gaps and race events", "" }, { "Endurance night", "TV, circuit map, stints", "" } };
         for (int i = 0; i < 3; i++)
         {
             float ry = 24f + i * 84f;
@@ -136,27 +136,27 @@ public class ODProfileView : MonoBehaviour
 
         float py = y + 24f + 84f * 3f + 12f + 28f;
         var providers = Card(tab, "Providers", rightX, py, rightW, 24f + 30f + 84f * 2f + 12f);
-        D.Caps(providers, "Caps", "Fournisseurs", 34f, 24f, 400f, 18f);
+        D.Caps(providers, "Caps", "Providers", 34f, 24f, 400f, 18f);
         var meta = D.Fill(providers, "MetaIcon", 34f, 54f + 16f, 52f, 52f, D.WithAlpha(D.Green, .18f), 16f);
         D.Text(meta.transform, "Initial", "M", 0f, 0f, 52f, 52f, 24f, D.Weight.Bold, D.GreenText, TextAlignmentOptions.Center);
-        D.Text(providers, "MetaName", "Compte Meta", 104f, 54f + 12f, rightW - 300f, 32f, 24f, D.Weight.SemiBold);
-        D.Text(providers, "MetaDesc", "Lié automatiquement au casque", 104f, 54f + 46f, rightW - 300f, 26f, 18f, D.Weight.Regular, D.Secondary);
-        D.Text(providers, "MetaState", "Connecté", rightW - 34f - 160f, 54f, 160f, 84f, 18f, D.Weight.SemiBold, D.GreenText, TextAlignmentOptions.MidlineRight);
+        D.Text(providers, "MetaName", "Meta account", 104f, 54f + 12f, rightW - 300f, 32f, 24f, D.Weight.SemiBold);
+        D.Text(providers, "MetaDesc", "Linked to the headset automatically", 104f, 54f + 46f, rightW - 300f, 26f, 18f, D.Weight.Regular, D.Secondary);
+        D.Text(providers, "MetaState", "Connected", rightW - 34f - 160f, 54f, 160f, 84f, 18f, D.Weight.SemiBold, D.GreenText, TextAlignmentOptions.MidlineRight);
         D.Line(providers, 34f, 54f + 84f - 1.6f, rightW - 68f);
         var add = D.Button(providers, "AddProvider", "", 20f, 54f + 84f + 6f, rightW - 40f, 72f, D.ButtonKind.Ghost);
         ((RoundedImage)add.targetGraphic).cornerRadius = D.Px(22f);
-        D.Text(providers, "AddLabel", "Ajouter un fournisseur de données", 34f, 54f + 84f, rightW - 120f, 84f, 24f, D.Weight.SemiBold);
+        D.Text(providers, "AddLabel", "Add a data provider", 34f, 54f + 84f, rightW - 120f, 84f, 24f, D.Weight.SemiBold);
         D.Text(providers, "AddChevron", "›", rightW - 34f - 40f, 54f + 84f, 40f, 84f, 34f, D.Weight.SemiBold, D.Secondary, TextAlignmentOptions.MidlineRight);
 
         float bw = (rightW - 32f) / 3f;
-        string[] actions = { "Modifier le profil", "Se déconnecter", "Supprimer le compte" };
+        string[] actions = { "Edit profile", "Sign out", "Delete account" };
         for (int i = 0; i < 3; i++)
             D.Button(tab, "Action" + i, actions[i], rightX + i * (bw + 16f), Bottom - 72f, bw, 72f,
                 i == 2 ? D.ButtonKind.Destructive : D.ButtonKind.Secondary, 22f);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Réglages
+    // Settings
     // ═══════════════════════════════════════════════════════════════════════
 
     void BuildSettings(RectTransform tab)
@@ -167,45 +167,45 @@ public class ODProfileView : MonoBehaviour
 
         // Column 1: experience, then notifications.
         var experience = Card(tab, "Experience", x1, y, colW, 410f);
-        D.Caps(experience, "Caps", "Expérience", 32f, 26f, 400f, 18f);
+        D.Caps(experience, "Caps", "Experience", 32f, 26f, 400f, 18f);
         float cy = 26f + 25f + 14f;
-        cy = SwitchRow(experience, cy, colW, "Mode simplifié", "Classement, écarts et faits de course uniquement", false, 84f);
-        cy = SegmentRow(experience, cy, colW, "Unités", new[] { "km/h · °C", "mph · °F" }, 0, true);
-        SegmentRow(experience, cy, colW, "Commentaires", new[] { "Français", "Anglais", "Ambiance" }, 0, false);
+        cy = SwitchRow(experience, cy, colW, "Simple mode", "Standings, gaps and race events only", false, 84f);
+        cy = SegmentRow(experience, cy, colW, "Units", new[] { "km/h · °C", "mph · °F" }, 0, true);
+        SegmentRow(experience, cy, colW, "Commentary", new[] { "French", "English", "Ambient" }, 0, false);
 
         float ny = y + 410f + 28f;
         var notifications = Card(tab, "Notifications", x1, ny, colW, colBottom - ny);
         D.Caps(notifications, "Caps", "Notifications", 32f, 26f, 400f, 18f);
         float rowH = (colBottom - ny - 26f - 25f - 4f - 12f) / 3f;
         float ry = 26f + 25f + 4f;
-        ry = SwitchRow(notifications, ry, colW, "Départ des courses", "15 min avant, pour tes favoris", true, rowH);
-        ry = SwitchRow(notifications, ry, colW, "Résultats", "Podium et classement à l’arrivée", true, rowH);
-        SwitchRow(notifications, ry, colW, "Faits de course", "Pénalités, abandons, drapeaux", false, rowH, last: true);
+        ry = SwitchRow(notifications, ry, colW, "Race starts", "15 min before, for your favourites", true, rowH);
+        ry = SwitchRow(notifications, ry, colW, "Results", "Podium and final standings", true, rowH);
+        SwitchRow(notifications, ry, colW, "Race events", "Penalties, retirements, flags", false, rowH, last: true);
 
         // Column 2: comfort & interaction.
         var comfort = Card(tab, "Comfort", x2, y, colW, colBottom - y);
-        D.Caps(comfort, "Caps", "Confort & interaction", 32f, 26f, 500f, 18f);
+        D.Caps(comfort, "Caps", "Comfort & interaction", 32f, 26f, 500f, 18f);
         cy = 26f + 25f + 14f;
-        cy = SwitchRow(comfort, cy, colW, "Vignette de confort", "Réduit le champ de vision en mouvement", true, 88f);
-        cy = SegmentRow(comfort, cy, colW, "Rotation", new[] { "Fluide", "Par paliers" }, 1, true);
-        cy = SegmentRow(comfort, cy, colW, "Main dominante", new[] { "Gauche", "Droite" }, 1, true);
-        cy = SwitchRow(comfort, cy, colW, "Suivi des mains", "Pincer pour sélectionner, sans manettes", true, 88f);
-        SliderRow(comfort, cy + 10f, colW, "Distance des fenêtres", .5f, v => $"{1f + v:0.0} m".Replace('.', ','));
+        cy = SwitchRow(comfort, cy, colW, "Comfort vignette", "Narrows the field of view while moving", true, 88f);
+        cy = SegmentRow(comfort, cy, colW, "Rotation", new[] { "Smooth", "Snap" }, 1, true);
+        cy = SegmentRow(comfort, cy, colW, "Dominant hand", new[] { "Left", "Right" }, 1, true);
+        cy = SwitchRow(comfort, cy, colW, "Hand tracking", "Pinch to select, no controllers", true, 88f);
+        SliderRow(comfort, cy + 10f, colW, "Window distance", .5f, v => $"{1f + v:0.0} m");
 
         // Column 3: display & audio.
         var display = Card(tab, "Display", x3, y, colW, colBottom - y);
-        D.Caps(display, "Caps", "Affichage & audio", 32f, 26f, 500f, 18f);
+        D.Caps(display, "Caps", "Display & audio", 32f, 26f, 500f, 18f);
         cy = 26f + 25f + 14f;
-        cy = SegmentRow(display, cy, colW, "Environnement", new[] { "Ma pièce", "Paddock virtuel" }, 0, true);
-        cy = SegmentRow(display, cy, colW, "Qualité graphique", new[] { "Standard", "Élevée", "Ultra" }, 1, true);
-        cy = SegmentRow(display, cy, colW, "Fréquence d’affichage", new[] { "72 Hz", "90 Hz", "120 Hz" }, 1, true);
-        cy = SwitchRow(display, cy, colW, "Son spatial", "Le moteur suit la voiture autour de toi", true, 88f);
-        SliderRow(display, cy + 10f, colW, "Luminosité des fenêtres", .72f, v => $"{Mathf.RoundToInt(v * 100f)} %");
+        cy = SegmentRow(display, cy, colW, "Environment", new[] { "My room", "Virtual paddock" }, 0, true);
+        cy = SegmentRow(display, cy, colW, "Graphics quality", new[] { "Standard", "High", "Ultra" }, 1, true);
+        cy = SegmentRow(display, cy, colW, "Refresh rate", new[] { "72 Hz", "90 Hz", "120 Hz" }, 1, true);
+        cy = SwitchRow(display, cy, colW, "Spatial audio", "The engine follows the car around you", true, 88f);
+        SliderRow(display, cy + 10f, colW, "Window brightness", .72f, v => $"{Mathf.RoundToInt(v * 100f)} %");
 
         // Footer: saved automatically, reset.
         D.Fill(tab, "SavedDot", X0, footerY + 27f, 10f, 10f, D.Green, 5f);
-        D.Text(tab, "Saved", "Enregistré automatiquement sur ton compte", X0 + 24f, footerY, 900f, 64f, 21f, D.Weight.Regular, D.Muted);
-        D.Button(tab, "Reset", "Restaurer les valeurs par défaut", 1920f - X0 - 460f, footerY, 460f, 64f, D.ButtonKind.Secondary, 21f);
+        D.Text(tab, "Saved", "Saved to your account automatically", X0 + 24f, footerY, 900f, 64f, 21f, D.Weight.Regular, D.Muted);
+        D.Button(tab, "Reset", "Restore defaults", 1920f - X0 - 460f, footerY, 460f, 64f, D.ButtonKind.Secondary, 21f);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -244,7 +244,7 @@ public class ODProfileView : MonoBehaviour
         return y + h;
     }
 
-    /// <summary>Label then a 60-px segmented control (design "Unités", "Rotation"…). Returns the next y.</summary>
+    /// <summary>Label then a 60-px segmented control (design "Units", "Rotation"…). Returns the next y.</summary>
     static float SegmentRow(Transform card, float y, float w, string label, string[] options, int selected, bool divider)
     {
         D.Text(card, label, label, 32f, y + 8f, w - 64f, 30f, 22f, D.Weight.SemiBold);

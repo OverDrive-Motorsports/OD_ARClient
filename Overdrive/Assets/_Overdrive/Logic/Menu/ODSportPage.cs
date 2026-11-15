@@ -9,7 +9,7 @@ using UnityEngine.UI;
 /// (state decided by ODChampionshipDataService); when it can't be reached, a popup
 /// offers to retry. The replay state is the broadcast page of a replay picked in
 /// the gallery (header "Replays" button); its back button returns to the gallery. A backend replay is downloaded if needed and
-/// read when the page opens; it starts from lights out when "Regarder le replay" is
+/// read when the page opens; it starts from lights out when "Watch replay" is
 /// pressed and stops when the page is left.
 /// </summary>
 public sealed class ODSportPage : MonoBehaviour
@@ -41,7 +41,7 @@ public sealed class ODSportPage : MonoBehaviour
     private Mode _modeBeforeReplay = Mode.Weekend;
     private ODReplayPlayer _player;
     private bool _replayOrderShown;
-    private bool _watchRequested;   // "Regarder le replay" pressed before the replay was ready
+    private bool _watchRequested;   // "Watch replay" pressed before the replay was ready
     private Exception _pendingBackendError;
 
     private void OnEnable()
@@ -135,17 +135,17 @@ public sealed class ODSportPage : MonoBehaviour
             for (int i = 0; i < modePanels.Length; i++)
                 if (modePanels[i] != null) modePanels[i].SetActive(i == index);
         bool replay = currentMode == Mode.Replay;
-        string[] modes = { "Hors week-end", "Week-end en cours", "Live", "Replay" };
-        if (heading != null) heading.text = replay ? replayGrandPrix : "Formule 1";
+        string[] modes = { "Off weekend", "Weekend in progress", "Live", "Replay" };
+        if (heading != null) heading.text = replay ? replayGrandPrix : "Formula 1";
         if (subtitle != null) subtitle.text = replay
-            ? "Formule 1 · " + replaySession + " · Saison " + replaySeason
+            ? "Formula 1 · " + replaySession + " · Season " + replaySeason
             : "";
         if (status != null) status.text = modes[index];
         // Background and status pill colours: ODChampionshipPanel / ODChampionshipTheme
         // (championship palette + state style), applied by ShowModeContent below.
         if (television != null) television.Configure(currentMode,
             replay ? "replay:" + replayId : "live:" + index,
-            replay ? replayGrandPrix : "Formule 1");
+            replay ? replayGrandPrix : "Formula 1");
         // The replay page has no "Replays" button: its back arrow returns to the gallery.
         if (replayButton != null) replayButton.gameObject.SetActive(!replay);
         ShowModeContent();
@@ -167,7 +167,7 @@ public sealed class ODSportPage : MonoBehaviour
 
         if (_snapshot == null || ModeFor(_snapshot.state) != currentMode)
         {
-            championshipPanel.ShowLoading("Formule 1");
+            championshipPanel.ShowLoading("Formula 1");
             return;
         }
         switch (_snapshot.state)
@@ -194,8 +194,8 @@ public sealed class ODSportPage : MonoBehaviour
 
             if (!snapshot.hasData)
             {
-                ShowBackendError("Aucune donnée",
-                    "Le backend répond mais ne contient aucun événement pour ce championnat. Lance une ingestion OpenF1 puis réessaie.");
+                ShowBackendError("No data",
+                    "The backend answers but has no event for this championship. Run an OpenF1 ingestion, then retry.");
                 return;
             }
 
@@ -236,7 +236,7 @@ public sealed class ODSportPage : MonoBehaviour
                 if (this == null || version != _loadVersion) return;
                 Debug.LogWarning("[ODSportPage] Live refresh failed: " + error.Message);
                 if (++failures < 3) continue;
-                ShowBackendError("Connexion perdue", ODChampionshipDataService.Describe(error));
+                ShowBackendError("Connection lost", ODChampionshipDataService.Describe(error));
                 return;
             }
         }
@@ -249,7 +249,7 @@ public sealed class ODSportPage : MonoBehaviour
         {
             id = replayId,
             championshipId = ODApiConfig.Instance.championshipCode,
-            championshipName = "Formule 1",
+            championshipName = "Formula 1",
             grandPrix = replayGrandPrix,
             sessionName = replaySession,
             season = replaySeason,
@@ -271,21 +271,21 @@ public sealed class ODSportPage : MonoBehaviour
 
             if (!ODReplayService.IsDownloaded(summary.id))
             {
-                championshipPanel.SetReplayProgress("Téléchargement du replay…");
+                championshipPanel.SetReplayProgress("Downloading the replay…");
                 var received = new Progress<ulong>(bytes =>
                 {
-                    if (IsCurrentReplay(version)) championshipPanel.SetReplayProgress($"Téléchargement du replay · {bytes / (1024 * 1024)} Mo");
+                    if (IsCurrentReplay(version)) championshipPanel.SetReplayProgress($"Downloading the replay · {bytes / (1024 * 1024)} MB");
                 });
                 await ODReplayService.DownloadAsync(summary, received);
                 if (!IsCurrentReplay(version)) return;
             }
 
-            championshipPanel.SetReplayProgress("Préparation du replay…");
+            championshipPanel.SetReplayProgress("Preparing the replay…");
             var race = await ODReplayService.LoadRaceAsync(summary);
             if (!IsCurrentReplay(version)) return;
             _player.Load(race, summary, ODReplayTrackMap.For(championshipPanel.ReplayScreen));
             if (_watchRequested) BeginReplay();
-            else championshipPanel.SetReplayProgress("Prêt · appuie sur « Regarder le replay »");
+            else championshipPanel.SetReplayProgress("Ready · press \"Watch replay\"");
         }
         catch (Exception error)
         {
@@ -299,7 +299,7 @@ public sealed class ODSportPage : MonoBehaviour
         this != null && version == _replayVersion && currentMode == Mode.Replay;
 
     /// <summary>
-    /// "Regarder le replay": starts the race from lights out, or as soon as it is ready
+    /// "Watch replay": starts the race from lights out, or as soon as it is ready
     /// when it is still downloading / being read.
     /// </summary>
     private void WatchReplay()
@@ -329,8 +329,8 @@ public sealed class ODSportPage : MonoBehaviour
     private void ShowReplayOrder(LiveSessionData frame)
     {
         championshipPanel.ShowReplayFrame(frame);
-        string lap = frame.totalLaps > 0 ? $"Tour {frame.currentLap}/{frame.totalLaps}" : $"Tour {frame.currentLap}";
-        Ranking?.ShowEntries(frame.entries, lap, "Replay · données téléchargées", animate: _replayOrderShown);
+        string lap = frame.totalLaps > 0 ? $"Lap {frame.currentLap}/{frame.totalLaps}" : $"Lap {frame.currentLap}";
+        Ranking?.ShowEntries(frame.entries, lap, "Replay · downloaded data", animate: _replayOrderShown);
         _replayOrderShown = true;   // the first order is placed at once, the next ones slide like overtakes
     }
 
@@ -339,16 +339,16 @@ public sealed class ODSportPage : MonoBehaviour
     {
         championshipPanel.ShowLive(data);
         string lap = data == null || data.currentLap <= 0 ? ""
-                   : data.totalLaps > 0 ? $"Tour {data.currentLap}/{data.totalLaps}" : $"Tour {data.currentLap}";
-        Ranking?.ShowEntries(data?.entries, lap, "Données en direct du backend");
+                   : data.totalLaps > 0 ? $"Lap {data.currentLap}/{data.totalLaps}" : $"Lap {data.currentLap}";
+        Ranking?.ShowEntries(data?.entries, lap, "Live data from the backend");
     }
 
     private void ShowReplayData(ReplayDetail detail)
     {
         championshipPanel.ShowReplay(detail);
         if (detail != null && detail.results.Count > 0)
-            Ranking?.ShowEntries(detail.results, detail.totalLaps > 0 ? $"{detail.totalLaps} tours" : "",
-                "Résultats du backend", animate: false);
+            Ranking?.ShowEntries(detail.results, detail.totalLaps > 0 ? $"{detail.totalLaps} laps" : "",
+                "Backend results", animate: false);
     }
 
     private RaceRankingManager _ranking;

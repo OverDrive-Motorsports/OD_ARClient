@@ -60,7 +60,7 @@ public static class ODReplayMapper
                 code = driver?.code,
                 teamName = driver?.teamName ?? "",
                 teamColor = ODChampionshipMapper.ParseColor(driver?.teamColor),
-                gap = i == 0 ? "Leader" : IsRetired(replay, car, time) ? "Abandon" : Gap(car, leader, time),
+                gap = i == 0 ? "Leader" : IsRetired(replay, car, time) ? "Retired" : Gap(car, leader, time),
                 tyreCompound = ODChampionshipMapper.CompoundLetter(stint.compound),
                 tyreAgeLaps = stint.compound != null ? stint.tyreAgeAtStart + Mathf.Max(0, lap - stint.lapStart) : -1,
                 pitStops = car.pitLaps.Count(p => p < lap),
@@ -95,7 +95,7 @@ public static class ODReplayMapper
     /// <summary>
     /// Gap to the leader, measured where the car is now: how long ago the leader was at the
     /// same point of the race (see <see cref="Progress"/>), so it changes all along the lap,
-    /// exact at each sector line. "+n tours" when the leader is n laps or more ahead. Empty
+    /// exact at each sector line. "+n laps" when the leader is n laps or more ahead. Empty
     /// until the car's first timing line; frozen once the car has run all its laps.
     /// </summary>
     public static string Gap(ReplayCar car, ReplayCar leader, float time)
@@ -104,7 +104,7 @@ public static class ODReplayMapper
         float progress = Progress(car, time);
 
         int lapsDown = Mathf.FloorToInt(Progress(leader, time) - progress + 1e-4f);
-        if (lapsDown > 0) return lapsDown == 1 ? "+1 tour" : $"+{lapsDown} tours";
+        if (lapsDown > 0) return lapsDown == 1 ? "+1 lap" : $"+{lapsDown} laps";
 
         float gap = Mathf.Min(time, LastLine(car)) - TimeAt(leader, progress);
         return float.IsNaN(gap) || gap < 0f ? "" : "+" + gap.ToString("0.0", CultureInfo.InvariantCulture) + "s";
@@ -287,13 +287,13 @@ public static class ODReplayMapper
         return ~i - 1;
     }
 
-    /// <summary>"Tour 12 / 56 · 0:21:45" — the race time runs from lights out.</summary>
+    /// <summary>"Lap 12 / 56 · 0:21:45" — the race time runs from lights out.</summary>
     public static string Progress(LiveSessionData frame, float elapsed)
     {
         var t = TimeSpan.FromSeconds(Mathf.Max(0f, elapsed));
         string clock = $"{(int)t.TotalHours}:{t.Minutes:00}:{t.Seconds:00}";
         if (frame == null || frame.currentLap <= 0) return clock;
-        string lap = frame.totalLaps > 0 ? $"Tour {frame.currentLap} / {frame.totalLaps}" : $"Tour {frame.currentLap}";
+        string lap = frame.totalLaps > 0 ? $"Lap {frame.currentLap} / {frame.totalLaps}" : $"Lap {frame.currentLap}";
         return lap + " · " + clock;
     }
 }

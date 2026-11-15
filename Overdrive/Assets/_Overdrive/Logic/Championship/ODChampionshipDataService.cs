@@ -159,13 +159,13 @@ public static class ODChampionshipDataService
 
     public static string Title(Exception error)
     {
-        if (!(error is ODApiException api)) return "Erreur";
+        if (!(error is ODApiException api)) return "Error";
         switch (api.Kind)
         {
-            case ODApiErrorKind.Unreachable: return "Backend injoignable";
-            case ODApiErrorKind.Unauthorized: return "Accès refusé";
-            case ODApiErrorKind.InvalidResponse: return "Réponse invalide";
-            default: return "Erreur du backend";
+            case ODApiErrorKind.Unreachable: return "Backend unreachable";
+            case ODApiErrorKind.Unauthorized: return "Access denied";
+            case ODApiErrorKind.InvalidResponse: return "Invalid response";
+            default: return "Backend error";
         }
     }
 
@@ -175,16 +175,16 @@ public static class ODChampionshipDataService
             switch (api.Kind)
             {
                 case ODApiErrorKind.Unreachable:
-                    return $"Impossible de joindre le backend ({ODApiConfig.Instance.BaseUrl}). Vérifie qu'il est lancé et accessible depuis cet appareil.";
+                    return $"Can't reach the backend ({ODApiConfig.Instance.BaseUrl}). Check that it is running and reachable from this device.";
                 case ODApiErrorKind.Unauthorized:
-                    return "Le gateway refuse la connexion (401). Vérifie le token dans ODApiConfig.";
+                    return "The gateway refused the connection (401). Check the token in ODApiConfig.";
                 case ODApiErrorKind.InvalidResponse:
-                    return "Le backend a répondu dans un format inattendu.";
+                    return "The backend answered in an unexpected format.";
                 case ODApiErrorKind.HttpError when api.StatusCode >= 502 && api.StatusCode <= 504:
-                    return $"Le gateway répond, mais un service du backend est indisponible (HTTP {api.StatusCode}{(api.Code != null ? " · " + api.Code : "")}).";
+                    return $"The gateway answers, but a backend service is unavailable (HTTP {api.StatusCode}{(api.Code != null ? " · " + api.Code : "")}).";
                 default:
-                    return $"Le backend a renvoyé une erreur (HTTP {api.StatusCode}{(api.Code != null ? " · " + api.Code : "")}).";
+                    return $"The backend returned an error (HTTP {api.StatusCode}{(api.Code != null ? " · " + api.Code : "")}).";
             }
-        return "Erreur inattendue : " + error.Message;
+        return "Unexpected error: " + error.Message;
     }
 }

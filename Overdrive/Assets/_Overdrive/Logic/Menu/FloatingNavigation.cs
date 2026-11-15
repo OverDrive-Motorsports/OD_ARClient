@@ -27,9 +27,9 @@ public class FloatingNavigation : MonoBehaviour
     static readonly ODTabBar.Tab[] Tabs =
     {
         new ODTabBar.Tab("Home",         ODNavigationIcon.Symbol.Homepage),
-        new ODTabBar.Tab("Championnats", ODNavigationIcon.Symbol.Trophy),
-        new ODTabBar.Tab("Calendrier",   ODNavigationIcon.Symbol.Calendar),
-        new ODTabBar.Tab("Profil",       ODNavigationIcon.Symbol.Profile),
+        new ODTabBar.Tab("Championships", ODNavigationIcon.Symbol.Trophy),
+        new ODTabBar.Tab("Calendar",     ODNavigationIcon.Symbol.Calendar),
+        new ODTabBar.Tab("Profile",      ODNavigationIcon.Symbol.Profile),
     };
 
     private ODTabBar _tabBar;

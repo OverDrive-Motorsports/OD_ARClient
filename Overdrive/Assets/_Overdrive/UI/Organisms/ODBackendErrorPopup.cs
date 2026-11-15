@@ -4,7 +4,7 @@
  ## All Technical rights reserved
  ##
  ## ODBackendErrorPopup - Blocking popup shown over a page when the backend
- ## can't be reached: a message plus "Réessayer" in the design's Alerte layout
+ ## can't be reached: a message plus "Retry" in the design's Alerte layout
  ## (ODDesign). Built at runtime (no prefab). Display only: the caller decides
  ## what retrying does.
  ##
@@ -76,8 +76,8 @@ public class ODBackendErrorPopup : MonoBehaviour
 
         // Icon colour follows the kind of problem: connection (red), no data (orange), session (blue).
         string t = (title ?? "").ToLowerInvariant();
-        bool session = t.Contains("401") || t.Contains("refus") || t.Contains("session") || t.Contains("accès");
-        bool empty = t.Contains("aucune") || t.Contains("indisponible");
+        bool session = t.Contains("401") || t.Contains("denied") || t.Contains("session") || t.Contains("access");
+        bool empty = t.Contains("no ") || t.Contains("unavailable");
         Color tint = session ? ODDesign.WithAlpha(ODDesign.Blue, .26f) : empty ? ODDesign.WithAlpha(ODDesign.Orange, .22f) : ODDesign.WithAlpha(ODDesign.Live, .22f);
         Color icon = session ? ODDesign.BlueSoft : empty ? ODDesign.OrangeText : ODDesign.Hex("FF7A70");
 
@@ -89,7 +89,7 @@ public class ODBackendErrorPopup : MonoBehaviour
         body.textWrappingMode = TextWrappingModes.Normal;
         body.overflowMode = TextOverflowModes.Ellipsis;
 
-        var retry = ODDesign.Button(card, "RetryButton", "Réessayer", 56f, ch - 44f - 72f, cw - 112f, 72f, ODDesign.ButtonKind.Primary);
+        var retry = ODDesign.Button(card, "RetryButton", "Retry", 56f, ch - 44f - 72f, cw - 112f, 72f, ODDesign.ButtonKind.Primary);
         retry.onClick.AddListener(() => { Destroy(gameObject); onRetry?.Invoke(); });
     }
 

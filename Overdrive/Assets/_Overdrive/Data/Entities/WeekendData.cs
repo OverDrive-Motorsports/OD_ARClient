@@ -4,7 +4,7 @@
  ## All Technical rights reserved
  ##
  ## WeekendData - Data shown by the championship panel during an event
- ## weekend ("LIVE · WEEK-END"): circuit and weather, session programme and
+ ## weekend ("LIVE · WEEKEND"): circuit and weather, session programme and
  ## season standings. Pure data: no MonoBehaviour, no logic.
  ##
  */
@@ -23,7 +23,7 @@ public enum WeekendSessionStatus
 [Serializable]
 public struct WeekendSession
 {
-    public string name;      // "EL1", "Qualifications", "Sprint"...
+    public string name;      // "FP1", "Qualifying", "Sprint"...
     public DateTime startsAt;
     public WeekendSessionStatus status;
 }

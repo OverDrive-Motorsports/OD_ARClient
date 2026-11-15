@@ -4,8 +4,8 @@
  ## All Technical rights reserved
  ##
  ## ODChampionshipPanel.Layout - Places the panel's builder elements on the
- ## design system grid (Canva pages 02.4 Hors direct, 02.5 Live week-end,
- ## 02.6 Live course): header with the caps line above the title and the
+ ## design system grid (Canva pages 02.4 Off air, 02.5 Live weekend,
+ ## 02.6 Live race): header with the caps line above the title and the
  ## status pill on the right, then each state's plateaux at the mockup's
  ## positions. Coordinates are design px (1920 x 1200 window), see ODDesign.
  ## Nothing is created twice: every method is idempotent.
@@ -116,7 +116,7 @@ public partial class ODChampionshipPanel
         }
     }
 
-    // ── Hors direct ─────────────────────────────────────────────────────────
+    // ── Off air ─────────────────────────────────────────────────────────────
 
     const float NextEventH = 705f, CalendarCardY = ContentTop + NextEventH + 32f, CalendarCardH = ContentH - NextEventH - 32f;
     const float StandingsX = GX + 700f + 40f;
@@ -126,7 +126,7 @@ public partial class ODChampionshipPanel
         if (nextEvent != null)
         {
             D.Place(nextEvent, GX, ContentTop, 700f, NextEventH);
-            StyleCaps(nextEvent, "Label", 44f, 44f, 612f, "Prochaine manche");
+            StyleCaps(nextEvent, "Label", 44f, 44f, 612f, "Next round");
             StyleLabel(nextEvent, "MockEvent", 44f, 82f, 612f, 64f, 52f, D.Weight.Bold, D.Primary);
             StyleLabel(nextEvent, "Sport", 44f, 150f, 612f, 34f, 23f, D.Weight.Regular, D.Muted);
             for (int i = 0; i < 3; i++)
@@ -146,7 +146,7 @@ public partial class ODChampionshipPanel
         if (calendar != null)
         {
             D.Place(calendar, GX, CalendarCardY, 700f, CalendarCardH);
-            StyleCaps(calendar, "Heading", 44f, 34f, 612f, "Ensuite au calendrier");
+            StyleCaps(calendar, "Heading", 44f, 34f, 612f, "Coming up next");
         }
         if (standings != null)
         {
@@ -156,7 +156,7 @@ public partial class ODChampionshipPanel
         }
     }
 
-    // ── Live · week-end ─────────────────────────────────────────────────────
+    // ── Live · weekend ──────────────────────────────────────────────────────
 
     const float CircuitCardW = 540f, NextSessionH = 164f, CircuitCardH = ContentH - NextSessionH - 32f;
     const float ProgramX = GX + 540f + 36f, ProgramW = 560f, WeekendStandingsX = ProgramX + 560f + 36f;
@@ -166,7 +166,7 @@ public partial class ODChampionshipPanel
         if (circuit != null)
         {
             D.Place(circuit, GX, ContentTop, CircuitCardW, CircuitCardH);
-            StyleCaps(circuit, "Heading", 36f, 36f, 468f, "Circuit · Météo");
+            StyleCaps(circuit, "Heading", 36f, 36f, 468f, "Circuit · Weather");
             var divider = circuit.Find("Divider");
             if (divider != null) { D.Place(divider, 36f, CircuitCardH - 36f - 66f * 2f - 16f - 24f, 468f, 1.6f); divider.GetComponent<Graphic>().color = D.DividerStrong; }
             var hint = circuit.Find("MapHint");
@@ -182,7 +182,7 @@ public partial class ODChampionshipPanel
         if (nextSession != null)
         {
             D.Place(nextSession, GX, ContentTop + CircuitCardH + 32f, CircuitCardW, NextSessionH);
-            StyleCaps(nextSession, "Heading", 36f, 32f, 300f, "Prochaine session", 19f, new Color(1f, 1f, 1f, .74f));
+            StyleCaps(nextSession, "Heading", 36f, 32f, 300f, "Next session", 19f, new Color(1f, 1f, 1f, .74f));
             var countdown = nextSession.Find("Countdown");
             if (countdown != null) countdown.gameObject.SetActive(false);
             if (nextSession.Find("SessionName") == null)
@@ -212,7 +212,7 @@ public partial class ODChampionshipPanel
         }
     }
 
-    /// <summary>Orange "Prochaine session" plateau of the week-end state.</summary>
+    /// <summary>Orange "Next session" plateau of the weekend state.</summary>
     void StyleNextSession(RectTransform card)
     {
         var surface = card != null ? card.GetComponent<ODHomepageSurface>() : null;
@@ -230,7 +230,7 @@ public partial class ODChampionshipPanel
         surface.SetVerticesDirty();
     }
 
-    // ── Live · course (and replay, same cards) ──────────────────────────────
+    // ── Live · race (and replay, same cards) ────────────────────────────────
 
     const float LiveLeftW = 580f, PodiumH = 300f, LiveButtonsY = ContentTop + PodiumH + 28f, LiveCircuitY = LiveButtonsY + 72f + 28f;
     const float LiveCircuitH = ContentBottom - LiveCircuitY, CourseX = GX + 580f + 36f;
@@ -283,9 +283,9 @@ public partial class ODChampionshipPanel
     }
 
     // ── Replay · broadcast page ─────────────────────────────────────────────
-    // Left column: "Replay vidéo" card (16:9 screen with a play disc, "Regarder le
-    // replay" + "Télémétrie"), final podium, one-line circuit card ("Voir en 3D").
-    // Right: the classification card, titled "Résultat final".
+    // Left column: "Video replay" card (16:9 screen with a play disc, "Watch
+    // replay" + "Telemetry"), final podium, one-line circuit card ("View in 3D").
+    // Right: the classification card, titled "Final result".
 
     const float ReplayHeroH = 470f, ReplayScreenY = 70f, ReplayScreenH = (LiveLeftW - 72f) * 9f / 16f;
     const float ReplayButtonsY = ReplayScreenY + ReplayScreenH + 22f, ReplayPodiumY = ContentTop + ReplayHeroH + 24f;
@@ -300,7 +300,7 @@ public partial class ODChampionshipPanel
         var plateau = hero.gameObject.AddComponent<ODHomepageSurface>();
         plateau.raycastTarget = false;
         ODChampionshipTheme.ApplyGlass(plateau);
-        D.Caps(hero, "Heading", "Replay vidéo", 36f, 30f, 400f);
+        D.Caps(hero, "Heading", "Video replay", 36f, 30f, 400f);
 
         // The scene's "TV Replay" button stays the TV toggle (VideoPlayerController recolours it
         // as an on/off switch); the card shows a primary capsule and a screen that press it.
@@ -326,7 +326,7 @@ public partial class ODChampionshipPanel
         watchIcon.symbol = ODNavigationIcon.Symbol.Play;
         watchIcon.color = D.Ink;
         watchIcon.raycastTarget = false;
-        D.Text(primary.transform, "Label", "Regarder le replay", 66f, 0f, watchW - 66f - 24f, 68f, 22f, D.Weight.SemiBold, D.Ink);
+        D.Text(primary.transform, "Label", "Watch replay", 66f, 0f, watchW - 66f - 24f, 68f, 22f, D.Weight.SemiBold, D.Ink);
         var telemetry = section.Find("Telemetry");
         if (telemetry != null)
         {
@@ -355,7 +355,7 @@ public partial class ODChampionshipPanel
                 if (text != null)
                 {
                     D.Style(text, 20f, D.Weight.SemiBold, Color.white, TextAlignmentOptions.Center);
-                    text.text = "Voir en 3D";
+                    text.text = "View in 3D";
                     var capsule = D.Fill(hint, "Capsule", 0f, 0f, 210f, 56f, D.ButtonFill, 28f);
                     capsule.transform.SetAsFirstSibling();
                 }
@@ -363,7 +363,7 @@ public partial class ODChampionshipPanel
         }
     }
 
-    /// <summary>"Regarder le replay" (capsule or screen): the TV switches on, then the page starts the replay.</summary>
+    /// <summary>"Watch replay" (capsule or screen): the TV switches on, then the page starts the replay.</summary>
     void PressWatch(Transform tvButton)
     {
         tvButton?.GetComponent<Button>()?.onClick.Invoke();
@@ -379,7 +379,7 @@ public partial class ODChampionshipPanel
         var card = transform.Find("CourseStandings");
         if (card == null) return;
         var heading = card.Find("Heading")?.GetComponent<TextMeshProUGUI>();
-        if (heading != null) heading.text = replay ? "Résultat final" : "Classement en direct";
+        if (heading != null) heading.text = replay ? "Final result" : "Live standings";
         foreach (var name in new[] { "Column1", "Column2", "Column4" })
         {
             var column = card.Find(name);
@@ -407,7 +407,7 @@ public partial class ODChampionshipPanel
 
         float w = GRight - CourseX;
         D.Place(card, CourseX, ContentTop, w, ContentH);
-        StyleLabel(card, "Heading", 40f, 30f, 700f, 52f, 36f, D.Weight.Bold, D.Primary).text = "Classement en direct";
+        StyleLabel(card, "Heading", 40f, 30f, 700f, 52f, 36f, D.Weight.Bold, D.Primary).text = "Live standings";
         var lap = StyleLabel(card, "LapText", w - 40f - 300f, 34f, 300f, 40f, 20f, D.Weight.Regular, D.Secondary);
         if (lap != null) lap.alignment = TextAlignmentOptions.MidlineRight;
         var notice = card.Find("DemoNotice");
@@ -417,7 +417,7 @@ public partial class ODChampionshipPanel
         var bar = card.Find("ScrollTrack");
         if (bar != null) bar.gameObject.SetActive(false);
 
-        // Columns (design: Pos · avatar · Pilote · Pneu · Arr. · Écart · Dernier tour).
+        // Columns (design: Pos · avatar · Driver · Tyre · Stops · Gap · Last lap).
         float y = 104f;
         string[] names = { "Column0", "Column1", "Column2", "Column3", "Column4" };
         float[] xs = { 164f, 624f, 754f, 832f, 970f };   // = the row cells' x + 40 (the list's inset)
@@ -501,14 +501,14 @@ public partial class ODChampionshipPanel
 
     // ── Shared helpers ──────────────────────────────────────────────────────
 
-    /// <summary>The 3D-circuit hint becomes a recessed map area with a capsule "Voir en 3D" in it.</summary>
+    /// <summary>The 3D-circuit hint becomes a recessed map area with a capsule "View in 3D" in it.</summary>
     static void MapHint(Transform card, Transform hint, float x, float y, float w, float h)
     {
         if (card.Find("MapArea") == null)
         {
             var area = D.Fill(card, "MapArea", x, y, w, h, D.Recessed, 32f);
             area.transform.SetSiblingIndex(hint.GetSiblingIndex());
-            var label = D.Text(area.transform, "Label", "Tracé du circuit", 0f, h * .5f - 60f, w, 34f, 22f, D.Weight.SemiBold, D.Secondary, TextAlignmentOptions.Center);
+            var label = D.Text(area.transform, "Label", "Circuit layout", 0f, h * .5f - 60f, w, 34f, 22f, D.Weight.SemiBold, D.Secondary, TextAlignmentOptions.Center);
             label.overflowMode = TextOverflowModes.Overflow;
         }
         D.Place(hint, x + (w - 300f) * .5f, y + h * .5f - 8f, 300f, 56f);
@@ -516,7 +516,7 @@ public partial class ODChampionshipPanel
         if (text != null)
         {
             D.Style(text, 20f, D.Weight.SemiBold, Color.white, TextAlignmentOptions.Center);
-            text.text = "Voir en 3D";
+            text.text = "View in 3D";
             if (hint.Find("Capsule") == null)
             {
                 var capsule = D.Fill(hint, "Capsule", 0f, 0f, 300f, 56f, D.ButtonFill, 28f);

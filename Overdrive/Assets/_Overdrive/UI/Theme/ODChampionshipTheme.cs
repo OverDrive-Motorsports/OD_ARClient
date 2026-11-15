@@ -7,7 +7,7 @@
  ## (championship panel in all its states, replay gallery, categories page).
  ##   • The page background gradient depends on the championship shown
  ##     (F1 red, WEC blue, MotoGP red→orange), never on the page state.
- ##   • The status pill depends on the state (hors direct grey, week-end gold,
+ ##   • The status pill depends on the state (off-air grey, weekend gold,
  ##     live red, replay blue).
  ##   • visionOS look: grey "liquid glass" window (rim, sheen, soft shadow),
  ##     lighter glass platters with concentric corners, capsule controls, and
@@ -22,9 +22,9 @@ using UnityEngine.UI;
 public enum ODStatusStyle
 {
     Loading,
-    OffSeason,   // HORS DIRECT
-    Weekend,     // LIVE · WEEK-END
-    Live,        // LIVE · COURSE
+    OffSeason,   // OFF AIR
+    Weekend,     // LIVE · WEEKEND
+    Live,        // LIVE · RACE
     Replay
 }
 
@@ -120,7 +120,7 @@ public static class ODChampionshipTheme
     }
 
     /// <summary>
-    /// Page window (design "Fenêtre"): glass over the dimmed room, white 13 % → 5 %
+    /// Page window (design "Window"): glass over the dimmed room, white 13 % → 5 %
     /// from top to bottom, the championship colour glowing in the top-left corner
     /// and its dark tone in the bottom-right one; 1.5-px light rim, radius 64.
     /// The shader mixes the fill at 42 % over the blurred room, hence the alphas.

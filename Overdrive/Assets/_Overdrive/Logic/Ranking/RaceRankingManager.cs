@@ -101,7 +101,7 @@ public class RaceRankingManager : MonoBehaviour
         if (lapText != null) lapText.text = lapLabel ?? "";
 
         var hint = transform.Find("ScrollHint")?.GetComponent<TextMeshProUGUI>();
-        if (hint != null) hint.text = entries.Count > 9 ? $"{entries.Count} pilotes · Faites défiler pour voir la suite" : $"{entries.Count} pilotes";
+        if (hint != null) hint.text = entries.Count > 9 ? $"{entries.Count} drivers · Scroll to see the rest" : $"{entries.Count} drivers";
         var notice = transform.Find("DemoNotice")?.GetComponent<TextMeshProUGUI>();
         if (notice != null) notice.text = sourceNotice ?? "";
     }

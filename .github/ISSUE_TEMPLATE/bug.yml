@@ -1,13 +1,13 @@
 name: Bug
-description: Signaler un probleme
+description: Report a problem
 title: "[Bug]: "
 labels: ["bug"]
 body:
   - type: dropdown
     id: priority
     attributes:
-      label: Priorité
-      description: Niveau d'urgence du bug
+      label: Priority
+      description: How urgent the bug is
       options:
         - P0 - CRITICAL
         - P1 – HIGH
@@ -18,29 +18,29 @@ body:
   - type: textarea
     id: problem
     attributes:
-      label: Probleme
-      description: Decris ce qui ne fonctionne pas.
+      label: Problem
+      description: Describe what doesn't work.
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
-      label: Etapes pour reproduire
+      label: Steps to reproduce
       description: 1) ... 2) ... 3) ...
   - type: textarea
     id: expected
     attributes:
-      label: Comportement attendu
+      label: Expected behaviour
   - type: textarea
     id: context
     attributes:
-      label: Contexte
-      description: Appareil, navigateur, version, capture si besoin.
+      label: Context
+      description: Device, browser, version, screenshot if needed.
   - type: checkboxes
     id: confirmation
     attributes:
-      label: Vérifications
-      description: Merci de confirmer les points suivants
+      label: Checks
+      description: Please confirm the following
       options:
-        - label: J’ai recherché dans les tickets existants et ce bug n’a pas déjà été signalé
+        - label: I searched the existing tickets and this bug hasn't been reported yet
           required: true

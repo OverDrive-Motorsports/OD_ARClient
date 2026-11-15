@@ -25,7 +25,7 @@ public sealed class ODReplayPlayer : MonoBehaviour
 
     /// <summary>Running order, P1 first — raised only when something shown in it changes.</summary>
     public event Action<LiveSessionData> OrderChanged;
-    /// <summary>"Tour 12 / 56 · 0:21:45" — raised once per race second.</summary>
+    /// <summary>"Lap 12 / 56 · 0:21:45" — raised once per race second.</summary>
     public event Action<string> ProgressChanged;
 
     /// <summary>A replay is loaded (on the grid, or playing).</summary>

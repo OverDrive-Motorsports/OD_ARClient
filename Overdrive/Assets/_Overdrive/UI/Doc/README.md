@@ -37,7 +37,7 @@ navigation bar follow the Canva design "OverDrive VR – v2" (pages
   the direction behind each pixel, so it stays frosted when the panel leaves
   the camera's field of view. Pages that show glass call `Acquire` / `Release`.
 - Controls: `Molecules/ODSegmentedControl` (recessed track, white 24 % pill;
-  `solidPill` for the Profil / Réglages switch), `Atoms/ODToggleSwitch`
+  `solidPill` for the Profile / Settings switch), `Atoms/ODToggleSwitch`
   (identity blue), `ODHoverState` (gaze ring, press scale) on design buttons.
 - Page layouts sit next to their display code:
   `Organisms/ODChampionshipPanel.Layout.cs`, `Organisms/ODChampionshipTile.cs`,
@@ -49,7 +49,7 @@ navigation bar follow the Canva design "OverDrive VR – v2" (pages
   star, kept on the headset in PlayerPrefs — no user endpoint yet). Simple
   glass cards, no motion (`Organisms/ODReplayTile.cs`). Picking one shows the
   broadcast page (championship panel in its replay state: video card,
-  podium, circuit line, "Résultat final"), whose back arrow returns to the
+  podium, circuit line, "Final result"), whose back arrow returns to the
   gallery. The championship state (hors week-end / week-end / live) is
   decided by the backend data; without the backend, a popup offers to retry.
   Only the profile and settings pages still show placeholder content.
