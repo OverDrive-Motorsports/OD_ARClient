@@ -82,11 +82,21 @@ navigation bar follow the Canva design "OverDrive VR – v2" (pages
 ## Course TV multiview prototype
 
 - `Atoms/ODVideoIcon.cs` draws video icons without font glyphs.
+- `Atoms/ODVideoProgressGlow.cs` draws the scrubber's red halo and fading
+  played-side trail as geometry, without image or shader assets.
+- `Molecules/ODVideoVolumeReveal.cs` shares pointer hover/press state across
+  the speaker, volume slider and their gap. A short slide/fade lends space
+  from the timeline; captured controls stay still until release. Reopening
+  the TV restores the compact state. No media playback logic lives here.
 - `Organisms/ODVideoUI.cs` shares video surfaces, controls and layout helpers.
 - `Organisms/ODVideoPlayerView.cs` owns the main TV controls and the camera
   picker: session participants come from the backend, in a clamped scroll
   view with a draggable scrollbar. The 20-name demo catalogue remains when
   participants are unavailable. Map and radio remain dummy buttons.
+  Its targeted `PolishControls()` migration keeps existing decoder/texture
+  references and the white grab bar. The title has no backplate or redundant
+  main-feed subtitle; captions/language placeholders live in the More menu,
+  not in the transport bar.
 - `Organisms/ODPilotVideoView.cs` displays either one onboard or a grouped
   mosaic in its own root Canvas. Both follow the main TV until their own
   white bar is grabbed; "Rattacher les vues" explicitly restores following.

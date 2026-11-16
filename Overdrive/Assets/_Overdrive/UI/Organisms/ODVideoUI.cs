@@ -6,6 +6,7 @@ using UnityEngine.UI;
 /// <summary>Shared video surfaces using the existing Overdrive type, glass and capsule vocabulary.</summary>
 public static class ODVideoUI
 {
+    private static readonly string[] SliderParts = { "Track", "FillArea", "HandleArea" };
     public static readonly Color Glass = new Color(.13f, .14f, .16f, .90f);
     public static RectTransform Rect(Transform p, string n, float x, float y, float w, float h) => ODRuntimeUI.Rect(p, n, x, y, w, h);
     public static TextMeshProUGUI Text(Transform p, string n, string s, float x, float y, float w, float h, float size = 20, bool bold = false, Color? c = null)
@@ -92,6 +93,18 @@ public static class ODVideoUI
     public static void Clear(Transform p)
     {
         for (int i = p.childCount - 1; i >= 0; i--) Remove(p.GetChild(i).gameObject);
+    }
+    /// <summary>Resize a horizontal slider without changing its value or its existing input bindings.</summary>
+    public static void SetSliderWidth(Slider slider, float width)
+    {
+        if (slider == null) return;
+        var rect = (RectTransform)slider.transform;
+        if (Mathf.Abs(rect.rect.width - width) > .01f) rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+        foreach (string child in SliderParts)
+        {
+            var part = slider.transform.Find(child) as RectTransform;
+            if (part != null && Mathf.Abs(part.rect.width - width) > .01f) part.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+        }
     }
     public static void Remove(Object o)
     {

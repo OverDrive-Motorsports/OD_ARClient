@@ -84,10 +84,9 @@ public sealed class ODVideoPlayerView : MonoBehaviour
         ((RectTransform)transform).sizeDelta = new Vector2(1200, 675);
         mainVideo = Video(transform, "Video", 0, 0, 1200, 675, texture, 36);
         mosaicRoot = Rect(transform, "Mosaic", 18, 100, 1164, 475);
-        Fill(transform, "HeaderGlass", 18, 18, 750, 66, Glass, 28);
         Fill(transform, "Status", 30, 30, 100, 40, new Color(.6f, .12f, .10f, .9f), 20);
         badgeLabel = Text(transform, "StatusText", "DIRECT", 39, 30, 86, 40, 16, true);
-        Text(transform, "Title", "Grand Prix", 148, 23, 600, 32, 25, true);
+        Text(transform, "Title", "Grand Prix", 148, 30, 600, 40, 25, true);
         feedLabel = Text(transform, "Feed", "Diffusion principale", 148, 54, 600, 24, 16, false, ODDesign.Secondary);
         addViewButton = Button(transform, "AddView", "Ajouter une vue", 946, 26, 180, 48);
         moreButton = IconButton(transform, "More", ODVideoIcon.Kind.More, 1136, 26, 48);
@@ -106,13 +105,9 @@ public sealed class ODVideoPlayerView : MonoBehaviour
         Text(forwardButton.transform, "Seconds", "10", 14, 14, 20, 20, 10, true).alignment = TextAlignmentOptions.Center;
         Text(transform, "Time", "0:00:00", 210, 607, 92, 28, 18, true);
         Slider(transform, "Progress", 320, 601, 404, 40, 0);
-        Button(transport.transform, "BackendSource", "TV", 724, 16, 78, 40).interactable = false;
         muteButton = IconButton(transform, "Mute", ODVideoIcon.Kind.Volume, 837, 597, 48, bare: true);
         volumeIcon = muteButton.GetComponentInChildren<ODVideoIcon>();
         Slider(transform, "Volume", 898, 601, 112, 40, .7f);
-        // Keep unavailable stream-specific controls visibly honest, not misleading no-op settings menus.
-        Button(transport.transform, "CaptionsUnavailable", "CC", 1004, 16, 46, 40).interactable = false;
-        Button(transport.transform, "LanguageUnavailable", "FR", 1054, 16, 46, 40).interactable = false;
         expandButton = IconButton(transform, "Expand", ODVideoIcon.Kind.Expand, 1120, 597, 48, bare: true);
         Text(transform, "PlaybackStatus", "Vidéo indisponible", 30, 550, 800, 26, 15, false, ODDesign.Secondary);
         var empty = Text(transform, "VideoUnavailable", "Vidéo indisponible", 160, 260, 880, 120, 30, true);
@@ -122,12 +117,88 @@ public sealed class ODVideoPlayerView : MonoBehaviour
         overlay.raycastTarget = true; dimmer = overlay.gameObject; dimmer.SetActive(false);
         var handle = GetComponent<WindowHandle>();
         if (handle != null) { handle.customPillPosition = false; handle.followTarget = (RectTransform)transform; }
+        PolishControls();
+    }
+
+    /// <summary>Targeted, repeatable polish of the saved TV. Keeps the decoder, textures, bindings and window handle intact.</summary>
+    public void PolishControls()
+    {
+        var progress = transform.Find("Progress")?.GetComponent<Slider>();
+        var volume = transform.Find("Volume")?.GetComponent<Slider>();
+        if (progress == null || volume == null || muteButton == null || optionsPanel == null)
+            throw new InvalidOperationException("Build or connect the TV controls before applying polish.");
+        foreach (string path in new[] { "HeaderGlass", "TransportGlass/BackendSource", "TransportGlass/DemoSource", "TransportGlass/CaptionsUnavailable", "TransportGlass/LanguageUnavailable" })
+        {
+            var old = transform.Find(path); if (old != null) Remove(old.gameObject);
+        }
+        if (feedLabel != null) { feedLabel.text = ""; feedLabel.gameObject.SetActive(false); }
+        var title = transform.Find("Title") as RectTransform;
+        title.anchoredPosition = new Vector2(148, -30); title.sizeDelta = new Vector2(600, 40);
+        var status = transform.Find("Status").GetComponent<RoundedImage>();
+        status.color = new Color(.46f, .16f, .14f, .82f);
+        if (transform.Find("StatusDot") == null)
+            Fill(transform, "StatusDot", 41, 47, 6, 6, new Color(1f, .33f, .25f), 3);
+        badgeLabel.rectTransform.anchoredPosition = new Vector2(55, -30);
+        badgeLabel.rectTransform.sizeDelta = new Vector2(68, 40);
+
+        var transport = transform.Find("TransportGlass").GetComponent<RoundedImage>();
+        var rim = transport.GetComponent<Outline>();
+        if (rim == null) rim = transport.gameObject.AddComponent<Outline>();
+        rim.effectColor = new Color(1, 1, 1, .12f); rim.effectDistance = new Vector2(1, -1); rim.useGraphicAlpha = true;
+        ((RectTransform)optionsPanel.transform).sizeDelta = new Vector2(316, 268);
+        if (optionsPanel.transform.Find("CaptionsUnavailable") == null)
+            Button(optionsPanel.transform, "CaptionsUnavailable", "Sous-titres · Bientôt", 12, 140, 292, 52).interactable = false;
+        if (optionsPanel.transform.Find("LanguageUnavailable") == null)
+            Button(optionsPanel.transform, "LanguageUnavailable", "Langue · Bientôt", 12, 204, 292, 52).interactable = false;
+
+        var area = progress.transform.Find("HandleArea") as RectTransform;
+        area.anchoredPosition = new Vector2(0, -8); area.sizeDelta = new Vector2(area.rect.width, 24);
+        var knob = progress.handleRect;
+        knob.sizeDelta = new Vector2(24, 0);
+        var red = new Color(.87f, .28f, .23f);
+        var knobImage = knob.GetComponent<RoundedImage>(); knobImage.color = red; knobImage.cornerRadius = 12;
+        if (knob.Find("Core") == null) Fill(knob, "Core", 4, 4, 16, 16, Color.white, 8);
+        var halo = knob.Find("ScrubGlow") as RectTransform;
+        if (halo == null)
+        {
+            halo = Rect(knob, "ScrubGlow", 0, 0, 128, 48);
+            halo.anchorMin = halo.anchorMax = halo.pivot = new Vector2(.5f, .5f);
+            halo.anchoredPosition = Vector2.zero; halo.SetAsFirstSibling();
+            var graphic = halo.gameObject.AddComponent<ODVideoProgressGlow>();
+            graphic.slider = progress; graphic.color = red; graphic.raycastTarget = false;
+        }
+        var divider = transform.Find("TransportDivider") as RectTransform;
+        if (divider == null) divider = Fill(transform, "TransportDivider", 1032, 606, 1.2f, 30, new Color(1, 1, 1, .22f), .6f).rectTransform;
+        var zone = transform.Find("VolumeHoverZone") as RectTransform;
+        if (zone == null)
+        {
+            var hit = Fill(transform, "VolumeHoverZone", 1040, 589, 72, 64, Color.clear, 0);
+            hit.raycastTarget = true; zone = hit.rectTransform;
+        }
+        zone.SetSiblingIndex(muteButton.transform.GetSiblingIndex());
+        var reveal = zone.GetComponent<ODVideoVolumeReveal>();
+        if (reveal == null) reveal = zone.gameObject.AddComponent<ODVideoVolumeReveal>();
+        reveal.speaker = (RectTransform)muteButton.transform; reveal.volume = volume; reveal.timeline = progress; reveal.separator = divider;
+        // Native Unity objects can be "fake null" in the Editor: do not use ?? for CanvasGroup.
+        var sliderGroup = volume.GetComponent<CanvasGroup>();
+        if (sliderGroup == null) sliderGroup = volume.gameObject.AddComponent<CanvasGroup>();
+        reveal.sliderGroup = sliderGroup;
+        foreach (var target in new[] { muteButton.gameObject, volume.gameObject })
+        {
+            var region = target.GetComponent<ODVideoVolumeReveal>();
+            if (region == null) region = target.AddComponent<ODVideoVolumeReveal>();
+            region.owner = reveal;
+        }
+        reveal.ResetPresentation();
+        // Newly added decorations must not sit above the modal veil or its interaction blocker.
+        if (dimmer != null) dimmer.transform.SetAsLastSibling();
     }
 
     public void Bind(VideoPlayerController value)
     {
         controller = value;
         if (mainVideo == null) BuildMain(value.videoPlayer != null ? value.videoPlayer.targetTexture : null);
+        if (transform.Find("VolumeHoverZone") == null) PolishControls();
         value.titleLabel = transform.Find("Title").GetComponent<TextMeshProUGUI>();
         value.playPauseButton = transform.Find("PlayPause").GetComponent<Button>();
         value.playPauseLabel = transform.Find("PlayPause/Label").GetComponent<TextMeshProUGUI>();
@@ -158,8 +229,16 @@ public sealed class ODVideoPlayerView : MonoBehaviour
         bool replay = controller.course != null && controller.course.currentMode == ODSportPage.Mode.Replay;
         if (badgeLabel != null) badgeLabel.text = replay ? "REPLAY" : "DIRECT";
         var status = transform.Find("Status")?.GetComponent<RoundedImage>();
-        if (status != null) status.color = replay ? new Color(.15f, .38f, .65f, .92f) : new Color(.65f, .12f, .10f, .92f);
-        if (feedLabel != null) feedLabel.text = FeedName(PrimaryFeed);
+        if (status != null) status.color = replay ? new Color(.15f, .29f, .48f, .82f) : new Color(.46f, .16f, .14f, .82f);
+        var dot = transform.Find("StatusDot")?.GetComponent<RoundedImage>();
+        if (dot != null) dot.color = replay ? new Color(.5f, .72f, 1f) : new Color(1f, .33f, .25f);
+        if (feedLabel != null)
+        {
+            feedLabel.text = PrimaryFeed >= 0 ? FeedName(PrimaryFeed) : "";
+            feedLabel.gameObject.SetActive(PrimaryFeed >= 0);
+        }
+        var title = transform.Find("Title") as RectTransform;
+        if (title != null) title.anchoredPosition = new Vector2(148, PrimaryFeed >= 0 ? -23 : -30);
         if (Application.isPlaying) ODVideoUI.BindVideoTexture(mainVideo, TextureForFeed(PrimaryFeed));
         var empty = transform.Find("VideoUnavailable")?.GetComponent<TextMeshProUGUI>();
         if (empty != null)
