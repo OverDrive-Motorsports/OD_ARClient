@@ -206,6 +206,20 @@ public static class ODChampionshipMapper
             date = entry.startTime.ToLocalTime(),
         };
 
+    /// <summary>Replay tile built from an event's session (the Home's latest races).</summary>
+    public static ReplaySummary ToReplaySummary(ChampionshipSummaryDto championship, string championshipCode,
+        EventSummaryDto evt, SessionSummaryDto session) => new ReplaySummary
+        {
+            id = session.sessionId,
+            championshipId = championshipCode,
+            championshipName = ChampionshipName(championship, championshipCode),
+            grandPrix = evt.name,
+            sessionName = SessionName(session),
+            season = (evt.seasonYear > 0 ? evt.seasonYear : session.startTime.Year).ToString(),
+            circuit = string.IsNullOrEmpty(evt.circuit) ? evt.location : evt.circuit,
+            date = session.startTime.ToLocalTime(),
+        };
+
     public static ReplayDetail ToReplayDetail(ReplaySummary summary, EventSummaryDto evt,
         List<SessionResultRowDto> results, Dictionary<int, DriverSummaryDto> drivers)
     {
@@ -363,7 +377,7 @@ public static class ODChampionshipMapper
         return ColorUtility.TryParseHtmlString(value, out var color) ? color : Color.white;
     }
 
-    static string ChampionshipName(ChampionshipSummaryDto championship, string code)
+    public static string ChampionshipName(ChampionshipSummaryDto championship, string code)
     {
         if (!string.IsNullOrEmpty(championship?.name)) return championship.name;
         return code == "f1" ? "Formula 1" : (code ?? "").ToUpperInvariant();

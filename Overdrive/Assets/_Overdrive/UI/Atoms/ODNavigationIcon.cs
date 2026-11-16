@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class ODNavigationIcon : MaskableGraphic
 {
     // New symbols go at the end: prefabs serialize the enum as an index.
-    public enum Symbol { Races, Rankings, Profile, Settings, Homepage, Categories, Star, Search, Back, Calendar, Trophy, Play }
+    public enum Symbol { Races, Rankings, Profile, Settings, Homepage, Categories, Star, Search, Back, Calendar, Trophy, Play, Bell }
     public Symbol symbol;
 
     protected override void OnPopulateMesh(VertexHelper mesh)
@@ -56,6 +56,17 @@ public class ODNavigationIcon : MaskableGraphic
             case Symbol.Search:
                 Ring(mesh, new Vector2(.43f, .57f), .27f, 0, 360);
                 Line(mesh, .63f, .37f, .87f, .13f);
+                break;
+            case Symbol.Bell:
+                // Dome over straight flanks, a flared rim, and the clapper below.
+                Ring(mesh, new Vector2(.5f, .60f), .22f, 0, 180);
+                Line(mesh, .28f, .60f, .28f, .36f);
+                Line(mesh, .72f, .60f, .72f, .36f);
+                Line(mesh, .28f, .36f, .16f, .28f);
+                Line(mesh, .72f, .36f, .84f, .28f);
+                Line(mesh, .16f, .28f, .84f, .28f);
+                Ring(mesh, new Vector2(.5f, .22f), .08f, 180, 360);
+                Line(mesh, .5f, .82f, .5f, .88f);
                 break;
             case Symbol.Back:
                 Line(mesh, .18f, .5f, .82f, .5f);
