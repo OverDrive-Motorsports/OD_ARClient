@@ -100,9 +100,16 @@ public class FloatingNavigation : MonoBehaviour
     private bool OpenWindow()
     {
         if (menu == null || contentWindow == null) return false;
-        contentWindow.gameObject.SetActive(true);
         var group = contentWindow.GetComponent<CanvasGroup>();
+        bool hidden = !contentWindow.gameObject.activeSelf || (group != null && group.alpha < 1f);
+        contentWindow.gameObject.SetActive(true);
         if (group != null) group.alpha = 1f;
+        // A window that (re)appears comes back centred in front of the headset.
+        if (hidden)
+        {
+            var launcher = FindAnyObjectByType<AppLauncher>();
+            if (launcher != null) launcher.SnapMenuInFront();
+        }
         return true;
     }
 }

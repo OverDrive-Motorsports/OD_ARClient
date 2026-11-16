@@ -282,6 +282,48 @@ public static class ODDesign
         return button;
     }
 
+    // ── Search field ────────────────────────────────────────────────────────
+
+    /// <summary>Recessed capsule with a search glyph and a TMP field (the Quest system keyboard types into it).</summary>
+    public static TMP_InputField SearchField(Transform parent, float x, float y, float w, float h, string placeholderText, float fontPx = 22f)
+    {
+        var field = Fill(parent, "Search", x, y, w, h, Recessed, h * .5f);
+        field.raycastTarget = true;
+        field.gameObject.SetActive(false);   // configure the input field before its OnEnable
+
+        var icon = Rect(field.transform, "Icon", 24f, (h - 26f) * .5f, 26f, 26f).gameObject.AddComponent<ODNavigationIcon>();
+        icon.symbol = ODNavigationIcon.Symbol.Search;
+        icon.color = Secondary;
+        icon.raycastTarget = false;
+
+        var area = Rect(field.transform, "TextArea", 64f, 0f, w - 64f - 28f, h);
+        area.gameObject.AddComponent<RectMask2D>();
+        var placeholder = Text(area, "Placeholder", placeholderText, 0f, 0f, w - 92f, h, fontPx, Weight.Regular, Tertiary);
+        var text = Text(area, "Text", "", 0f, 0f, w - 92f, h, fontPx, Weight.Regular, Primary);
+        text.overflowMode = TextOverflowModes.Overflow;
+
+        var input = field.gameObject.AddComponent<TMP_InputField>();
+        input.targetGraphic = field;
+        input.textViewport = area;
+        input.textComponent = text;
+        input.placeholder = placeholder;
+        input.fontAsset = text.font;
+        input.pointSize = text.fontSize;
+        input.lineType = TMP_InputField.LineType.SingleLine;
+        input.characterLimit = 40;
+        input.caretColor = Color.white;
+        input.customCaretColor = true;
+        input.selectionColor = new Color(1f, 1f, 1f, .25f);
+        var colours = input.colors;
+        colours.normalColor = Color.white;
+        colours.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
+        colours.pressedColor = colours.selectedColor = new Color(1.3f, 1.3f, 1.3f, 1f);
+        colours.fadeDuration = 0f;
+        input.colors = colours;
+        field.gameObject.SetActive(true);
+        return input;
+    }
+
     // ── Status pill ─────────────────────────────────────────────────────────
 
     /// <summary>Capsule with a glowing dot and a caps label — never colour alone.</summary>

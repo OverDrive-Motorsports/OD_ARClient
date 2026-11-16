@@ -53,6 +53,17 @@ navigation bar follow the Canva design "OverDrive VR – v2" (pages
   gallery. The championship state (hors week-end / week-end / live) is
   decided by the backend data; without the backend, a popup offers to retry.
   Only the profile and settings pages still show placeholder content.
+- Widget catalogue: the "Telemetry" button of the championship page (live
+  and replay states) opens `Organisms/ODWidgetCatalogView` in a window of
+  its own (`Logic/Menu/ODWidgetCatalogPage`), like the race TV: at 2/3
+  of the race window's size, it opens on the left of the race window (or of
+  the TV when it is open), at the same height and facing the user, and its
+  grab bar moves it; the race keeps running.
+  Side bar (title, search, categories with counts, widgets in the user's
+  space), the selected category in the centre, the selected widget on the
+  right (preview, format Small / Large, "Add to my space"). The close button
+  returns to the race in one action. No telemetry widget exists yet, so every
+  category shows the "No widgets available yet" state.
 
 ## Allowed dependencies
 
