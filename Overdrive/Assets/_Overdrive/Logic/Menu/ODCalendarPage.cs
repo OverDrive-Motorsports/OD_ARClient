@@ -3,7 +3,7 @@
  ## OverDrive 2026
  ## All Technical rights reserved
  ##
- ## ODCalendarPage - Calendar page of the main menu (nav tab "Calendrier").
+ ## ODCalendarPage - Calendar page of the main menu (nav tab "Calendar").
  ## Empty for now: the window and its title only (ODCalendarView).
  ##
  */

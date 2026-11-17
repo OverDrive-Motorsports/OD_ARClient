@@ -132,7 +132,7 @@ local.properties
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 
-# XR / MR spécifique
+# XR / MR specific
 Library/
 Packages/
 UserSettings/

@@ -69,7 +69,9 @@ public static class VideoMultiviewSetup
         sceneBounds.Position = new Vector3(600, -337.5f, 0);
         sceneBounds.Size = new Vector3(1200, 675, .01f);
         PrefabUtility.RecordPrefabInstancePropertyModifications(sceneBounds);
-        CourseMediaSetup.ConnectPanel(tv, panel);
+        tv.videoPanel = panel;
+        tv.videoPlayer = panel.GetComponent<UnityEngine.Video.VideoPlayer>();
+        panel.GetComponent<ODVideoPlayerView>().Bind(tv);
         tv.scrubSlider = panel.transform.Find("Progress").GetComponent<Slider>();
         tv.timeLabel = panel.transform.Find("Time").GetComponent<TextMeshProUGUI>();
         EditorUtility.SetDirty(tv); PrefabUtility.RecordPrefabInstancePropertyModifications(tv);

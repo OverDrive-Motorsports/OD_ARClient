@@ -35,8 +35,10 @@ public sealed class ODVideoIcon : MaskableGraphic
                 Line(v, .85f, .3f, .15f, .3f); Line(v, .85f, .3f, .64f, .51f); Line(v, .85f, .3f, .64f, .09f); break;
             case Kind.Expand:
                 for (int x = 0; x < 2; x++) for (int y = 0; y < 2; y++)
-                { float a = x == 0 ? .17f : .83f, b = y == 0 ? .17f : .83f;
-                  Line(v, a, b, a + (x == 0 ? .22f : -.22f), b); Line(v, a, b, a, b + (y == 0 ? .22f : -.22f)); }
+                {
+                    float a = x == 0 ? .17f : .83f, b = y == 0 ? .17f : .83f;
+                    Line(v, a, b, a + (x == 0 ? .22f : -.22f), b); Line(v, a, b, a, b + (y == 0 ? .22f : -.22f));
+                }
                 break;
             case Kind.Map:
                 Line(v, .12f, .2f, .12f, .74f); Line(v, .12f, .74f, .37f, .88f); Line(v, .37f, .88f, .63f, .74f);
@@ -70,7 +72,9 @@ public sealed class ODVideoIcon : MaskableGraphic
     private void Arc(VertexHelper v, Vector2 center, float radius, float begin, float end)
     {
         for (int i = 0; i < 24; i++)
-        { float a = Mathf.Lerp(begin, end, i / 24f) * Mathf.Deg2Rad, b = Mathf.Lerp(begin, end, (i + 1) / 24f) * Mathf.Deg2Rad;
-          Line(v, center.x + Mathf.Cos(a) * radius, center.y + Mathf.Sin(a) * radius, center.x + Mathf.Cos(b) * radius, center.y + Mathf.Sin(b) * radius); }
+        {
+            float a = Mathf.Lerp(begin, end, i / 24f) * Mathf.Deg2Rad, b = Mathf.Lerp(begin, end, (i + 1) / 24f) * Mathf.Deg2Rad;
+            Line(v, center.x + Mathf.Cos(a) * radius, center.y + Mathf.Sin(a) * radius, center.x + Mathf.Cos(b) * radius, center.y + Mathf.Sin(b) * radius);
+        }
     }
 }

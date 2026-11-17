@@ -7,7 +7,7 @@
  ## (championship panel in all its states, replay gallery, categories page).
  ##   • The page background gradient depends on the championship shown
  ##     (F1 red, WEC blue, MotoGP red→orange), never on the page state.
- ##   • The status pill depends on the state (hors direct grey, week-end gold,
+ ##   • The status pill depends on the state (off-air grey, weekend gold,
  ##     live red, replay blue).
  ##   • visionOS look: grey "liquid glass" window (rim, sheen, soft shadow),
  ##     lighter glass platters with concentric corners, capsule controls, and
@@ -22,9 +22,9 @@ using UnityEngine.UI;
 public enum ODStatusStyle
 {
     Loading,
-    OffSeason,   // HORS DIRECT
-    Weekend,     // LIVE · WEEK-END
-    Live,        // LIVE · COURSE
+    OffSeason,   // OFF AIR
+    Weekend,     // LIVE · WEEKEND
+    Live,        // LIVE · RACE
     Replay
 }
 
@@ -55,7 +55,7 @@ public static class ODChampionshipTheme
         bottomRight = ODDesign.Gold,
     };
 
-    /// <summary>Accepts backend codes ("f1") and mock ids ("formula_1", "wec", "motogp").</summary>
+    /// <summary>Accepts backend codes ("f1") and championship ids ("formula_1", "wec", "motogp").</summary>
     public static Palette NeutralPalette => Neutral;
 
     public static Palette For(string championshipId)
@@ -120,7 +120,7 @@ public static class ODChampionshipTheme
     }
 
     /// <summary>
-    /// Page window (design "Fenêtre"): glass over the dimmed room, white 13 % → 5 %
+    /// Page window (design "Window"): glass over the dimmed room, white 13 % → 5 %
     /// from top to bottom, the championship colour glowing in the top-left corner
     /// and its dark tone in the bottom-right one; 1.5-px light rim, radius 64.
     /// The shader mixes the fill at 42 % over the blurred room, hence the alphas.
@@ -158,25 +158,6 @@ public static class ODChampionshipTheme
         surface.shadowSize = 30f;
         surface.shadowAlpha = .30f;
         Rim(surface, 1.5f, .22f, .12f);
-        surface.SetVerticesDirty();
-    }
-
-    /// <summary>
-    /// A single card tinted with its championship (e.g. its tile on the categories
-    /// page). <paramref name="muted"/> keeps a hint of the colour for championships
-    /// that aren't available yet.
-    /// </summary>
-    public static void ApplyTile(ODHomepageSurface surface, Palette palette, bool muted = false)
-    {
-        if (surface == null) return;
-        surface.glass = true;
-        surface.useMiddle = false;
-        surface.topLeft = Glass(palette.topLeft, muted ? .40f : .85f, muted ? .62f : .78f);
-        surface.bottomRight = Glass(palette.middle, .30f, muted ? .52f : .62f);
-        surface.sheen = .06f;
-        surface.shadowSize = 0f;
-        surface.cornerRadius = PlatterRadius;
-        Rim(surface, 1.25f, .14f, .02f);
         surface.SetVerticesDirty();
     }
 

@@ -11,26 +11,22 @@ interactions and display.
 
 ```
 Logic/
-├── Menu/     Navigation and main menu (AppLauncher, OverdriveMainMenu)
-├── Ranking/  Live race ranking (RaceRankingManager)
-├── Search/   Content search/filtering (SearchController)
-└── Video/    Video playback (VideoPlayerController)
+├── Championship/  Championship panel data and states (ODChampionshipDataService)
+├── Menu/          Navigation and main menu (AppLauncher, OverdriveMainMenu)
+├── Ranking/       Live race ranking (RaceRankingManager)
+├── Replay/        Replay catalogue, podium, download to the headset (ODReplayService) and playback clock (ODReplayPlayer)
+└── Video/         Video playback (VideoPlayerController)
 ```
 
 ## Current state
 
-Groups the former `Scripts/UI/` controllers that already did orchestration
-(not just display): menu loading, ranking management, search, video
-playback. They currently rely on the mocks in `Data/Mock/ODMockData.cs`
-while waiting for a real backend.
+Screens load their data through the services (`ODChampionshipDataService`,
+`ODReplayService`), which call [Core](../../Core/Doc/README.md) and map the
+DTOs into entities. There is no demo data: when the backend can't be reached,
+`ODBackendErrorPopup` offers to retry.
 
-See [UI-Refresh-Pattern.md](./UI-Refresh-Pattern.md) for how a screen should
-hold and refresh its Entities (mutate in place, never replace),
-[Example-EntityToODDataTable.md](./Example-EntityToODDataTable.md) for a
-worked example wiring `StandingEntry` into the existing `ODDataTable`
-prefab, and [RaceReplay-DownloadAndPlayback.md](./RaceReplay-DownloadAndPlayback.md)
-for the different case of a full-race download consumed by seeking through
-a local timeline instead of being refreshed.
+See [RaceReplay-DownloadAndPlayback.md](./RaceReplay-DownloadAndPlayback.md)
+for how a replay goes from the backend to the headset, then plays.
 
 ## Backend video (Dev contract)
 
@@ -45,8 +41,9 @@ a local timeline instead of being refreshed.
   closing a camera releases its decoder and allocated texture. The gateway
   Bearer token belongs only to JSON calls and is never attached to media URLs.
 - `Menu/ODSportPage.VideoSessionId` uses the selected live session or replay
-  ID, not the display title or a fabricated mock session. The rest of the
-  app can still show demo data without playing a demo video.
+  ID, not the display title or a fabricated mock session. Downloaded race
+  data continues to play independently through `ODReplayPlayer`, even when
+  no broadcast is available; the removed demo mode is not restored.
 
 ## Allowed dependencies
 

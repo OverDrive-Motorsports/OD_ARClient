@@ -93,7 +93,7 @@ public static class CircuitPreviewSetup
             mount.localPosition = new Vector3(0, -32, -160);
             preview.modelMount = mount;
             preview.circuitLabel = Text(root.transform, "CircuitName", "Baku", new Vector2(0, -263), new Vector2(700, 32), 24);
-            Text(root.transform, "GrabHint", "Déplacer avec la barre blanche", new Vector2(0, -293), new Vector2(700, 22), 17);
+            Text(root.transform, "GrabHint", "Move with the white bar", new Vector2(0, -293), new Vector2(700, 22), 17);
 
             var pointable = root.AddComponent<PointableCanvas>();
             pointable.InjectCanvas(canvas);

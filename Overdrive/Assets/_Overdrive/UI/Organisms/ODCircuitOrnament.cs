@@ -65,7 +65,7 @@ public class ODCircuitOrnament : MonoBehaviour
         Divider(root, x, Height); x += 1f + Gap;
 
         float resetWidth = Width - Pad - x;
-        var reset = PillButton(root, "Reset", "Réinitialiser", x, y, resetWidth, Round);
+        var reset = PillButton(root, "Reset", "Reset", x, y, resetWidth, Round);
         reset.onClick.AddListener(() => ResetRequested?.Invoke());
     }
 

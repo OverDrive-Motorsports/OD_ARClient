@@ -1,9 +1,9 @@
-## Contexte
-<!-- Pourquoi ce PR ? Lien vers le ticket si dispo. -->
+## Context
+<!-- Why this PR? Link to the ticket if available. -->
 
-## Changements
+## Changes
 - 
 
-## Vérifications
-- [ ] Tests ajoutés ou mis à jour si nécessaire
-- [ ] Docs mises à jour si nécessaire
+## Checks
+- [ ] Tests added or updated if needed
+- [ ] Docs updated if needed

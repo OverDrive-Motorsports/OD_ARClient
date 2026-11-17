@@ -83,20 +83,6 @@ public class AppLauncher : MonoBehaviour
         menuCanvas.transform.rotation = Quaternion.LookRotation(fwd, Vector3.up);
     }
 
-    /// <summary>Toggle visibility. Re-snaps in front of you when shown again.</summary>
-    public void ToggleMenu()
-    {
-        if (menuCanvas == null) return;
-
-        if (menuCanvas.gameObject.activeSelf && _cg.alpha > 0.5f)
-            StartCoroutine(FadeOut());
-        else
-        {
-            SnapMenuInFront();
-            StartCoroutine(FadeIn());
-        }
-    }
-
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private IEnumerator WaitForTracking()
@@ -138,12 +124,5 @@ public class AppLauncher : MonoBehaviour
         for (float e = 0; e < fadeInDuration; e += Time.deltaTime)
         { _cg.alpha = Mathf.Clamp01(e / fadeInDuration); yield return null; }
         _cg.alpha = 1f;
-    }
-
-    private IEnumerator FadeOut()
-    {
-        for (float e = 0; e < fadeInDuration; e += Time.deltaTime)
-        { _cg.alpha = 1f - Mathf.Clamp01(e / fadeInDuration); yield return null; }
-        _cg.alpha = 0f;
     }
 }

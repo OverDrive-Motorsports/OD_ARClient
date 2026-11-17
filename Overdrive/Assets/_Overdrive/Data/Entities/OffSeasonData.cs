@@ -4,7 +4,7 @@
  ## All Technical rights reserved
  ##
  ## OffSeasonData - Data shown by the championship panel in its off-season
- ## ("hors direct") state: next event countdown, upcoming calendar and season
+ ## ("off air") state: next event countdown, upcoming calendar and season
  ## standings grouped by category. Pure data: no MonoBehaviour, no logic.
  ##
  */
@@ -16,7 +16,7 @@ using UnityEngine;
 [Serializable]
 public struct OffSeasonEvent
 {
-    public string name;       // "24 Heures du Mans"
+    public string name;       // "24 Hours of Le Mans"
     public string location;   // "Circuit de la Sarthe · France"
     public int round;      // Championship round number, 0 when unknown
     public DateTime startsAt;

@@ -6,7 +6,7 @@
  ## ODSegmentedControl - Segmented control of the design system: recessed
  ## capsule track (black 22 %, 6-px inset) and a white 24 % pill that glides
  ## (spring, slight stretch) under the selected segment, labels 100 % / 66 %.
- ## The "mode" variant (Profil / Réglages) uses a solid white pill with dark
+ ## The "mode" variant (Profile / Settings) uses a solid white pill with dark
  ## text. Built at runtime; display + selection only, the caller reacts to Changed.
  ##
  */

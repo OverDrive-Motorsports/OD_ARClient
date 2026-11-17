@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Behaviour of the saved category directory, laid out as the design's catalogue
-/// (Canva 02.2): caps line + "Championnats", Tous / Favoris / En direct filter and
+/// (Canva 02.2): caps line + "Championships", All / Favourites / Live filter and
 /// a round search button, then the championship posters in a 3 x 2 grid.
 /// </summary>
 public sealed class ODCategoriesPage : MonoBehaviour
@@ -38,19 +38,20 @@ public sealed class ODCategoriesPage : MonoBehaviour
     private const string FavoritePrefix = "Overdrive.CategoryFavorite.";
 
     // Catalogue content, in card order (the design's order). Card ids stay the builder's
-    // ("f1", "coming-N"); only the F1 card opens for now. Season figures are illustrative.
+    // ("f1", "coming-N"); only the F1 card opens for now. No season figures (round, next
+    // race, progress, live) until the backend provides them per championship.
     private static readonly ODChampionshipTile.Info[] Championships =
     {
-        Tile("f1",      "F1",  "Formule 1",       "Monoplaces · 24 Grands Prix",        "Manche 19 / 24",  "États-Unis · dans 11 j", .79f, false),
-        Tile("motogp",  "MGP", "MotoGP",          "Grand Prix moto · 22 manches",       "Manche 19 / 22",  "Australie · ce week-end", .86f, true),
-        Tile("wec",     "WEC", "World Endurance", "Prototypes & GT · 8 manches",        "Manche 7 / 8",    "Bahreïn · dans 12 j",    .88f, false),
-        Tile("fe",      "FE",  "Formula E",       "Monoplaces électriques",             "Pré-saison",      "Tests · demain",         0f,   false),
-        Tile("indycar", "IC",  "IndyCar",         "Ovales & circuits routiers",         "Saison terminée", "Reprise en mars",        1f,   false),
-        Tile("wrc",     "WRC", "WRC",             "Championnat du monde des rallyes",   "Manche 13 / 14",  "Espagne · ce week-end",  .93f, false),
+        Tile("f1",      "F1",  "Formula 1",       "Single-seaters · 24 Grands Prix"),
+        Tile("motogp",  "MGP", "MotoGP",          "Motorcycle Grand Prix · 22 rounds"),
+        Tile("wec",     "WEC", "World Endurance", "Prototypes & GT · 8 rounds"),
+        Tile("fe",      "FE",  "Formula E",       "Electric single-seaters"),
+        Tile("indycar", "IC",  "IndyCar",         "Ovals & road courses"),
+        Tile("wrc",     "WRC", "WRC",             "World Rally Championship"),
     };
 
-    private static ODChampionshipTile.Info Tile(string id, string code, string name, string subtitle, string round, string next, float progress, bool live) =>
-        new ODChampionshipTile.Info { id = id, code = code, name = name, subtitle = subtitle, round = round, next = next, progress = progress, live = live };
+    private static ODChampionshipTile.Info Tile(string id, string code, string name, string subtitle) =>
+        new ODChampionshipTile.Info { id = id, code = code, name = name, subtitle = subtitle, round = "", next = "" };
 
     private enum Scope { All, Favorites, Live }
     private Scope _scope;
@@ -97,7 +98,7 @@ public sealed class ODCategoriesPage : MonoBehaviour
         {
             ODDesign.Place(caps.transform, 72f, 60f, 900f, 30f);
             ODDesign.Style(caps, ODDesign.PageCaps, ODDesign.Weight.SemiBold, ODDesign.Secondary, caps: true);
-            caps.text = $"Catalogue · {cards.Length} compétitions";
+            caps.text = $"Catalogue · {cards.Length} competitions";
         }
         var title = transform.Find("Heading")?.GetComponent<TextMeshProUGUI>();
         if (title != null)
@@ -105,14 +106,14 @@ public sealed class ODCategoriesPage : MonoBehaviour
             ODDesign.Place(title.transform, 72f, 94f, 900f, 74f);
             ODDesign.Style(title, ODDesign.TitleXL, ODDesign.Weight.Bold, ODDesign.Primary);
         }
-        if (profileButton != null) profileButton.gameObject.SetActive(false);   // the tab bar holds Profil
+        if (profileButton != null) profileButton.gameObject.SetActive(false);   // the tab bar holds Profile
 
         // Right of the header: filter + round search button; the search field takes the filter's place when open.
         const float headerBottom = 162f;
         var searchButton = ODDesign.IconButton(transform, "SearchButton", 1920f - 72f - 68f, headerBottom - 68f, 68f, ODNavigationIcon.Symbol.Search);
         searchButton.onClick.AddListener(ToggleSearch);
         _filter = ODSegmentedControl.Create(transform, ODDesign.Px(1920f - 72f - 68f - 16f - 470f), ODDesign.Px(headerBottom - 68f),
-            ODDesign.Px(470f), ODDesign.Px(68f), new[] { "Tous", "Favoris", "En direct" }, 0, ODDesign.Px(22f));
+            ODDesign.Px(470f), ODDesign.Px(68f), new[] { "All", "Favourites", "Live" }, 0, ODDesign.Px(22f));
         _filter.Changed += index => { _scope = (Scope)index; Filter(search != null ? search.text : ""); };
 
         if (search != null)
@@ -168,10 +169,10 @@ public sealed class ODCategoriesPage : MonoBehaviour
         ODChampionshipTheme.ApplyTypography(transform);
 
         var heading = transform.Find("Heading")?.GetComponent<TextMeshProUGUI>();
-        if (heading != null) heading.text = "Championnats";
-        if (search != null && search.placeholder is TextMeshProUGUI hint) hint.text = "Rechercher un championnat";
+        if (heading != null) heading.text = "Championships";
+        if (search != null && search.placeholder is TextMeshProUGUI hint) hint.text = "Search a championship";
         var empty = noResults != null ? noResults.GetComponent<TextMeshProUGUI>() : null;
-        if (empty != null) empty.text = "Aucun championnat trouvé";
+        if (empty != null) empty.text = "No championship found";
 
         // The 3-column grid runs slightly past the scroll viewport: widen its mask so the right column isn't cut.
         var mask = scroll != null && scroll.viewport != null ? scroll.viewport.GetComponent<RectMask2D>() : null;

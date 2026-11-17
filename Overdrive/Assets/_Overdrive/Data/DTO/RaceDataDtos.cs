@@ -6,11 +6,27 @@
  ## RaceDataDtos - Mirrors of race-data-service JSON (gateway prefix
  ## /v1/race-data). camelCase keys, bare arrays, no envelope.
  ## Source of truth: services/race-data-service/src/core/domain/race_live.entity.go
+ ## and replay_catalog.entity.go
  ##
  */
 
 using System;
 using System.Collections.Generic;
+
+/// <summary>
+/// GET /championships/{code}/replays — sessions that can be replayed (telemetry and car
+/// locations stored), newest first. type: race | sprint | quali | practice.
+/// </summary>
+public class ReplayCatalogEntryDto
+{
+    public string sessionId;
+    public string name;
+    public string type;
+    public DateTime startTime;
+    public int seasonYear;
+    public string eventName;
+    public string circuit;
+}
 
 /// <summary>GET /sessions/{id}/race/position — latest sample per driver, unordered.</summary>
 public class RacePositionDto

@@ -24,7 +24,7 @@ public class WindowHandle : MonoBehaviour
     [Tooltip("Gap (m) between the followed window's bottom edge and the pill.")]
     public float followGap = 0.02f;
     /// <summary>
-    /// Design window bar (Canva "Fenêtre, barre & ornement"): 320 x 18 px under a
+    /// Design window bar (Canva "Window, bar & ornament"): 320 x 18 px under a
     /// 1920-px window, i.e. 1/6 of the window width, white 62 % at rest. Same on every
     /// window; a constant so stale serialized scene values can't override it.
     /// </summary>

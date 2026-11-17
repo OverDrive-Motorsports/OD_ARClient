@@ -31,13 +31,31 @@ public class ODApiConfig : ScriptableObject
     [Tooltip("Championship code exposed by championship-service (OpenF1 ingestion uses \"f1\").")]
     public string championshipCode = "f1";
 
+    [Tooltip("OpenF1 session_key of a session to always show (e.g. 9998), or a full backend id " +
+             "(\"openf1:session:9998\"). Empty = sessions found through the championship's events only.")]
+    public string sessionKey = "";
+
     [Tooltip("Per-request timeout, in seconds.")]
     public int timeoutSeconds = 8;
+
+    [Tooltip("A replay download gives up after this many seconds without receiving data (the backend builds the whole file before sending it).")]
+    public int downloadStallSeconds = 60;
 
     [Tooltip("Polling period of the live session, in seconds (the backend has no WebSocket yet).")]
     public float livePollSeconds = 5f;
 
     public string BaseUrl => (Application.isEditor ? editorBaseUrl : deviceBaseUrl).TrimEnd('/');
+
+    /// <summary>Backend id of <see cref="sessionKey"/> (ingestion ids are "provider:session:key"), null when unset.</summary>
+    public string PinnedSessionId
+    {
+        get
+        {
+            string key = (sessionKey ?? "").Trim();
+            if (key.Length == 0) return null;
+            return key.Contains(":") ? key : "openf1:session:" + key;
+        }
+    }
 
     static ODApiConfig _instance;
 

@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
-/// <summary>Course-owned TV panel. Never replaces or hides the course window.</summary>
+/// <summary>Race-window TV panel. Never replaces or hides the race window.</summary>
 public sealed class VideoPlayerController : MonoBehaviour
 {
     public ODSportPage course;
@@ -96,7 +96,7 @@ public sealed class VideoPlayerController : MonoBehaviour
         }
         if (standingsPanel != null) standingsPanel.SetActive(session);
         if (standingsHeading != null) standingsHeading.text = mode == ODSportPage.Mode.Replay
-            ? "Classement de la course" : "Classement de la session";
+            ? "Race standings" : "Session standings";
         if (titleLabel != null) titleLabel.text = videoPanel != null && videoPanel.GetComponent<ODVideoPlayerView>() != null
             ? title : (mode == ODSportPage.Mode.Replay ? "TV Replay" : "TV Live") + " · " + title;
         if (!session) HideVideo();
@@ -266,7 +266,7 @@ public sealed class VideoPlayerController : MonoBehaviour
 
     private void UpdateControls()
     {
-        if (playPauseLabel != null) playPauseLabel.text = WantsPlayback ? "Pause" : "Lecture";
+        if (playPauseLabel != null) playPauseLabel.text = WantsPlayback ? "Pause" : "Play";
         if (playbackStatus != null) playbackStatus.text = StatusForFeed(View != null ? View.PrimaryFeed : -1);
         RefreshView();
         if (tvButtons == null) return;
