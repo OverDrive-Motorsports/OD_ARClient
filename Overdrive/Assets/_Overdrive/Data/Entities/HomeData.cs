@@ -25,7 +25,7 @@ public enum HomeState
 [Serializable]
 public struct HomeSession
 {
-    public string name;       // "Essais libres 1", "Sprint", "Course"
+    public string name;       // "Free Practice 1", "Sprint", "Race"
     public DateTime startsAt; // local time
     public bool finished;
 }
@@ -34,14 +34,14 @@ public struct HomeSession
 public class HomeNextEvent
 {
     public string championshipId;    // "f1", "motogp"
-    public string championshipName;  // "Formule 1"
+    public string championshipName;  // "Formula 1"
     public string eventName;         // "Grand Prix de Malaisie"
     public string location;          // "Sepang International Circuit · Malaysia"
     public string place;             // "Phillip Island" — short, for the caps line
     public int round;                // 19 — 0 when unknown
     public int roundCount;           // 22 — 0 when unknown
     public DateTime startsAt;        // local time
-    /// <summary>Weekend only: what just happened ("Qualifications terminées · pole pour Márquez"), null when nothing yet.</summary>
+    /// <summary>Weekend only: what just happened ("Qualifying over · pole for Márquez"), null when nothing yet.</summary>
     public string headline;
     /// <summary>Key sessions in chronological order (at most three): during a weekend, the last finished one comes first.</summary>
     public List<HomeSession> sessions = new();
@@ -65,7 +65,7 @@ public struct HomeLeader
     public float points;
 }
 
-/// <summary>Tile of the "Cette semaine" / "Aussi ce week-end" row: another event, or a replay of the featured one.</summary>
+/// <summary>Tile of the "This week" / "Also this weekend" row: another event, or a replay of the featured one.</summary>
 [Serializable]
 public struct HomeAgendaItem
 {

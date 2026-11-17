@@ -18,7 +18,7 @@ public static class ODHomeMapper
 {
     /// <summary>How many sessions the countdown card lists.</summary>
     public const int MaxSessions = 3;
-    /// <summary>Tiles of the "Cette semaine" / "Aussi ce week-end" row.</summary>
+    /// <summary>Tiles of the "This week" / "Also this weekend" row.</summary>
     public const int MaxAgenda = 3;
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -52,7 +52,7 @@ public static class ODHomeMapper
     public static HomeNextEvent ToLiveEvent(ChampionshipSummaryDto championship, string championshipCode, EventSummaryDto evt) =>
         Featured(championship, championshipCode, evt);
 
-    /// <summary>"Manche 19 / 22": position of <paramref name="evt"/> in its season.</summary>
+    /// <summary>"Round 19 / 22": position of <paramref name="evt"/> in its season.</summary>
     public static void SetRound(HomeNextEvent data, List<EventSummaryDto> events, EventSummaryDto evt)
     {
         if (data == null || evt == null || events == null) return;
@@ -111,43 +111,42 @@ public static class ODHomeMapper
     static bool IsRace(SessionSummaryDto session) =>
         session.type == "race" || (session.type == "sprint" && ODChampionshipMapper.SessionName(session) == "Sprint");
 
-    /// <summary>Spelled-out session name ("EL1" reads "Essais libres 1" on the Home).</summary>
+    /// <summary>Spelled-out session name ("FP1" reads "Free Practice 1" on the Home).</summary>
     public static string SessionLongName(SessionSummaryDto session) => LongName(ODChampionshipMapper.SessionName(session));
 
     static string LongName(string name) =>
-        name != null && name.StartsWith("EL") && name.Length > 2 ? "Essais libres " + name.Substring(2) : name;
+        name != null && name.StartsWith("FP") && name.Length > 2 ? "Free Practice " + name.Substring(2) : name;
 
     // ═══════════════════════════════════════════════════════════════════════
     // What just happened (weekend)
     // ═══════════════════════════════════════════════════════════════════════
 
-    /// <summary>"Qualifications terminées · pole pour Márquez", "Course terminée", "Essais libres 2 terminés · meilleur temps pour Martín".</summary>
+    /// <summary>"Qualifying over · pole for Márquez", "Race over", "Free Practice 2 over · fastest lap by Martín".</summary>
     public static string Headline(string sessionName, string winner)
     {
         if (string.IsNullOrEmpty(sessionName)) return null;
         string name = LongName(sessionName);
-        string done = name.StartsWith("Qualif") ? "terminées"
-                    : name.StartsWith("Essais") ? "terminés"
-                    : name == "Sprint" ? "terminé" : "terminée";
-        if (string.IsNullOrEmpty(winner)) return name + " " + done;
-        string result = name.StartsWith("Qualif") ? "pole pour " + winner
-                      : name.StartsWith("Essais") ? "meilleur temps pour " + winner
-                      : name == "Course" || name == "Sprint" ? "victoire " + Of(winner)
-                      : winner + " en tête";
-        return name + " " + done + " · " + result;
+        if (string.IsNullOrEmpty(winner)) return name + " over";
+        string result = IsQualifying(name) ? "pole for " + winner
+                      : IsPractice(name) ? "fastest lap by " + winner
+                      : IsRaceName(name) ? "won by " + winner
+                      : winner + " leads";
+        return name + " over · " + result;
     }
 
-    /// <summary>Short result for a replay tile: "Pole : Márquez", "Victoire : Bagnaia"; null without a winner.</summary>
+    /// <summary>Short result for a replay tile: "Pole: Márquez", "Win: Bagnaia"; null without a winner.</summary>
     public static string ResultLabel(string sessionName, string winner)
     {
         if (string.IsNullOrEmpty(winner)) return null;
         string name = LongName(sessionName) ?? "";
-        if (name.StartsWith("Qualif")) return "Pole : " + winner;
-        if (name == "Course" || name == "Sprint") return "Victoire : " + winner;
-        return "Meilleur temps : " + winner;
+        if (IsQualifying(name)) return "Pole: " + winner;
+        if (IsRaceName(name)) return "Win: " + winner;
+        return "Fastest lap: " + winner;
     }
 
-    static string Of(string name) => "AEIOUYÉÈÀÂ".IndexOf(char.ToUpperInvariant(name[0])) >= 0 ? "d’" + name : "de " + name;
+    static bool IsQualifying(string name) => name.Contains("Qualifying");
+    static bool IsPractice(string name) => name.StartsWith("Free Practice") || name == "Practice";
+    static bool IsRaceName(string name) => name == "Race" || name == "Sprint";
 
     // ═══════════════════════════════════════════════════════════════════════
     // Rest of the week
@@ -202,69 +201,4 @@ public static class ODHomeMapper
             lead = ranked.Count > 1 ? ranked[0].points - ranked[1].points : -1f,
         };
     }
-
-    // ── Demo data (existing mobile mocks, picked from the backend error popup) ──
-
-    public static HomeNextEvent ToNextEvent(OffSeasonData offSeason)
-    {
-        if (offSeason?.nextEvent == null) return null;
-        var evt = offSeason.nextEvent.Value;
-        return new HomeNextEvent
-        {
-            championshipId = offSeason.championshipId,
-            championshipName = offSeason.headline,
-            eventName = evt.name,
-            location = evt.location,
-            place = evt.location,
-            startsAt = evt.startsAt,
-        };
-    }
-
-    public static HomeNextEvent ToWeekendEvent(WeekendData weekend, string championshipName)
-    {
-        if (weekend == null) return null;
-        var sessions = weekend.sessions.OrderBy(s => s.startsAt).ToList();
-        var data = new HomeNextEvent
-        {
-            championshipId = weekend.championshipId,
-            championshipName = championshipName,
-            eventName = weekend.eventName,
-            location = weekend.circuit?.name,
-            place = weekend.circuit?.name,
-            startsAt = sessions.Count > 0 ? sessions[0].startsAt : DateTime.Now,
-        };
-        AddKeySessions(data, sessions.Select(s => new Candidate
-        {
-            name = LongName(s.name),
-            startsAt = s.startsAt,
-            race = s.name == "Course" || s.name == "Sprint",
-            finished = s.status == WeekendSessionStatus.Completed,
-        }), true);
-        var last = sessions.LastOrDefault(s => s.status == WeekendSessionStatus.Completed);
-        data.headline = Headline(last.name, null);
-        return data;
-    }
-
-    public static HomeNextEvent ToLiveEvent(LiveSessionData live, string championshipName, string eventName) => live == null ? null : new HomeNextEvent
-    {
-        championshipId = live.championshipId,
-        championshipName = championshipName,
-        eventName = eventName,
-        location = live.circuitName,
-        place = live.circuitName,
-        startsAt = DateTime.Now,
-    };
-
-    public static HomeAgendaItem ToAgendaItem(OffSeasonData offSeason, OffSeasonEvent evt) => new HomeAgendaItem
-    {
-        championshipId = offSeason.championshipId,
-        championshipName = offSeason.headline,
-        title = evt.name,
-        location = evt.location,
-        startsAt = evt.startsAt,
-        endsAt = evt.startsAt.AddDays(2),
-        replayIndex = -1,
-    };
-
-    public static HomeReplay ToReplay(ReplaySummary summary) => new HomeReplay { summary = summary };
 }

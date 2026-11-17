@@ -28,8 +28,8 @@ using UnityEngine.UI;
 /// (modePanels) — this component only fills content. Display only: buttons
 /// raise events, Logic decides what they do.
 ///
-/// The live running order (CourseStandings) is deliberately not touched: it is
-/// driven by RaceRankingManager until the panel is connected to live timing.
+/// The running order table (CourseStandings) is filled by RaceRankingManager,
+/// fed by ODSportPage (live data, replay results or replay playback).
 /// </summary>
 public partial class ODChampionshipPanel : MonoBehaviour
 {
@@ -53,8 +53,8 @@ public partial class ODChampionshipPanel : MonoBehaviour
 
     enum State { None, OffSeason, Weekend, Live, Replay }
 
-    static readonly string[] FrenchDays = { "Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam" };
-    static readonly string[] FrenchMonths = { "JAN", "FÉV", "MAR", "AVR", "MAI", "JUIN", "JUIL", "AOÛT", "SEPT", "OCT", "NOV", "DÉC" };
+    static readonly string[] Days = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    static readonly string[] Months = { "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC" };
 
     /// <summary>A standings card: its own heading + a scrollable list of tables.</summary>
     sealed class StandingsView
@@ -64,7 +64,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
         public float padPx;
         public bool wide;
         public bool Narrow => !wide;
-        /// <summary>Pilotes / Équipes choice of each category, kept across data refreshes.</summary>
+        /// <summary>Drivers / Teams choice of each category, kept across data refreshes.</summary>
         public readonly Dictionary<string, StandingType> types = new Dictionary<string, StandingType>();
         /// <summary>Controls placed on the card's title line (category button, switch), rebuilt with the list.</summary>
         public readonly List<GameObject> headerControls = new List<GameObject>();
@@ -104,12 +104,12 @@ public partial class ODChampionshipPanel : MonoBehaviour
         Resolve();
         _state = State.None;
         SetLabel(heading, title);
-        SetLabel(subtitle, "Connexion au backend…");
-        ApplyTheme(null, ODStatusStyle.Loading, "Chargement");
+        SetLabel(subtitle, "Connecting to the backend…");
+        ApplyTheme(null, ODStatusStyle.Loading, "Loading");
         AfterStatus(null);
     }
 
-    /// <summary>Off-season ("HORS DIRECT"): next event countdown, calendar, season standings.</summary>
+    /// <summary>Off-season ("OFF AIR"): next event countdown, calendar, season standings.</summary>
     public void ShowOffSeason(OffSeasonData data)
     {
         Resolve();
@@ -118,12 +118,12 @@ public partial class ODChampionshipPanel : MonoBehaviour
         _offSeason = data;
 
         SetLabel(heading, data != null ? data.headline : "");
-        ApplyTheme(data?.championshipId, ODStatusStyle.OffSeason, "Hors direct");
+        ApplyTheme(data?.championshipId, ODStatusStyle.OffSeason, "Off air");
         AfterStatus(null);
 
         OffSeasonEvent? next = data != null ? data.nextEvent : null;
-        SetText(_nextEventCard, "MockEvent", next.HasValue ? next.Value.name : "Inter-saison");
-        SetText(_nextEventCard, "Sport", next.HasValue ? next.Value.location : "Aucun événement programmé");
+        SetText(_nextEventCard, "MockEvent", next.HasValue ? next.Value.name : "Off-season");
+        SetText(_nextEventCard, "Sport", next.HasValue ? next.Value.location : "No event scheduled");
         _nextEventCard?.Find("ViewEvent")?.gameObject.SetActive(next.HasValue);
 
         RefreshOffSeasonCountdown();
@@ -131,7 +131,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
         RenderStandings(_offSeasonStandings, data != null ? data.standings : null, StandingType.Drivers);
     }
 
-    /// <summary>Event weekend ("LIVE · WEEK-END"): circuit/weather, next session, programme, standings.</summary>
+    /// <summary>Event weekend ("LIVE · WEEKEND"): circuit/weather, next session, programme, standings.</summary>
     public void ShowWeekend(WeekendData data)
     {
         Resolve();
@@ -142,7 +142,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
         WeekendCircuit? circuit = data != null ? data.circuit : null;
         SetLabel(heading, data != null ? data.eventName : "");
         SetLabel(subtitle, circuit.HasValue ? JoinNonEmpty(" · ", circuit.Value.name, circuit.Value.location) : "");
-        ApplyTheme(data?.championshipId, ODStatusStyle.Weekend, "Live · Week-end");
+        ApplyTheme(data?.championshipId, ODStatusStyle.Weekend, "Live · Weekend");
         AfterStatus(null);
         StyleNextSession(_nextSessionCard);
 
@@ -153,7 +153,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
         RenderStandings(_weekendStandings, standings, StandingType.Drivers);
     }
 
-    /// <summary>Live session ("LIVE · COURSE"): lap progress, podium, track status.</summary>
+    /// <summary>Live session ("LIVE · RACE"): lap progress, podium, track status.</summary>
     public void ShowLive(LiveSessionData data)
     {
         Resolve();
@@ -161,8 +161,8 @@ public partial class ODChampionshipPanel : MonoBehaviour
 
         string session = data != null && !string.IsNullOrEmpty(data.sessionName) ? data.sessionName : "Session";
         string lap = data == null || data.currentLap <= 0 ? ""
-                       : data.totalLaps > 0 ? $"Tour {data.currentLap} / {data.totalLaps}"
-                                            : $"Tour {data.currentLap}";
+                       : data.totalLaps > 0 ? $"Lap {data.currentLap} / {data.totalLaps}"
+                                            : $"Lap {data.currentLap}";
 
         LayoutLive(liveSection);
         LayoutCourseStandings();
@@ -192,14 +192,51 @@ public partial class ODChampionshipPanel : MonoBehaviour
         LayoutCourseStandings();
         SetCourseColumns(replay: true);
         SetLabel(heading, s.grandPrix);
-        SetLabel(subtitle, JoinNonEmpty(" · ", ChampionshipName(s.championshipId) ?? s.championshipName, s.sessionName, string.IsNullOrEmpty(s.season) ? null : "Saison " + s.season, data.location));
+        SetLabel(subtitle, JoinNonEmpty(" · ", ChampionshipName(s.championshipId) ?? s.championshipName, s.sessionName, string.IsNullOrEmpty(s.season) ? null : "Season " + s.season, data.location));
         ApplyTheme(s.championshipId, ODStatusStyle.Replay, "Replay");
         AfterStatus(null);
 
         var circuit = Child(replaySection, "Circuit");
         BindPodium(Child(replaySection, "Podium"), data.results);
-        BindLapProgress(circuit, JoinNonEmpty(" · ", data.location, data.totalLaps > 0 ? $"{data.totalLaps} tours" : null), "", 1f);
+        BindLapProgress(circuit, JoinNonEmpty(" · ", data.location, data.totalLaps > 0 ? $"{data.totalLaps} laps" : null), "", 1f);
         BindTrackStatus(circuit, null);
+    }
+
+    /// <summary>The replay card's video screen: the track map is drawn over it during playback.</summary>
+    public RectTransform ReplayScreen
+    {
+        get
+        {
+            Resolve();
+            return Child(Child(replaySection, "ReplayHero"), "Screen");
+        }
+    }
+
+    /// <summary>"Watch replay" was pressed (capsule or video screen) on the replay page.</summary>
+    public event System.Action ReplayWatchPressed;
+
+    /// <summary>Replay playback starts: the table shows the running order with the live columns (tyres, stops, last lap).</summary>
+    public void BeginReplayPlayback()
+    {
+        Resolve();
+        if (_state != State.Replay) return;
+        SetCourseColumns(replay: false);
+        var heading = transform.Find("CourseStandings/Heading")?.GetComponent<TextMeshProUGUI>();
+        if (heading != null) heading.text = "Race standings";
+    }
+
+    /// <summary>Replay playback: the podium follows the running order at the replay time.</summary>
+    public void ShowReplayFrame(LiveSessionData frame)
+    {
+        Resolve();
+        if (_state == State.Replay) BindPodium(Child(replaySection, "Podium"), frame != null ? frame.entries : null);
+    }
+
+    /// <summary>Replay playback: "Lap 12 / 56 · 0:21:45" on the circuit card.</summary>
+    public void SetReplayProgress(string text)
+    {
+        Resolve();
+        if (_state == State.Replay) SetText(Child(replaySection, "Circuit"), "LapProgress", text);
     }
 
     /// <summary>Background from the championship, pill from the state, cards as glass.</summary>
@@ -258,7 +295,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
     {
         switch (ODDesign.Normalise(id))
         {
-            case "f1": return "Formule 1";
+            case "f1": return "Formula 1";
             case "wec": return "World Endurance";
             case "motogp": return "MotoGP";
             case "indycar": return "IndyCar";
@@ -283,7 +320,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
 
         FindButton(_nextEventCard, "ViewEvent")?.onClick.AddListener(onViewEvent.Invoke);
         FindButton(standingsCard, "FullStandings")?.onClick.AddListener(onFullStandings.Invoke);
-        // The builder's Pilotes / Équipes buttons give way to one segmented control per category.
+        // The builder's Drivers / Teams buttons give way to one segmented control per category.
         Child(standingsCard, "Drivers")?.gameObject.SetActive(false);
         Child(standingsCard, "Teams")?.gameObject.SetActive(false);
 
@@ -305,10 +342,10 @@ public partial class ODChampionshipPanel : MonoBehaviour
         SetText(_nextEventCard, "CountdownValue1", next.HasValue ? span.Hours.ToString("00") : "--");
         SetText(_nextEventCard, "CountdownValue2", next.HasValue ? span.Minutes.ToString("00") : "--");
 
-        SetLabel(subtitle, !next.HasValue ? "Inter-saison"
-                         : days > 1 ? $"Prochain event dans {days} jours"
-                         : days == 1 ? "Prochain event demain"
-                                          : "Prochain event aujourd'hui");
+        SetLabel(subtitle, !next.HasValue ? "Off-season"
+                         : days > 1 ? $"Next event in {days} days"
+                         : days == 1 ? "Next event tomorrow"
+                                          : "Next event today");
     }
 
     /// <summary>As many design rows (80-px badge, 29-px title) as the card holds, after the next event.</summary>
@@ -329,12 +366,12 @@ public partial class ODChampionshipPanel : MonoBehaviour
             float y = shown * (rowH + gap);
             bool hasRound = evt.round > 0;
             var badge = ODDesign.Fill(_calendarRows, "RoundBadge", 0f, y, 80f, 80f, ODDesign.Avatar, 26f);
-            ODDesign.Text(badge.transform, "Label", hasRound ? "Manche" : FrenchMonths[evt.startsAt.Month - 1], 0f, 12f, 80f, 20f, 13f,
+            ODDesign.Text(badge.transform, "Label", hasRound ? "Round" : Months[evt.startsAt.Month - 1], 0f, 12f, 80f, 20f, 13f,
                 ODDesign.Weight.SemiBold, ODDesign.Secondary, TextAlignmentOptions.Center, caps: true, trackingEm: .08f);
             ODDesign.Text(badge.transform, "Number", hasRound ? evt.round.ToString() : evt.startsAt.Day.ToString(), 0f, 30f, 80f, 40f, 30f,
                 ODDesign.Weight.Bold, ODDesign.Primary, TextAlignmentOptions.Center);
             ODDesign.Text(_calendarRows, "Name", evt.name, 102f, y + 6f, width - 102f, 38f, 29f, ODDesign.Weight.SemiBold);
-            ODDesign.Text(_calendarRows, "Location", JoinNonEmpty(" · ", evt.location, $"{FrenchDays[(int)evt.startsAt.DayOfWeek]} {evt.startsAt:dd/MM}"),
+            ODDesign.Text(_calendarRows, "Location", JoinNonEmpty(" · ", evt.location, $"{Days[(int)evt.startsAt.DayOfWeek]} {evt.startsAt:dd/MM}"),
                 102f, y + 46f, width - 102f, 30f, 21f, ODDesign.Weight.Regular, ODDesign.Muted);
             shown++;
         }
@@ -363,7 +400,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
             foreach (Transform child in programCard)
                 if (child.name.StartsWith("Session") || child.name.StartsWith("Time") || child.name == "Divider")
                     child.gameObject.SetActive(false);
-            _programContent = BuildScrollArea(programCard, ODDesign.Px(96f), programCard.rect.height - ODDesign.Px(36f + 72f + 22f), 36f);   // above "Suivre le direct"
+            _programContent = BuildScrollArea(programCard, ODDesign.Px(96f), programCard.rect.height - ODDesign.Px(36f + 72f + 22f), 36f);   // above "Follow live"
         }
 
         _weekendStandings = BuildStandingsView(standingsCard, standingsCard != null ? standingsCard.rect.height - ODDesign.Px(30f) : 0f, 36f);
@@ -372,11 +409,10 @@ public partial class ODChampionshipPanel : MonoBehaviour
     void BindCircuitWeather(WeekendCircuit? circuit, WeekendWeather? weather)
     {
         bool c = circuit.HasValue, w = weather.HasValue;
-        // Order matches the builder's labels: Longueur, Tours, Pluie, Air, Piste, Vent.
-        CultureInfo fr = CultureInfo.GetCultureInfo("fr-FR");
+        // Order matches the builder's labels: Length, Laps, Rain, Air, Track, Wind.
         string[] values =
         {
-            c && circuit.Value.lengthKm > 0 ? $"{circuit.Value.lengthKm.ToString("0.###", fr)} km" : "--",
+            c && circuit.Value.lengthKm > 0 ? $"{circuit.Value.lengthKm.ToString("0.###", CultureInfo.InvariantCulture)} km" : "--",
             c && circuit.Value.totalLaps > 0 ? circuit.Value.totalLaps.ToString() : "--",
             w && weather.Value.rainChancePercent >= 0 ? $"{weather.Value.rainChancePercent} %" : "--",
             w ? Degrees(weather.Value.airTempC) : "--",
@@ -389,7 +425,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
 
     static string Degrees(float value) => float.IsNaN(value) ? "--" : $"{value:0}°";
 
-    /// <summary>Rebuilt periodically so "dans 12 min" and the next-session countdown stay current.</summary>
+    /// <summary>Rebuilt periodically so "in 12 min" and the next-session countdown stay current.</summary>
     void RefreshWeekendSchedule()
     {
         var sessions = _weekend != null ? _weekend.sessions : null;
@@ -408,17 +444,17 @@ public partial class ODChampionshipPanel : MonoBehaviour
     void BindNextSession(List<WeekendSession> sessions, int liveIndex, int nextIndex)
     {
         string name, number = "", unit = "";
-        if (liveIndex >= 0) { name = sessions[liveIndex].name; number = "EN"; unit = "cours"; }
+        if (liveIndex >= 0) { name = sessions[liveIndex].name; number = "LIVE"; unit = "in progress"; }
         else if (nextIndex >= 0)
         {
             name = sessions[nextIndex].name;
             TimeSpan span = sessions[nextIndex].startsAt - DateTime.Now;
             if (span < TimeSpan.Zero) span = TimeSpan.Zero;
             if (span.TotalMinutes < 60) { number = Mathf.CeilToInt((float)span.TotalMinutes).ToString(); unit = "minutes"; }
-            else if (span.TotalHours < 48) { number = $"{(int)span.TotalHours}h{span.Minutes:00}"; unit = "avant le départ"; }
-            else { number = ((int)span.TotalDays).ToString(); unit = "jours"; }
+            else if (span.TotalHours < 48) { number = $"{(int)span.TotalHours}h{span.Minutes:00}"; unit = "before the start"; }
+            else { number = ((int)span.TotalDays).ToString(); unit = "days"; }
         }
-        else name = "Week-end terminé";
+        else name = "Weekend over";
 
         SetText(_nextSessionCard, "SessionName", name);
         SetText(_nextSessionCard, "BigNumber", number);
@@ -442,14 +478,14 @@ public partial class ODChampionshipPanel : MonoBehaviour
             bool next = i == nextIndex, live = i == liveIndex;
             var row = LayoutRow(_programContent, "Session_" + session.name, ODDesign.Px(rowH));
 
-            string time = $"{FrenchDays[(int)session.startsAt.DayOfWeek]}. {session.startsAt:HH}:{session.startsAt:mm}";
+            string time = $"{Days[(int)session.startsAt.DayOfWeek]}. {session.startsAt:HH}:{session.startsAt:mm}";
             if (next) time += " · " + RelativeIn(session.startsAt - DateTime.Now);
 
             (string label, Color fill, Color text) =
-                  live ? ("En cours", ODDesign.WithAlpha(ODDesign.Live, .30f), Color.white)
-                : next ? ("Prochain", Color.white, ODDesign.Ink)
-                : done ? ("Terminé", new Color(1f, 1f, 1f, .08f), ODDesign.Secondary)
-                       : ("À venir", ODDesign.WithAlpha(ODDesign.Gold, .18f), ODDesign.GoldText);
+                  live ? ("Live", ODDesign.WithAlpha(ODDesign.Live, .30f), Color.white)
+                : next ? ("Next", Color.white, ODDesign.Ink)
+                : done ? ("Done", new Color(1f, 1f, 1f, .08f), ODDesign.Secondary)
+                       : ("Upcoming", ODDesign.WithAlpha(ODDesign.Gold, .18f), ODDesign.GoldText);
 
             float chipW = 150f;
             ODDesign.Text(row, "Name", session.name, 0f, rowH * .5f - 36f, w - chipW - 14f, 38f, 27f, ODDesign.Weight.SemiBold,
@@ -549,7 +585,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
             if (child.name == "Divider" || child.name == "NameColumn" || child.name == "PointsColumn")
                 child.gameObject.SetActive(false);
 
-        // Wide card (hors direct): 40-px title line; narrow (week-end): 36-px title.
+        // Wide card (off air): 40-px title line; narrow (weekend): 36-px title.
         bool wide = card.rect.width / ODDesign.Scale > 800f;
         float top = ODDesign.Px(wide ? 136f : 100f);
         return new StandingsView { card = card, content = BuildScrollArea(card, top, bottom, padPx), padPx = padPx, wide = wide };
@@ -557,7 +593,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
 
     /// <summary>
     /// One block per category, as on the mobile app: centred category title,
-    /// Pilotes / Équipes segmented control, "Nom / PTS" header, one row per entry.
+    /// Drivers / Teams segmented control, "Name / PTS" header, one row per entry.
     /// <paramref name="preferred"/> is the initial tab of categories not chosen yet.
     /// </summary>
     void RenderStandings(StandingsView view, List<SeasonStandingCategory> categories, StandingType preferred)
@@ -576,7 +612,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
     /// <summary>
     /// One category at a time, as in the mockups: its name as the card title
     /// (a button cycling through the categories when there are several), the
-    /// Pilotes / Équipes switch on the right, then the table.
+    /// Drivers / Teams switch on the right, then the table.
     /// </summary>
     void RenderCategory(StandingsView view)
     {
@@ -596,9 +632,9 @@ public partial class ODChampionshipPanel : MonoBehaviour
 
         if (view.categories.Count == 0)
         {
-            SetText(view.card, "Heading", view.wide ? "Classement" : "Championnat");
+            SetText(view.card, "Heading", view.wide ? "Standings" : "Championship");
             var row = LayoutRow(view.content, "Empty", ODDesign.Px(80f));
-            ODDesign.Text(row, "Label", "Classement indisponible", 0f, 0f, 600f, 80f, 22f, ODDesign.Weight.Regular, ODDesign.Secondary);
+            ODDesign.Text(row, "Label", "Standings unavailable", 0f, 0f, 600f, 80f, 22f, ODDesign.Weight.Regular, ODDesign.Secondary);
             return;
         }
 
@@ -611,14 +647,14 @@ public partial class ODChampionshipPanel : MonoBehaviour
         if (type == StandingType.Teams && !hasTeams) type = StandingType.Drivers;
 
         bool several = view.categories.Count > 1;
-        string title = view.wide ? (string.IsNullOrEmpty(category.label) ? "Classement" : "Classement " + category.label)
-                                 : (string.IsNullOrEmpty(category.label) ? "Championnat" : category.label);
+        string title = view.wide ? (string.IsNullOrEmpty(category.label) ? "Standings" : category.label + " standings")
+                                 : (string.IsNullOrEmpty(category.label) ? "Championship" : category.label);
         SetText(view.card, "Heading", several ? "" : title);
         if (several) view.headerControls.Add(CategoryButton(view, title, view.categoryIndex, view.categories.Count, pad, titleY, titleH));
 
         float w = view.content.rect.width / ODDesign.Scale;
         ODSegmentedControl control = null;
-        string[] tabs = { "Pilotes", "Équipes" };
+        string[] tabs = { "Drivers", "Teams" };
         int selected = type == StandingType.Drivers ? 0 : 1;
         if (hasDrivers && hasTeams)
         {
@@ -648,7 +684,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
         view.content.anchoredPosition = Vector2.zero;   // back to top
     }
 
-    /// <summary>The card title itself cycles the categories: "Classement Hypercar  1/3 ›" on a ghost capsule.</summary>
+    /// <summary>The card title itself cycles the categories: "Hypercar standings  1/3 ›" on a ghost capsule.</summary>
     GameObject CategoryButton(StandingsView view, string title, int index, int count, float x, float y, float h)
     {
         float size = view.wide ? 40f : 36f;
@@ -670,7 +706,7 @@ public partial class ODChampionshipPanel : MonoBehaviour
         return button.gameObject;
     }
 
-    // Row layout (design px): wide = hors direct table, narrow = week-end card.
+    // Row layout (design px): wide = off-air table, narrow = weekend card.
     const float WideRowH = 100f, NarrowRowH = 96f, PtsW = 90f, GapW = 110f;
 
     RectTransform RowsContainer(RectTransform block)
@@ -689,8 +725,8 @@ public partial class ODChampionshipPanel : MonoBehaviour
     {
         Color c = ODDesign.ColumnText;
         ODDesign.Text(row, "Pos", "Pos", 4f, 0f, 40f, 40f, 17f, ODDesign.Weight.SemiBold, c, caps: true, trackingEm: .12f);
-        ODDesign.Text(row, "Name", "Nom", 148f, 0f, 300f, 40f, 17f, ODDesign.Weight.SemiBold, c, caps: true, trackingEm: .12f);
-        ODDesign.Text(row, "Gap", "Écart", w - 4f - PtsW - 20f - GapW, 0f, GapW, 40f, 17f, ODDesign.Weight.SemiBold, c, TextAlignmentOptions.MidlineRight, caps: true, trackingEm: .12f);
+        ODDesign.Text(row, "Name", "Name", 148f, 0f, 300f, 40f, 17f, ODDesign.Weight.SemiBold, c, caps: true, trackingEm: .12f);
+        ODDesign.Text(row, "Gap", "Gap", w - 4f - PtsW - 20f - GapW, 0f, GapW, 40f, 17f, ODDesign.Weight.SemiBold, c, TextAlignmentOptions.MidlineRight, caps: true, trackingEm: .12f);
         ODDesign.Text(row, "Points", "Pts", w - 4f - PtsW, 0f, PtsW, 40f, 17f, ODDesign.Weight.SemiBold, c, TextAlignmentOptions.MidlineRight, caps: true, trackingEm: .12f);
         ODDesign.Line(row, 0f, 42f, w, ODDesign.DividerStrong);
     }
@@ -764,13 +800,13 @@ public partial class ODChampionshipPanel : MonoBehaviour
     static string FormatPoints(float points) =>
         points % 1f == 0f ? ((int)points).ToString() : points.ToString("0.#", CultureInfo.InvariantCulture);
 
-    /// <summary>"dans 12 min", "dans 4 h 12", "dans 3 j".</summary>
+    /// <summary>"in 12 min", "in 4 h 12", "in 3 d".</summary>
     static string RelativeIn(TimeSpan span)
     {
-        if (span <= TimeSpan.Zero) return "maintenant";
-        if (span.TotalMinutes < 60) return $"dans {Mathf.CeilToInt((float)span.TotalMinutes)} min";
-        if (span.TotalHours < 48) return $"dans {(int)span.TotalHours} h {span.Minutes:00}";
-        return $"dans {(int)span.TotalDays} j";
+        if (span <= TimeSpan.Zero) return "now";
+        if (span.TotalMinutes < 60) return $"in {Mathf.CeilToInt((float)span.TotalMinutes)} min";
+        if (span.TotalHours < 48) return $"in {(int)span.TotalHours} h {span.Minutes:00}";
+        return $"in {(int)span.TotalDays} d";
     }
 
     static string JoinNonEmpty(string separator, params string[] parts)

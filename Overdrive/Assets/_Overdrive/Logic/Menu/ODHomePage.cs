@@ -3,11 +3,11 @@
  ## OverDrive 2026
  ## All Technical rights reserved
  ##
- ## ODHomePage - Home page of the main menu (nav tab "Accueil"). Loads the
+ ## ODHomePage - Home page of the main menu (nav tab "Home"). Loads the
  ## Home data from the backend each time the page opens, hands it to
  ## ODHomeView and routes its buttons to the other menu pages. While a
  ## session is live, its running order is re-fetched every few seconds. On a
- ## backend failure it shows the usual error popup (retry / demo data).
+ ## backend failure it shows the usual error popup (retry).
  ##
  */
 
@@ -18,8 +18,6 @@ using UnityEngine;
 public sealed class ODHomePage : MonoBehaviour
 {
     public OverdriveMainMenu menu;
-    [Tooltip("Home shown with the demo data (picked from the backend error popup).")]
-    public HomeState demoState = HomeState.NoRace;
 
     const string ReminderPrefix = "Overdrive.HomeReminder.";
 
@@ -68,11 +66,6 @@ public sealed class ODHomePage : MonoBehaviour
         ODPassthroughBlur.Acquire(this);   // frosted room behind the glass (Quest 3, camera permission)
         if (_view == null) return;
         _view.Build();
-        if (ODDataSource.UseMocks)
-        {
-            ShowDemo();
-            return;
-        }
         if (_loaded) Repaint();   // last known data while the refresh runs
         else _view.ShowLoading();
         Load();
@@ -90,7 +83,7 @@ public sealed class ODHomePage : MonoBehaviour
         try
         {
             await ODHomeDataService.LoadAsync(_data);
-            if (this == null || version != _loadVersion || ODDataSource.UseMocks) return;
+            if (this == null || version != _loadVersion) return;
             _loaded = true;
             ODBackendErrorPopup.Hide((RectTransform)transform);
             Repaint();
@@ -101,7 +94,7 @@ public sealed class ODHomePage : MonoBehaviour
             if (this == null || version != _loadVersion) return;
             Debug.LogWarning("[ODHomePage] Backend load failed: " + error);
             ODBackendErrorPopup.Show((RectTransform)transform, ODChampionshipDataService.Title(error), ODChampionshipDataService.Describe(error),
-                Load, UseDemo);
+                Load);
         }
     }
 
@@ -112,11 +105,11 @@ public sealed class ODHomePage : MonoBehaviour
         while (true)
         {
             await Task.Delay(TimeSpan.FromSeconds(Mathf.Max(1f, ODApiConfig.Instance.livePollSeconds)));
-            if (this == null || version != _loadVersion || ODDataSource.UseMocks || _data.state != HomeState.Live) return;
+            if (this == null || version != _loadVersion || _data.state != HomeState.Live) return;
             try
             {
                 await ODHomeDataService.RefreshLiveAsync(_data);
-                if (this == null || version != _loadVersion || ODDataSource.UseMocks) return;
+                if (this == null || version != _loadVersion) return;
                 failures = 0;
                 _view.ShowLive(_data.live);
             }
@@ -127,19 +120,6 @@ public sealed class ODHomePage : MonoBehaviour
                 if (++failures >= 3) { Load(); return; }   // the session may be over: decide the Home again
             }
         }
-    }
-
-    void UseDemo()
-    {
-        ODDataSource.UseMocks = true;
-        ShowDemo();
-    }
-
-    /// <summary>Demo data only: the Home for <see cref="demoState"/>.</summary>
-    public void ShowDemo()
-    {
-        ODHomeDataService.LoadDemo(_data, demoState);
-        Repaint();
     }
 
     void Repaint() => _view.Show(_data, IsReminderOn());

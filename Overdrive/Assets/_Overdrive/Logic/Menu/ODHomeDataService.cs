@@ -8,8 +8,6 @@
  ## a running session (Live, 2.1a), an event weekend between two sessions
  ## (Weekend, 2.1b) or the next event (NoRace, 2.1c). Also the other events
  ## of the week, the latest finished races and each championship's leader.
- ## Falls back to the existing mobile mocks only when the user picked the
- ## demo data in the error popup.
  ##
  */
 
@@ -20,9 +18,9 @@ using System.Threading.Tasks;
 
 public static class ODHomeDataService
 {
-    /// <summary>Replay tiles of the "À revoir" row.</summary>
+    /// <summary>Replay tiles of the "Watch again" row.</summary>
     public const int MaxReplays = 3;
-    /// <summary>Rows of the "Tes championnats" card.</summary>
+    /// <summary>Rows of the "Your championships" card.</summary>
     public const int MaxLeaders = 3;
     /// <summary>Past events scanned per championship for replays (one request each).</summary>
     const int PastEventsScanned = 3;
@@ -115,51 +113,6 @@ public static class ODHomeDataService
     {
         if (home.liveSession == null) return;
         home.live = await LoadLiveAsync(home.liveChampionshipCode, home.liveEvent, home.liveSession);
-    }
-
-    /// <summary>Fills <paramref name="home"/> from the mobile mocks already used by the championship pages.</summary>
-    public static void LoadDemo(HomeData home, HomeState state)
-    {
-        var wec = ODOffSeasonMockData.Wec;
-        var motoGp = ODWeekendMockData.MotoGp;
-
-        Reset(home);
-        home.state = state;
-        home.replays.AddRange(ODReplayMockData.Catalog.Take(MaxReplays).Select(ODHomeMapper.ToReplay));
-        foreach (var leader in new[]
-                 {
-                     ODHomeMapper.ToLeader(motoGp.championshipId, motoGp.standings.FirstOrDefault()),
-                     ODHomeMapper.ToLeader(wec.championshipId, wec.standings.FirstOrDefault()),
-                 })
-            if (leader.HasValue) home.leaders.Add(leader.Value);
-
-        HomeAgendaItem? replayTile = null;
-        switch (state)
-        {
-            case HomeState.Live:
-                home.live = ODLiveSessionMockData.Formula1;
-                home.nextEvent = ODHomeMapper.ToLiveEvent(home.live, "Formule 1", "Grand Prix de Monaco");
-                break;
-            case HomeState.Weekend:
-                home.nextEvent = ODHomeMapper.ToWeekendEvent(motoGp, "MotoGP");
-                var replay = home.replays.Count > 0 ? home.replays[0].summary : default;
-                replayTile = new HomeAgendaItem
-                {
-                    championshipId = replay.championshipId,
-                    championshipName = replay.championshipName,
-                    title = replay.sessionName,
-                    replayIndex = 0,
-                };
-                break;
-            default:
-                home.nextEvent = ODHomeMapper.ToNextEvent(wec);
-                return;
-        }
-
-        var events = new List<OffSeasonEvent>(wec.calendar);
-        if (wec.nextEvent.HasValue) events.Insert(0, wec.nextEvent.Value);
-        home.agenda.AddRange(ODHomeMapper.Agenda(events.Select(e => ODHomeMapper.ToAgendaItem(wec, e)),
-            home.replays.Count > 0 ? replayTile : null, DateTime.Now));
     }
 
     static void Reset(HomeData home)

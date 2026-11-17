@@ -4,7 +4,7 @@
  ## All Technical rights reserved
  ##
  ## ODReplayTile - Replay card of the replay gallery: a glass plateau with the
- ## Grand Prix, one detail line, a star (save to "Mes replays") and a round
+ ## Grand Prix, one detail line, a star (save to "My replays") and a round
  ## play button. No motion at all: gaze only lights the rim, instantly. The
  ## card is one button; the star is its own button on top.
  ##
@@ -20,8 +20,8 @@ public class ODReplayTile : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     public struct Info
     {
         public string title;     // Grand Prix
-        public string detail;    // "Course · 02/03/2024"
-        public bool saved;     // in "Mes replays"
+        public string detail;    // "Race · 02/03/2024"
+        public bool saved;     // in "My replays"
     }
 
     static readonly Color RimRest = new Color(1f, 1f, 1f, .10f), RimHover = new Color(1f, 1f, 1f, .40f);

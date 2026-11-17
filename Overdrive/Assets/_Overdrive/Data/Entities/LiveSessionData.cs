@@ -4,7 +4,7 @@
  ## All Technical rights reserved
  ##
  ## LiveSessionData - Data shown by the championship panel while a session
- ## is running ("LIVE · COURSE"): lap progress, track status and the running
+ ## is running ("LIVE · RACE"): lap progress, track status and the running
  ## order. Pure data: no MonoBehaviour, no logic.
  ##
  */
@@ -21,7 +21,7 @@ public struct LiveEntry
     public string code;           // "VER" — derived from the name when empty
     public string teamName;
     public Color teamColor;
-    public string gap;            // "Leader", "+3.4s", "+1 tour"
+    public string gap;            // "Leader", "+3.4s", "+1 lap"
     public string tyreCompound;   // "S", "M", "H", "I", "W"
     public int tyreAgeLaps;    // -1 when unknown
     public int pitStops;       // -1 when unknown
@@ -33,13 +33,13 @@ public struct LiveEntry
 public class LiveSessionData
 {
     public string championshipId;
-    public string sessionName;   // "Course"
+    public string sessionName;   // "Race"
     public string circuitName;   // "Circuit de Monaco"
-    public string conditions;    // "38°C · Ensoleillé"
+    public string conditions;    // "Track 38°C · Dry"
     public Color accentColor;
     public int currentLap;
     public int totalLaps;     // 0 when unknown (timed sessions)
-    public string trackStatus;   // "Piste libre", "Safety Car", "Drapeau rouge"...
+    public string trackStatus;   // "Track clear", "Safety Car", "Red flag"...
     /// <summary>Running order, P1 first — any count.</summary>
     public List<LiveEntry> entries = new();
 }

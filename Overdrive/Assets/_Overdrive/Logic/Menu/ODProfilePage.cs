@@ -3,8 +3,8 @@
  ## OverDrive 2026
  ## All Technical rights reserved
  ##
- ## ODProfilePage - Profile page of the main menu (nav tab "Profil"), with its
- ## Réglages tab. Mock-up only (ODProfileView): connected to nothing.
+ ## ODProfilePage - Profile page of the main menu (nav tab "Profile"), with its
+ ## Settings tab. Mock-up only (ODProfileView): connected to nothing.
  ##
  */
 

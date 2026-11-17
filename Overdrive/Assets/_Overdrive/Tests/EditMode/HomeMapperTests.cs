@@ -29,7 +29,7 @@ public class HomeMapperTests
     static EventSummaryDto Event() => new EventSummaryDto
     {
         eventId = "openf1:event:1",
-        name = "Grand Prix de Malaisie",
+        name = "Malaysian Grand Prix",
         circuit = "Sepang",
         startDate = new DateTime(2026, 10, 30, 0, 0, 0, DateTimeKind.Utc),
     };
@@ -49,9 +49,9 @@ public class HomeMapperTests
         var next = ODHomeMapper.ToNextEvent(null, "motogp", Event(), sessions, Now);
 
         Assert.AreEqual(3, next.sessions.Count);
-        Assert.AreEqual("Essais libres 1", next.sessions[0].name);
+        Assert.AreEqual("Free Practice 1", next.sessions[0].name);
         Assert.AreEqual("Sprint", next.sessions[1].name);
-        Assert.AreEqual("Course", next.sessions[2].name);
+        Assert.AreEqual("Race", next.sessions[2].name);
     }
 
     [Test]
@@ -66,7 +66,7 @@ public class HomeMapperTests
         var next = ODHomeMapper.ToNextEvent(null, "f1", Event(), sessions, Now);
 
         Assert.AreEqual(1, next.sessions.Count);
-        Assert.AreEqual("Course", next.sessions[0].name);
+        Assert.AreEqual("Race", next.sessions[0].name);
     }
 
     [Test]
@@ -115,20 +115,20 @@ public class HomeMapperTests
         var weekend = ODHomeMapper.ToWeekendEvent(null, "motogp", Event(), sessions, Now);
 
         Assert.AreEqual(3, weekend.sessions.Count);
-        Assert.AreEqual("Qualifications", weekend.sessions[0].name);
+        Assert.AreEqual("Qualifying", weekend.sessions[0].name);
         Assert.IsTrue(weekend.sessions[0].finished);
         Assert.AreEqual("Sprint", weekend.sessions[1].name);
         Assert.IsFalse(weekend.sessions[1].finished);
-        Assert.AreEqual("Course", weekend.sessions[2].name);
+        Assert.AreEqual("Race", weekend.sessions[2].name);
     }
 
     [Test]
     public void Headline_AgreesWithTheSession()
     {
-        Assert.AreEqual("Qualifications terminées · pole pour Márquez", ODHomeMapper.Headline("Qualifications", "Márquez"));
-        Assert.AreEqual("Course terminée · victoire d’Alonso", ODHomeMapper.Headline("Course", "Alonso"));
-        Assert.AreEqual("Sprint terminé", ODHomeMapper.Headline("Sprint", null));
-        Assert.AreEqual("Essais libres 2 terminés · meilleur temps pour Martín", ODHomeMapper.Headline("EL2", "Martín"));
+        Assert.AreEqual("Qualifying over · pole for Márquez", ODHomeMapper.Headline("Qualifying", "Márquez"));
+        Assert.AreEqual("Race over · won by Alonso", ODHomeMapper.Headline("Race", "Alonso"));
+        Assert.AreEqual("Sprint over", ODHomeMapper.Headline("Sprint", null));
+        Assert.AreEqual("Free Practice 2 over · fastest lap by Martín", ODHomeMapper.Headline("FP2", "Martín"));
         Assert.IsNull(ODHomeMapper.Headline(null, "Márquez"));
     }
 
@@ -144,13 +144,13 @@ public class HomeMapperTests
             replayIndex = -1,
         };
         var events = new[] { Item("F1", 23, 25), Item("Past", 10, 12), Item("WRC", 16, 18), Item("WEC", 30, 31) };
-        var replay = new HomeAgendaItem { title = "Qualifications", replayIndex = 0 };
+        var replay = new HomeAgendaItem { title = "Qualifying", replayIndex = 0 };
 
         var agenda = ODHomeMapper.Agenda(events, replay, now);
 
         Assert.AreEqual(3, agenda.Count);
         Assert.AreEqual("WRC", agenda[0].title);
-        Assert.AreEqual("Qualifications", agenda[1].title);
+        Assert.AreEqual("Qualifying", agenda[1].title);
         Assert.AreEqual("F1", agenda[2].title);
     }
 

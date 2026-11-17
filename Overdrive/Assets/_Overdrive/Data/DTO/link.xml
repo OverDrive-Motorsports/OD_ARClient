@@ -2,10 +2,17 @@
   DTOs are only ever instantiated by Newtonsoft.Json through reflection, so
   IL2CPP managed code stripping would otherwise remove their fields and
   constructors on device builds. Every DTO class name ends with "Dto".
+  They live in Overdrive.Data (Data/Overdrive.Data.asmdef), except the
+  gateway error body in Core (Assembly-CSharp). ReplaySummary is saved
+  with the downloaded replays, so it is read the same way.
 -->
 <linker>
-  <assembly fullname="Assembly-CSharp">
+  <assembly fullname="Overdrive.Data">
     <type fullname="*Dto" preserve="all" />
     <type fullname="*Dto`1" preserve="all" />
+    <type fullname="ReplaySummary" preserve="all" />
+  </assembly>
+  <assembly fullname="Assembly-CSharp">
+    <type fullname="*Dto" preserve="all" />
   </assembly>
 </linker>

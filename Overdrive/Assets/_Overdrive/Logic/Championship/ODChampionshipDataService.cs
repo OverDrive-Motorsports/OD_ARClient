@@ -3,9 +3,10 @@
  ## OverDrive 2026
  ## All Technical rights reserved
  ##
- ## ODChampionshipDataService - Loads what the championship panel and the
- ## replay gallery display, from the backend (Core) or from the mobile mocks
- ## (Data/Mock), and decides the panel state from the event/session statuses.
+ ## ODChampionshipDataService - Loads what the championship panel displays
+ ## from the backend (Core), decides the panel state from the event/session
+ ## statuses, and turns backend errors into user-facing text. Replays live in
+ ## ODReplayService.
  ##
  */
 
@@ -36,18 +37,9 @@ public class ChampionshipSnapshot
     public SessionSummaryDto liveSession;
 }
 
-/// <summary>
-/// Backend vs demo data. Starts on the backend; switches to the mobile mocks
-/// for the rest of the app session once the user picks them in the error popup.
-/// </summary>
-public static class ODDataSource
-{
-    public static bool UseMocks { get; set; }
-}
-
 public static class ODChampionshipDataService
 {
-    /// <summary>How many past events are scanned for standings / replays (one request each).</summary>
+    /// <summary>How many past events are scanned for standings (one request each).</summary>
     const int MaxPastEventsScanned = 12;
 
     static string Code => ODApiConfig.Instance.championshipCode;
@@ -63,9 +55,11 @@ public static class ODChampionshipDataService
     public static async Task<ChampionshipSnapshot> LoadAsync()
     {
         DateTime now = DateTime.UtcNow;
-        var championships = await ODBackendApi.GetChampionships();
-        var championship = championships?.FirstOrDefault(c => c.championshipCode == Code);
-        var events = (await ODBackendApi.GetEvents(Code) ?? new List<EventSummaryDto>()).OrderBy(e => e.startDate).ToList();
+        var championshipsTask = ODBackendApi.GetChampionships();
+        var eventsTask = ODBackendApi.GetEvents(Code);
+        await Task.WhenAll(championshipsTask, eventsTask);
+        var championship = championshipsTask.Result?.FirstOrDefault(c => c.championshipCode == Code);
+        var events = (eventsTask.Result ?? new List<EventSummaryDto>()).OrderBy(e => e.startDate).ToList();
 
         // The session pinned in ODApiConfig wins when it's live, whatever the event dates say.
         var pinned = await LoadPinnedAsync();
@@ -96,12 +90,13 @@ public static class ODChampionshipDataService
                     liveSession = liveSession,
                 };
 
-            var standings = await LoadSeasonStandingsAsync(events, now);
-            var weather = await LoadLatestWeatherAsync(sessions);
+            var standingsTask = LoadSeasonStandingsAsync(events, now);
+            var weatherTask = LoadLatestWeatherAsync(sessions);
+            await Task.WhenAll(standingsTask, weatherTask);
             return new ChampionshipSnapshot
             {
                 state = ChampionshipViewState.Weekend,
-                weekend = ODChampionshipMapper.ToWeekend(Code, current, sessions, weather, standings),
+                weekend = ODChampionshipMapper.ToWeekend(Code, current, sessions, weatherTask.Result, standingsTask.Result),
             };
         }
 
@@ -171,37 +166,8 @@ public static class ODChampionshipDataService
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Replays
+    // Pinned session
     // ═══════════════════════════════════════════════════════════════════════
-
-    /// <summary>Finished races and sprints, most recent first.</summary>
-    public static async Task<List<ReplaySummary>> LoadReplaysAsync()
-    {
-        DateTime now = DateTime.UtcNow;
-        var championships = await ODBackendApi.GetChampionships();
-        var championship = championships?.FirstOrDefault(c => c.championshipCode == Code);
-        var events = await ODBackendApi.GetEvents(Code) ?? new List<EventSummaryDto>();
-
-        var replays = new List<ReplaySummary>();
-
-        // The session pinned in ODApiConfig comes first, whatever its type (it may not be a race).
-        var pinned = await LoadPinnedAsync();
-        if (pinned.session != null && pinned.evt != null && pinned.session.status != "scheduled")
-            replays.Add(ODChampionshipMapper.ToReplaySummary(championship, Code, pinned.evt, pinned.session));
-
-        foreach (var evt in events.Where(e => e.status == "finished" || e.endDate < now)
-                                  .OrderByDescending(e => e.startDate)
-                                  .Take(MaxPastEventsScanned))
-        {
-            var sessions = await ODBackendApi.GetEventSessions(evt.eventId);
-            if (sessions == null) continue;
-            foreach (var session in sessions.Where(s => (s.type == "race" || s.type == "sprint") && s.status == "finished")
-                                            .OrderByDescending(s => s.startTime))
-                if (replays.All(r => r.id != session.sessionId))
-                    replays.Add(ODChampionshipMapper.ToReplaySummary(championship, Code, evt, session));
-        }
-        return replays;
-    }
 
     /// <summary>Session set in ODApiConfig.sessionKey and its event; nulls when unset or unknown to the backend (404).</summary>
     static async Task<(SessionSummaryDto session, EventSummaryDto evt)> LoadPinnedAsync()
@@ -214,28 +180,19 @@ public static class ODChampionshipDataService
         return (session, evt);
     }
 
-    public static async Task<ReplayDetail> LoadReplayDetailAsync(ReplaySummary summary)
-    {
-        var resultTask = ODBackendApi.GetSessionResult(summary.id);
-        var driversTask = ODBackendApi.GetSessionDrivers(summary.id);
-        await Task.WhenAll(resultTask, driversTask);
-        return ODChampionshipMapper.ToReplayDetail(summary, null, resultTask.Result?.data,
-            ODChampionshipMapper.DriverLookup(driversTask.Result));
-    }
-
     // ═══════════════════════════════════════════════════════════════════════
     // Errors → user-facing text
     // ═══════════════════════════════════════════════════════════════════════
 
     public static string Title(Exception error)
     {
-        if (!(error is ODApiException api)) return "Erreur";
+        if (!(error is ODApiException api)) return "Error";
         switch (api.Kind)
         {
-            case ODApiErrorKind.Unreachable: return "Backend injoignable";
-            case ODApiErrorKind.Unauthorized: return "Accès refusé";
-            case ODApiErrorKind.InvalidResponse: return "Réponse invalide";
-            default: return "Erreur du backend";
+            case ODApiErrorKind.Unreachable: return "Backend unreachable";
+            case ODApiErrorKind.Unauthorized: return "Access denied";
+            case ODApiErrorKind.InvalidResponse: return "Invalid response";
+            default: return "Backend error";
         }
     }
 
@@ -245,14 +202,16 @@ public static class ODChampionshipDataService
             switch (api.Kind)
             {
                 case ODApiErrorKind.Unreachable:
-                    return $"Impossible de joindre le backend ({ODApiConfig.Instance.BaseUrl}). Vérifie qu'il est lancé et accessible depuis cet appareil.";
+                    return $"Can't reach the backend ({ODApiConfig.Instance.BaseUrl}). Check that it is running and reachable from this device.";
                 case ODApiErrorKind.Unauthorized:
-                    return "Le gateway refuse la connexion (401). Vérifie le token dans ODApiConfig.";
+                    return "The gateway refused the connection (401). Check the token in ODApiConfig.";
                 case ODApiErrorKind.InvalidResponse:
-                    return "Le backend a répondu dans un format inattendu.";
+                    return "The backend answered in an unexpected format.";
+                case ODApiErrorKind.HttpError when api.StatusCode >= 502 && api.StatusCode <= 504:
+                    return $"The gateway answers, but a backend service is unavailable (HTTP {api.StatusCode}{(api.Code != null ? " · " + api.Code : "")}).";
                 default:
-                    return $"Le backend a renvoyé une erreur (HTTP {api.StatusCode}).";
+                    return $"The backend returned an error (HTTP {api.StatusCode}{(api.Code != null ? " · " + api.Code : "")}).";
             }
-        return "Erreur inattendue : " + error.Message;
+        return "Unexpected error: " + error.Message;
     }
 }

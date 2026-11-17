@@ -27,7 +27,7 @@ public class ODCalendarView : MonoBehaviour
         ODChampionshipTheme.ApplyBackground(surface, ODChampionshipTheme.NeutralPalette);
 
         // Design header (Canva 02.3): caps line above the 64-px title; the month grid comes later.
-        ODDesign.Caps(root, "Caps", "Calendrier · Saison 2026", ODDesign.WindowPadSide, ODDesign.WindowPadTop, 900f, ODDesign.PageCaps);
-        ODDesign.Text(root, "Heading", "Calendrier", ODDesign.WindowPadSide, ODDesign.WindowPadTop + 37f, 900f, 72f, ODDesign.TitleXL, ODDesign.Weight.Bold);
+        ODDesign.Caps(root, "Caps", "Calendar · Season 2026", ODDesign.WindowPadSide, ODDesign.WindowPadTop, 900f, ODDesign.PageCaps);
+        ODDesign.Text(root, "Heading", "Calendar", ODDesign.WindowPadSide, ODDesign.WindowPadTop + 37f, 900f, 72f, ODDesign.TitleXL, ODDesign.Weight.Bold);
     }
 }

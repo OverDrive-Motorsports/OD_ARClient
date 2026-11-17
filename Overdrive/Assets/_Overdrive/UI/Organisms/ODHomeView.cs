@@ -185,7 +185,7 @@ public class ODHomeView : MonoBehaviour
         string text = "En direct";
         if (live != null)
         {
-            bool laps = (live.sessionName == "Course" || live.sessionName == "Sprint") && live.currentLap > 0;
+            bool laps = (live.sessionName == "Race" || live.sessionName == "Sprint") && live.currentLap > 0;
             text += laps ? " · Tour " + live.currentLap + (live.totalLaps > 0 ? " / " + live.totalLaps : "")
                          : string.IsNullOrEmpty(live.sessionName) ? "" : " · " + live.sessionName;
         }
@@ -334,7 +334,7 @@ public class ODHomeView : MonoBehaviour
     static string CountdownCaps(string session)
     {
         if (string.IsNullOrEmpty(session)) return "Début dans";
-        return session == "Essais libres 1" ? "Premiers essais dans" : session + " dans";
+        return session == "Free Practice 1" ? "Premiers essais dans" : session + " dans";
     }
 
     static string StartsLabel(DateTime start)
