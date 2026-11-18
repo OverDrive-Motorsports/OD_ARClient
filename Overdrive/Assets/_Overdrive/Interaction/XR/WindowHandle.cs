@@ -46,6 +46,8 @@ public class WindowHandle : MonoBehaviour
     /// <summary>A ray or fingertip is on the bar (ornaments appear while it is).</summary>
     public bool IsHovered { get; private set; }
     public bool IsGrabbed => _grabbed;
+    /// <summary>Independent windows can detach from a group exactly when their own bar is grabbed.</summary>
+    public event System.Action GrabStarted;
 
     // ── runtime ───────────────────────────────────────────────────────────────
     private Transform _pill;
@@ -53,13 +55,14 @@ public class WindowHandle : MonoBehaviour
 
     private bool _grabbed;
     private RayInteractor _grabRay;
+    private ODWindowGrabInput _grabInput;
     private float _grabDist;
-    private Vector3 _grabOffset;     // canvas pos - ray hit point
+    private Vector3 _localGripPoint;
 
     // proximity grab
     private bool _proxGrab;
     private OVRHand _proxHand;
-    private Vector3 _proxStartFinger, _proxStartCanvas;
+    private readonly Dictionary<OVRHand, bool> _handPressed = new Dictionary<OVRHand, bool>();
 
     private RayInteractor[] _rays;
     private OVRHand[] _hands;
@@ -68,15 +71,25 @@ public class WindowHandle : MonoBehaviour
     private void Start()
     {
         BuildPill();
-        _rays = FindObjectsByType<RayInteractor>(FindObjectsSortMode.None);
-        _hands = FindObjectsByType<OVRHand>(FindObjectsSortMode.None);
+        // Keep both input modes: the rig enables controllers/hands alternately.
+        _rays = FindObjectsByType<RayInteractor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        _hands = FindObjectsByType<OVRHand>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        PrimeHands();
+    }
+
+    private void OnEnable() => PrimeHands();
+    private void PrimeHands()
+    {
+        _handPressed.Clear();
+        if (_hands != null) foreach (var hand in _hands)
+            if (hand != null) _handPressed[hand] = hand.IsTracked && hand.GetFingerIsPinching(OVRHand.HandFinger.Index);
     }
 
     private void Update()
     {
         // refresh references if the rig spawned interactors after us
         if (_rays == null || _rays.Length == 0)
-            _rays = FindObjectsByType<RayInteractor>(FindObjectsSortMode.None);
+            _rays = FindObjectsByType<RayInteractor>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
         if (_grabbed) UpdateDrag();
         else CheckGrabStart();
@@ -135,7 +148,6 @@ public class WindowHandle : MonoBehaviour
     // ── grab detection ────────────────────────────────────────────────────────
     private void CheckGrabStart()
     {
-        bool pinch = PinchActive();
         bool hover = false;
 
         // RAY: use each ISDK ray interactor (matches the visible laser)
@@ -144,6 +156,9 @@ public class WindowHandle : MonoBehaviour
             foreach (var ray in _rays)
             {
                 if (ray == null || !ray.isActiveAndEnabled) continue;
+                var input = ray.GetComponent<ODWindowGrabInput>();
+                if (input == null) continue;
+                input.Sample();
 
                 Vector3 o = ray.Origin;
                 Vector3 d = ray.Forward;
@@ -152,14 +167,16 @@ public class WindowHandle : MonoBehaviour
                 if (!RayNearPill(o, d, out float hit)) continue;
                 hover = true;
 
-                if (pinch)
+                if (input.TryClaim(this))
                 {
                     Vector3 hitPoint = o + d.normalized * hit;
                     _grabbed = true;
                     _proxGrab = false;
                     _grabRay = ray;
+                    _grabInput = input;
                     _grabDist = hit;
-                    _grabOffset = transform.position - hitPoint;
+                    _localGripPoint = transform.InverseTransformPoint(hitPoint);
+                    GrabStarted?.Invoke();
                     SetColor(grabColor);
                     return;
                 }
@@ -172,16 +189,20 @@ public class WindowHandle : MonoBehaviour
             foreach (var hand in _hands)
             {
                 if (hand == null || !hand.IsTracked) continue;
+                bool pinching = hand.GetFingerIsPinching(OVRHand.HandFinger.Index);
+                bool wasPressed;
+                _handPressed.TryGetValue(hand, out wasPressed);
+                _handPressed[hand] = pinching;
                 Vector3 tip = IndexTip(hand);
-                if (Vector3.Distance(tip, _pill.position) > proximityRadius) continue;
+                if (Vector3.Distance(tip, ClosestPillPoint(tip)) > proximityRadius) continue;
                 hover = true;
 
-                if (hand.GetFingerIsPinching(OVRHand.HandFinger.Index))
+                if (pinching && !wasPressed)
                 {
                     _grabbed = true; _proxGrab = true;
                     _proxHand = hand;
-                    _proxStartFinger = tip;
-                    _proxStartCanvas = transform.position;
+                    _localGripPoint = transform.InverseTransformPoint(tip);
+                    GrabStarted?.Invoke();
                     SetColor(grabColor);
                     return;
                 }
@@ -195,71 +216,71 @@ public class WindowHandle : MonoBehaviour
     // ── drag ──────────────────────────────────────────────────────────────────
     private void UpdateDrag()
     {
-        if (!PinchActive()) { EndGrab(); return; }
-
         if (_proxGrab)
         {
-            if (_proxHand == null || !_proxHand.IsTracked) { EndGrab(); return; }
+            if (_proxHand == null || !_proxHand.IsTracked || !_proxHand.GetFingerIsPinching(OVRHand.HandFinger.Index)) { EndGrab(); return; }
             Vector3 tip = IndexTip(_proxHand);
-            transform.position = _proxStartCanvas + (tip - _proxStartFinger);
-            FaceUser();
+            MoveFromGrip(tip);
             return;
         }
 
-        if (_grabRay == null) { EndGrab(); return; }
+        if (_grabRay == null || !_grabRay.isActiveAndEnabled || _grabInput == null) { EndGrab(); return; }
+        _grabInput.Sample();
+        if (!_grabInput.IsPressed) { EndGrab(); return; }
         Vector3 o = _grabRay.Origin;
         Vector3 d = _grabRay.Forward;
         if (d.sqrMagnitude < 0.001f) { d = _grabRay.transform.forward; o = _grabRay.transform.position; }
         Vector3 hitPoint = o + d.normalized * _grabDist;
-        transform.position = hitPoint + _grabOffset;
-        FaceUser();
+        MoveFromGrip(hitPoint);
     }
 
     /// <summary>
     /// Meta-style billboard: while dragged, the window continuously yaws
     /// to face the user (stays upright, no pitch/roll).
     /// </summary>
-    private void FaceUser()
+    private void MoveFromGrip(Vector3 worldGrip)
     {
+        Quaternion rotation = transform.rotation;
         var cam = Camera.main;
-        if (cam == null) return;
-
-        Vector3 away = transform.position - cam.transform.position;
-        away.y = 0f;
-        if (away.sqrMagnitude < 0.0025f) return; // too close, keep rotation
-
-        transform.rotation = Quaternion.LookRotation(away.normalized, Vector3.up);
+        if (cam != null)
+        {
+            var center = (Vector3)GetComponent<RectTransform>().rect.center;
+            Vector3 desiredCenter = worldGrip + transform.TransformVector(center - _localGripPoint);
+            Vector3 away = Vector3.ProjectOnPlane(desiredCenter - cam.transform.position, Vector3.up);
+            if (away.sqrMagnitude >= .0025f)
+                rotation = Quaternion.RotateTowards(rotation, Quaternion.LookRotation(away.normalized, Vector3.up), 110f * Time.deltaTime);
+        }
+        // Rotate about the actual grab point, not the top-left canvas origin. The bar stays on the hand/ray.
+        transform.rotation = rotation;
+        transform.position = worldGrip - transform.TransformVector(_localGripPoint);
     }
 
     private void EndGrab()
     {
         IsHovered = false;
+        if (_grabInput != null) _grabInput.ReleaseClaim(this);
         _grabbed = false; _proxGrab = false;
-        _grabRay = null; _proxHand = null;
+        _grabRay = null; _grabInput = null; _proxHand = null;
+        PrimeHands();
         SetColor(idleColor);
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────
-    private bool PinchActive()
-    {
-        if (_hands != null)
-            foreach (var h in _hands)
-                if (h != null && h.IsTracked && h.GetFingerIsPinching(OVRHand.HandFinger.Index))
-                    return true;
-
-        return OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.LTouch)
-            || OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.RTouch)
-            || OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch)
-            || OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch);
-    }
-
     private bool RayNearPill(Vector3 origin, Vector3 dir, out float hitDist)
     {
         dir = dir.normalized;
-        Vector3 toPill = _pill.position - origin;
-        hitDist = Vector3.Dot(toPill, dir);
+        hitDist = Vector3.Dot(_pill.position - origin, dir);
         if (hitDist < 0.05f) return false;
-        return Vector3.Distance(origin + dir * hitDist, _pill.position) < rayHoverRadius;
+        var nearest = ClosestPillPoint(origin + dir * hitDist);
+        hitDist = Vector3.Dot(nearest - origin, dir);
+        return Vector3.Distance(origin + dir * hitDist, nearest) < rayHoverRadius;
+    }
+
+    private Vector3 ClosestPillPoint(Vector3 point)
+    {
+        var rect = _pill as RectTransform;
+        float halfWidth = rect != null ? rect.rect.width * Mathf.Abs(rect.lossyScale.x) * .5f : .1f;
+        return _pill.position + _pill.right * Mathf.Clamp(Vector3.Dot(point - _pill.position, _pill.right), -halfWidth, halfWidth);
     }
 
     private Vector3 IndexTip(OVRHand hand)

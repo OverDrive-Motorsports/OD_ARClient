@@ -62,6 +62,21 @@ public class SessionSummaryDto
     public DateTime? endTime;
 }
 
+/// <summary>Dev: GET /v1/championship/sessions/{sessionId}/broadcast.</summary>
+public class SessionBroadcastDto
+{
+    public string sessionId;
+    public string broadcastUrl;
+}
+
+/// <summary>Dev: GET /v1/race-data/sessions/{sessionId}/drivers/{driverNumber}/broadcast (snake_case).</summary>
+public class DriverBroadcastDto
+{
+    public string session_id;
+    public int driver_number;
+    public string broadcast_url;
+}
+
 /// <summary>GET /sessions/{sessionId}/drivers</summary>
 public class DriverSummaryDto
 {

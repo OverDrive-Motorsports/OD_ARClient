@@ -36,6 +36,13 @@ last: a folder without it is an interrupted download and is deleted on the
 next scan. `FormatVersion` is bumped whenever these files change shape, so
 older downloads show up as "download again".
 
+## Video broadcasts
+
+`SessionBroadcastDto` and `DriverBroadcastDto` carry the main/onboard media
+URLs. They and the driver catalogue live in `Overdrive.Data` and are kept
+by `DTO/link.xml`. Video streams are separate from downloaded replay data;
+neither path falls back to the removed demo assets.
+
 ## Allowed dependencies
 
 None. Data doesn't reference any other layer of the project.

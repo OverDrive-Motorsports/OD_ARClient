@@ -43,6 +43,12 @@ public static class ODBackendApi
     public static Task<List<DriverSummaryDto>> GetSessionDrivers(string sessionId)
         => ODApiClient.Get<List<DriverSummaryDto>>($"{Championship}/sessions/{Esc(sessionId)}/drivers");
 
+    public static Task<SessionBroadcastDto> GetSessionBroadcast(string sessionId)
+        => ODApiClient.Get<SessionBroadcastDto>($"{Championship}/sessions/{Esc(sessionId)}/broadcast");
+
+    public static Task<DriverBroadcastDto> GetDriverBroadcast(string sessionId, int driverNumber)
+        => ODApiClient.Get<DriverBroadcastDto>($"{RaceData}/sessions/{Esc(sessionId)}/drivers/{driverNumber}/broadcast");
+
     public static Task<SessionDatasetDto<DriverStandingRowDto>> GetDriverStandings(string sessionId)
         => ODApiClient.Get<SessionDatasetDto<DriverStandingRowDto>>($"{Championship}/sessions/{Esc(sessionId)}/datasets/championship_drivers");
 

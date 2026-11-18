@@ -39,6 +39,8 @@ public sealed class ODSportPage : MonoBehaviour
     private int _loadVersion;
     private int _replayVersion;
     private Mode _modeBeforeReplay = Mode.Weekend;
+    // Broadcasts use the selected backend session, independently of downloaded replay data.
+    public string VideoSessionId => currentMode == Mode.Replay ? replayId : _snapshot?.liveSession?.sessionId;
     private ODReplayPlayer _player;
     private bool _replayOrderShown;
     private bool _watchRequested;   // "Watch replay" pressed before the replay was ready
@@ -120,14 +122,15 @@ public sealed class ODSportPage : MonoBehaviour
     private void OnDisable()
     {
         ODPassthroughBlur.Release(this);
-        circuitPreview?.Hide();
+        // Unity objects can be destroyed before this page during scene shutdown.
+        if (circuitPreview != null) circuitPreview.Hide();
         _loadVersion++;   // drops in-flight loads and stops live polling; OnEnable reloads
         StopReplay();     // OnEnable starts the replay again from lights out
     }
 
     public void SetMode(Mode mode)
     {
-        if (currentMode != mode) circuitPreview?.Hide();
+        if (currentMode != mode && circuitPreview != null) circuitPreview.Hide();
         if (mode != Mode.Replay) StopReplay();
         currentMode = (Mode)Mathf.Clamp((int)mode, 0, 3);
         int index = (int)currentMode;
@@ -144,8 +147,8 @@ public sealed class ODSportPage : MonoBehaviour
         // Background and status pill colours: ODChampionshipPanel / ODChampionshipTheme
         // (championship palette + state style), applied by ShowModeContent below.
         if (television != null) television.Configure(currentMode,
-            replay ? "replay:" + replayId : "live:" + index,
-            replay ? replayGrandPrix : "Formula 1");
+            replay ? "replay:" + replayId : "live:" + index + ":" + VideoSessionId,
+            replay ? replayGrandPrix : _snapshot?.liveEvent?.name ?? "Formula 1", VideoSessionId);
         // The replay page has no "Replays" button: its back arrow returns to the gallery.
         if (replayButton != null) replayButton.gameObject.SetActive(!replay);
         ShowModeContent();
