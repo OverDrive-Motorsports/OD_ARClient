@@ -2,9 +2,9 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Places the Overdrive menu in front of the user ONCE at startup,
-/// then leaves it completely fixed in world space. Walking toward it
-/// brings you physically closer, just like a real screen.
+/// Places the Overdrive menu in front of the user when it appears (centred on
+/// the headset, ODWindowPlacement), then leaves it fixed in world space.
+/// Walking toward it brings you physically closer, just like a real screen.
 /// </summary>
 public class AppLauncher : MonoBehaviour
 {
@@ -14,12 +14,8 @@ public class AppLauncher : MonoBehaviour
     public Transform navigationWindow;
     public float navigationVerticalOffset = -0.47f;
 
-    [Header("Placement")]
-    [Tooltip("Distance from the user's head in metres when it first appears")]
-    public float spawnDistance = 1.5f;
-
-    [Tooltip("Vertical offset from eye height (0 = exact eye level)")]
-    public float verticalOffset = 0f;
+    // Placement: ODWindowPlacement (distance and eye level are constants there, so stale
+    // values serialized in the scene can't move the window).
 
     [Header("Fade")]
     public float fadeInDuration = 0.6f;
@@ -56,13 +52,7 @@ public class AppLauncher : MonoBehaviour
 
         yield return WaitForTracking();
 
-        SnapMenuInFront();   // place ONCE, then never touch it again
-        if (navigationWindow != null && navigationWindow.GetComponentInParent<LeftWristNavigation>() == null)
-        {
-            navigationWindow.SetPositionAndRotation(
-                menuCanvas.transform.position + menuCanvas.transform.up * navigationVerticalOffset,
-                menuCanvas.transform.rotation);
-        }
+        SnapMenuInFront();   // placed when it appears, then left where the user drags it
         yield return FadeIn();
     }
 
@@ -70,17 +60,43 @@ public class AppLauncher : MonoBehaviour
 
     // ── Public API ────────────────────────────────────────────────────────────
 
-    /// <summary>Instantly (re)place the menu in front of the user.</summary>
+    /// <summary>
+    /// Instantly (re)place the menu in front of the user: the visible window (not the larger
+    /// canvas around it) centred on the headset's gaze, at eye height. The navigation window
+    /// follows when it isn't on the wrist.
+    /// </summary>
     public void SnapMenuInFront()
     {
         Transform head = GetHead();
         if (head == null || menuCanvas == null) return;
 
-        Vector3 fwd = FlatForward(head.forward);
-        menuCanvas.transform.position = head.position
-                                      + fwd * spawnDistance
-                                      + Vector3.up * verticalOffset;
-        menuCanvas.transform.rotation = Quaternion.LookRotation(fwd, Vector3.up);
+        // Through ODWindowMotion so a glide in progress (ODWindowLayout) is cancelled, not fought.
+        var pose = ODWindowPlacement.RootPose(menuCanvas.transform, MenuWindow, ODWindowPlacement.Arc.InFront(head).At(0f));
+        ODWindowMotion.MoveTo(menuCanvas.transform, pose, animate: false);
+        FollowNavigation();
+    }
+
+    /// <summary>The floating navigation window, which moves with the menu, or null when it lives on the wrist.</summary>
+    public Transform NavigationFollower =>
+        navigationWindow != null && navigationWindow.GetComponentInParent<LeftWristNavigation>() == null ? navigationWindow : null;
+
+    /// <summary>The menu as the user sees it (its canvas is larger).</summary>
+    private RectTransform MenuWindow
+    {
+        get
+        {
+            var window = menuCanvas != null ? menuCanvas.GetComponentInChildren<OverdriveMainMenu>(true) : null;
+            return window != null ? (RectTransform)window.transform : null;
+        }
+    }
+
+    /// <summary>The floating navigation window stays under the menu, unless it lives on the wrist.</summary>
+    private void FollowNavigation()
+    {
+        if (NavigationFollower == null) return;
+        navigationWindow.SetPositionAndRotation(
+            menuCanvas.transform.position + menuCanvas.transform.up * navigationVerticalOffset,
+            menuCanvas.transform.rotation);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -111,12 +127,6 @@ public class AppLauncher : MonoBehaviour
         if (rig != null) return rig.centerEyeAnchor;
         if (Camera.main != null) return Camera.main.transform;
         return null;
-    }
-
-    private static Vector3 FlatForward(Vector3 v)
-    {
-        v.y = 0f;
-        return v.sqrMagnitude > 0.001f ? v.normalized : Vector3.forward;
     }
 
     private IEnumerator FadeIn()

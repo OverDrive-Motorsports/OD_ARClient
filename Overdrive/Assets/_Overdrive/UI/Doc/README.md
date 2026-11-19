@@ -12,6 +12,9 @@ UI/
 ├── Atoms/       Small runtime graphics (RoundedImage, ODHomepageSurface, ODNavigationIcon, ODTrackLine, ODToggleSwitch, ODFadeIn)
 ├── Molecules/   ODSegmentedControl, ContentGridItem
 ├── Organisms/   Page sections (ODChampionshipPanel, tiles, profile, calendar, tab bar, replay track map, error popup...)
+├── Telemetry/   Telemetry widgets (see below)
+│   ├── Core/      ODTelemetryWidget (shared base + Parts), ODTelemetryStyle (formats, colours, number formats)
+│   └── Widgets/   One file per widget: ODSpeedWidget, ODPedalsWidget, ODSectorsWidget, ODLapTimeWidget
 ├── Theme/       Design tokens and runtime builders (ODDesign, ODRuntimeUI, ODChampionshipTheme, ODSpring, ODTypeScaled)
 ├── Resources/   Shaders and DM Sans font assets loaded via Resources.Load
 └── Prefabs/     Screens/ — the full-screen prefabs placed in the scene
@@ -53,6 +56,29 @@ navigation bar follow the Canva design "OverDrive VR – v2" (pages
   gallery. The championship state (hors week-end / week-end / live) is
   decided by the backend data; without the backend, a popup offers to retry.
   Only the profile and settings pages still show placeholder content.
+
+## Telemetry widgets
+
+Design "Widgets télémétrie". Every widget derives from
+`Telemetry/Core/ODTelemetryWidget`, which owns what they share:
+
+- two formats (`WidgetFormat`): Small 440 x 440, Large 920 x 440 design px, so
+  they line up in a grid (`ODTelemetryStyle.SizeOf`);
+- the frame: frosted glass card like the other windows
+  (`ODChampionshipTheme.ApplyBackground`, radius 52), translucent recessed
+  boxes inside (`Panel`);
+- the header: caps title and followed-driver pill ("VER", or "VER / HAM");
+- the data path: Logic (`Logic/Telemetry/ODTelemetryWindow`) pushes each
+  `TelemetryFrame` with `Show()`; the base hands its parts to the widget
+  (`OnCar`, `OnTrace`, `OnTiming`) and calls `Tick` every frame for easing;
+- the live parts (`ODTelemetryWidget.Parts.cs`): `LiveText` (rewritten only
+  when the value changes), `Eased`, `Bar`, `Trace` — monospaced digits and
+  fixed boxes, so values move without flicker or layout shift.
+
+To add a widget: create `Telemetry/Widgets/ODXxxWidget.cs` deriving from
+`ODTelemetryWidget`, give it a `Title`, build `BuildSmall` / `BuildLarge` in
+design px on the card (header included, `Pad` margins), override the data
+hooks it needs, then add its type to `ODTelemetryWindow.Widgets`.
 
 ## Allowed dependencies
 

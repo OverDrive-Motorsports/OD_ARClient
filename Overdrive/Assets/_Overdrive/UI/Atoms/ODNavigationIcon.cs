@@ -6,7 +6,8 @@ using UnityEngine.UI;
 public class ODNavigationIcon : MaskableGraphic
 {
     // New symbols go at the end: prefabs serialize the enum as an index.
-    public enum Symbol { Races, Rankings, Profile, Settings, Homepage, Categories, Star, Search, Back, Calendar, Trophy, Play, Bell }
+    // New symbols go at the end: scenes and prefabs store the enum as its index.
+    public enum Symbol { Races, Rankings, Profile, Settings, Homepage, Categories, Star, Search, Back, Calendar, Trophy, Play, Bell, Close, Plus, Gauge, Tyre, Timer }
     public Symbol symbol;
 
     protected override void OnPopulateMesh(VertexHelper mesh)
@@ -67,6 +68,33 @@ public class ODNavigationIcon : MaskableGraphic
                 Line(mesh, .16f, .28f, .84f, .28f);
                 Ring(mesh, new Vector2(.5f, .22f), .08f, 180, 360);
                 Line(mesh, .5f, .82f, .5f, .88f);
+                break;
+            case Symbol.Close:
+                Line(mesh, .24f, .24f, .76f, .76f);
+                Line(mesh, .24f, .76f, .76f, .24f);
+                break;
+            case Symbol.Plus:
+                Line(mesh, .5f, .18f, .5f, .82f);
+                Line(mesh, .18f, .5f, .82f, .5f);
+                break;
+            case Symbol.Gauge:
+                // Speedometer: upper arc, two end ticks, needle from the hub.
+                Ring(mesh, new Vector2(.5f, .40f), .36f, 0, 180);
+                Line(mesh, .14f, .40f, .24f, .40f);
+                Line(mesh, .76f, .40f, .86f, .40f);
+                Line(mesh, .5f, .40f, .70f, .62f);
+                Ring(mesh, new Vector2(.5f, .40f), .05f, 0, 360);
+                break;
+            case Symbol.Tyre:
+                Ring(mesh, new Vector2(.5f, .5f), .38f, 0, 360);
+                Ring(mesh, new Vector2(.5f, .5f), .15f, 0, 360);
+                break;
+            case Symbol.Timer:
+                // Stopwatch: dial, hand, crown on top.
+                Ring(mesh, new Vector2(.5f, .44f), .32f, 0, 360);
+                Line(mesh, .5f, .44f, .5f, .62f);
+                Line(mesh, .5f, .76f, .5f, .86f);
+                Line(mesh, .40f, .88f, .60f, .88f);
                 break;
             case Symbol.Back:
                 Line(mesh, .18f, .5f, .82f, .5f);

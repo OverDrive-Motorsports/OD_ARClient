@@ -303,7 +303,7 @@ public sealed class ODReplayCatalog : MonoBehaviour
                 ODDesign.Style(label, ODDesign.CapsSize, ODDesign.Weight.Bold, Color.white, TextAlignmentOptions.Center, trackingEm: .06f);
             }
         }
-        _search = BuildSearch(1920f - GX - BadgeW - 16f - SearchW, HeaderMid - 32f, SearchW, 64f);
+        _search = ODDesign.SearchField(transform, 1920f - GX - BadgeW - 16f - SearchW, HeaderMid - 32f, SearchW, 64f, "Search a replay");
         _search.onValueChanged.AddListener(_ => Render());
 
         if (scroll != null)
@@ -340,46 +340,6 @@ public sealed class ODReplayCatalog : MonoBehaviour
             ODDesign.Place(notice.transform, GX, ContentBottom + 14f, 1200f, 30f);
             ODDesign.Style(notice, 18f, ODDesign.Weight.Regular, ODDesign.Tertiary);
         }
-    }
-
-    /// <summary>Recessed capsule with a search glyph and a TMP field (the Quest system keyboard types into it).</summary>
-    private TMP_InputField BuildSearch(float x, float y, float w, float h)
-    {
-        var field = ODDesign.Fill(transform, "Search", x, y, w, h, ODDesign.Recessed, h * .5f);
-        field.raycastTarget = true;
-        field.gameObject.SetActive(false);   // configure the input field before its OnEnable
-
-        var icon = ODDesign.Rect(field.transform, "Icon", 24f, (h - 26f) * .5f, 26f, 26f).gameObject.AddComponent<ODNavigationIcon>();
-        icon.symbol = ODNavigationIcon.Symbol.Search;
-        icon.color = ODDesign.Secondary;
-        icon.raycastTarget = false;
-
-        var area = ODDesign.Rect(field.transform, "TextArea", 64f, 0f, w - 64f - 28f, h);
-        area.gameObject.AddComponent<RectMask2D>();
-        var placeholder = ODDesign.Text(area, "Placeholder", "Search a replay", 0f, 0f, w - 92f, h, 22f, ODDesign.Weight.Regular, ODDesign.Tertiary);
-        var text = ODDesign.Text(area, "Text", "", 0f, 0f, w - 92f, h, 22f, ODDesign.Weight.Regular, ODDesign.Primary);
-        text.overflowMode = TextOverflowModes.Overflow;
-
-        var input = field.gameObject.AddComponent<TMP_InputField>();
-        input.targetGraphic = field;
-        input.textViewport = area;
-        input.textComponent = text;
-        input.placeholder = placeholder;
-        input.fontAsset = text.font;
-        input.pointSize = text.fontSize;
-        input.lineType = TMP_InputField.LineType.SingleLine;
-        input.characterLimit = 40;
-        input.caretColor = Color.white;
-        input.customCaretColor = true;
-        input.selectionColor = new Color(1f, 1f, 1f, .25f);
-        var colours = input.colors;
-        colours.normalColor = Color.white;
-        colours.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f);
-        colours.pressedColor = colours.selectedColor = new Color(1.3f, 1.3f, 1.3f, 1f);
-        colours.fadeDuration = 0f;   // no motion on the replay pages
-        input.colors = colours;
-        field.gameObject.SetActive(true);
-        return input;
     }
 
     /// <summary>Championship gradient behind the gallery, accent-tinted sport badge (tiles dress themselves).</summary>
