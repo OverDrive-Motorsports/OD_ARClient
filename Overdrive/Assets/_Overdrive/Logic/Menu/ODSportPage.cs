@@ -45,6 +45,7 @@ public sealed class ODSportPage : MonoBehaviour
     private Exception _pendingBackendError;
     private Button[] _telemetryButtons = Array.Empty<Button>();
     private ODWidgetCatalogPage _widgetCatalog;
+    private ODTelemetryWindow _telemetryWindow;
 
     private void OnEnable()
     {
@@ -141,6 +142,7 @@ public sealed class ODSportPage : MonoBehaviour
         ODPassthroughBlur.Release(this);
         circuitPreview?.Hide();
         CloseWidgetCatalog();
+        CloseTelemetry();
         _loadVersion++;   // drops in-flight loads and stops live polling; OnEnable reloads
         StopReplay();     // OnEnable starts the replay again from lights out
     }
@@ -149,6 +151,7 @@ public sealed class ODSportPage : MonoBehaviour
     {
         if (currentMode != mode) circuitPreview?.Hide();
         if (mode != Mode.LiveSession && mode != Mode.Replay) CloseWidgetCatalog();   // no "Telemetry" button there
+        if (mode != Mode.LiveSession && mode != Mode.Replay) CloseTelemetry();   // no "Telemetry" button there
         if (mode != Mode.Replay) StopReplay();
         currentMode = (Mode)Mathf.Clamp((int)mode, 0, 3);
         int index = (int)currentMode;
