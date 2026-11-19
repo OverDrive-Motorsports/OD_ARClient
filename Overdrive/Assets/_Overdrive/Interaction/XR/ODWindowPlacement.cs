@@ -30,11 +30,11 @@ public static class ODWindowPlacement
         public Vector3 centre;   // head position, y ignored
         public float radius, height, yaw;   // yaw of the window at angle 0, in degrees
 
-        /// <summary>The arc in front of <paramref name="head"/>, at eye height.</summary>
-        public static Arc InFront(Transform head) => new Arc
+        /// <summary>The arc in front of <paramref name="head"/>, at eye height (<paramref name="distance"/> m away, Distance by default).</summary>
+        public static Arc InFront(Transform head, float distance = Distance) => new Arc
         {
             centre = head.position,
-            radius = Distance,
+            radius = distance,
             height = head.position.y,
             yaw = Yaw(head.forward),
         };

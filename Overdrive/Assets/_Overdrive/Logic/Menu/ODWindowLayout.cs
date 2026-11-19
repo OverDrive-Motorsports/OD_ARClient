@@ -7,13 +7,15 @@
  ## (ODWindowPlacement), all at the same height and facing the headset:
  ##   • centre: the race TV while it is open, else the main window;
  ##   • right of the TV: the main window;
- ##   • left of the centre: the secondary windows (widget catalogue), in the
- ##     order they were opened, side by side.
+ ##   • left of the centre: secondary windows opened with OpenOnLeft, in the
+ ##     order they were opened, side by side (the widget catalogue opens in
+ ##     front of the user instead, without moving the others).
  ## When the TV appears it takes the centre in front of the headset and the
  ## main window glides to its right; when it closes, the main window glides
  ## back to the centre. Opening a secondary window keeps the centre where it
  ## stands. Windows already on screen glide (ODWindowMotion); a window that
  ## is appearing is put in place at once, under its fade-in.
+ ## Recentre (Meta recenter, headset put on) puts them back in front at once.
  ## Layout only runs on these events: nothing is computed per frame.
  ##
  */
@@ -75,9 +77,18 @@ public static class ODWindowLayout
         if (Application.isPlaying && !_quitting) Arrange(recentre: true, appearing: null);
     }
 
+    /// <summary>
+    /// The user recentred (Meta button) or put the headset on: the centre window (TV or main) goes
+    /// back in front of the headset at once, the others into line around it.
+    /// </summary>
+    public static void Recentre()
+    {
+        if (Application.isPlaying && !_quitting) Arrange(recentre: true, appearing: null, snap: true);
+    }
+
     // ── Layout ──────────────────────────────────────────────────────────────
 
-    static void Arrange(bool recentre, RectTransform appearing)
+    static void Arrange(bool recentre, RectTransform appearing, bool snap = false)
     {
         var head = Camera.main != null ? Camera.main.transform : null;
         var main = MainWindow;
@@ -87,27 +98,27 @@ public static class ODWindowLayout
         var centre = _centre != null && (_centre == appearing || _centre.gameObject.activeInHierarchy) ? _centre : main;
 
         var arc = recentre ? ODWindowPlacement.Arc.InFront(head) : ODWindowPlacement.Arc.Through(head, TargetCentre(centre));
-        Move(centre, arc.At(0f), appearing);
+        Move(centre, arc.At(0f), appearing, snap);
 
         if (centre != main)
-            Move(main, arc.At(arc.Step(ODWindowPlacement.HalfWidth(centre), ODWindowPlacement.HalfWidth(main))), appearing);
+            Move(main, arc.At(arc.Step(ODWindowPlacement.HalfWidth(centre), ODWindowPlacement.HalfWidth(main))), appearing, snap);
 
         float angle = 0f;
         var previous = centre;
         foreach (var window in Left)
         {
             angle -= arc.Step(ODWindowPlacement.HalfWidth(previous), ODWindowPlacement.HalfWidth(window));
-            Move(window, arc.At(angle), appearing);
+            Move(window, arc.At(angle), appearing, snap);
             previous = window;
         }
     }
 
     /// <summary>Glides (or, when it is appearing, puts) <paramref name="window"/> so its centre lands on <paramref name="target"/>.</summary>
-    static void Move(RectTransform window, Pose target, RectTransform appearing)
+    static void Move(RectTransform window, Pose target, RectTransform appearing, bool snap)
     {
         var root = Root(window);
         var pose = ODWindowPlacement.RootPose(root, window, target);   // the rect's centre, not its pivot
-        bool onScreen = window != appearing && root.gameObject.activeInHierarchy;
+        bool onScreen = !snap && window != appearing && root.gameObject.activeInHierarchy;
         ODWindowMotion.MoveTo(root, pose, onScreen, window == MainWindow ? NavigationFollower : null);
     }
 

@@ -45,7 +45,7 @@ public sealed class ODSportPage : MonoBehaviour
     private Exception _pendingBackendError;
     private Button[] _telemetryButtons = Array.Empty<Button>();
     private ODWidgetCatalogPage _widgetCatalog;
-    private ODTelemetryWindow _telemetryWindow;
+    private ODWidgetSpace _widgetSpace;   // telemetry widgets the user placed from the catalogue
 
     private void OnEnable()
     {
@@ -80,8 +80,18 @@ public sealed class ODSportPage : MonoBehaviour
     {
         if (!isActiveAndEnabled) return;
         if (_widgetCatalog == null)
-            _widgetCatalog = ODWidgetCatalogPage.Create(menu != null ? (RectTransform)menu.transform : (RectTransform)transform);
+        {
+            var raceWindow = menu != null ? (RectTransform)menu.transform : (RectTransform)transform;
+            if (_widgetSpace == null) _widgetSpace = ODWidgetSpace.Create(raceWindow);
+            _widgetCatalog = ODWidgetCatalogPage.Create(raceWindow, _widgetSpace);
+        }
         _widgetCatalog.Toggle();
+    }
+
+    /// <summary>Placed widgets are shown on the live and replay states only (the telemetry feed), where they were left.</summary>
+    private void ShowWidgetSpace(bool visible)
+    {
+        if (_widgetSpace != null) _widgetSpace.SetVisible(visible);
     }
 
     private void CloseWidgetCatalog()
@@ -142,7 +152,7 @@ public sealed class ODSportPage : MonoBehaviour
         ODPassthroughBlur.Release(this);
         circuitPreview?.Hide();
         CloseWidgetCatalog();
-        CloseTelemetry();
+        ShowWidgetSpace(false);
         _loadVersion++;   // drops in-flight loads and stops live polling; OnEnable reloads
         StopReplay();     // OnEnable starts the replay again from lights out
     }
@@ -150,8 +160,9 @@ public sealed class ODSportPage : MonoBehaviour
     public void SetMode(Mode mode)
     {
         if (currentMode != mode) circuitPreview?.Hide();
-        if (mode != Mode.LiveSession && mode != Mode.Replay) CloseWidgetCatalog();   // no "Telemetry" button there
-        if (mode != Mode.LiveSession && mode != Mode.Replay) CloseTelemetry();   // no "Telemetry" button there
+        bool telemetry = mode == Mode.LiveSession || mode == Mode.Replay;   // states with the "Telemetry" button
+        if (!telemetry) CloseWidgetCatalog();
+        ShowWidgetSpace(telemetry);
         if (mode != Mode.Replay) StopReplay();
         currentMode = (Mode)Mathf.Clamp((int)mode, 0, 3);
         int index = (int)currentMode;
@@ -409,5 +420,6 @@ public sealed class ODSportPage : MonoBehaviour
         if (championshipPanel != null) championshipPanel.ReplayWatchPressed -= WatchReplay;
         foreach (var button in _telemetryButtons) button?.onClick.RemoveListener(ToggleWidgetCatalog);
         if (_widgetCatalog != null) Destroy(_widgetCatalog.gameObject);
+        if (_widgetSpace != null) Destroy(_widgetSpace.gameObject);
     }
 }

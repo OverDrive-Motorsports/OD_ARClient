@@ -5,6 +5,10 @@ using UnityEngine;
 /// Places the Overdrive menu in front of the user when it appears (centred on
 /// the headset, ODWindowPlacement), then leaves it fixed in world space.
 /// Walking toward it brings you physically closer, just like a real screen.
+/// It waits for a real, steady head pose before placing it (at launch the
+/// headset first reports a default pose), and puts the windows back in
+/// front of the user when they recentre (Meta button) or put the headset on
+/// (ODWindowLayout.Recentre).
 /// </summary>
 public class AppLauncher : MonoBehaviour
 {
@@ -22,6 +26,12 @@ public class AppLauncher : MonoBehaviour
     public float delayBeforeFade = 0.5f;
 
     private CanvasGroup _cg;
+    private bool _placed;        // the menu appeared: from now on recentring moves the windows
+    private bool _recentreHooked;
+
+    /// <summary>Frames of steady head tracking before the menu is placed, and the longest wait (s).</summary>
+    private const int SteadyFrames = 12;
+    private const float TrackingTimeout = 5f;
 
     // ── Awake ────────────────────────────────────────────────────────────────
     private void Awake()
@@ -53,7 +63,43 @@ public class AppLauncher : MonoBehaviour
         yield return WaitForTracking();
 
         SnapMenuInFront();   // placed when it appears, then left where the user drags it
+        _placed = true;
         yield return FadeIn();
+    }
+
+    private void OnEnable()
+    {
+        OVRManager.HMDMounted += Recentre;
+        HookRecentre();
+    }
+
+    private void OnDisable()
+    {
+        OVRManager.HMDMounted -= Recentre;
+        if (_recentreHooked && OVRManager.instance != null && OVRManager.display != null)
+            OVRManager.display.RecenteredPose -= Recentre;
+        _recentreHooked = false;
+    }
+
+    /// <summary>The display exists once OVRManager is up, which may be after this OnEnable.</summary>
+    private void HookRecentre()
+    {
+        if (_recentreHooked || OVRManager.instance == null || OVRManager.display == null) return;
+        OVRManager.display.RecenteredPose += Recentre;
+        _recentreHooked = true;
+    }
+
+    private void Update()
+    {
+        if (!_recentreHooked) HookRecentre();
+    }
+
+    /// <summary>Recentred or headset put on: the windows go back in front of the user, where they now look.</summary>
+    private void Recentre()
+    {
+        if (!_placed) return;   // the first placement is still coming
+        if (Object.FindAnyObjectByType<OverdriveMainMenu>() != null) ODWindowLayout.Recentre();
+        else SnapMenuInFront();
     }
 
     // NOTE: no LateUpdate / no follow. The menu stays where it spawned.
@@ -101,17 +147,32 @@ public class AppLauncher : MonoBehaviour
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
+    /// <summary>
+    /// Waits until the head is really tracked, steadily, for a few frames (worn headset, position and
+    /// orientation tracked): with a floor-level origin the head is above the floor from the first
+    /// frame, before its pose is the user's. Gives up after TrackingTimeout (editor, headset not worn);
+    /// HMDMounted then recentres when it is put on.
+    /// </summary>
     private IEnumerator WaitForTracking()
     {
-        float timeout = 3f, elapsed = 0f;
-        while (elapsed < timeout)
+        float elapsed = 0f;
+        int steady = 0;
+        while (elapsed < TrackingTimeout && steady < SteadyFrames)
         {
-            Transform h = GetHead();
-            if (h != null && h.position.y > 0.1f) break;
-            elapsed += Time.deltaTime;
+            steady = HeadTracked() ? steady + 1 : 0;
+            elapsed += Time.unscaledDeltaTime;
             yield return null;
         }
         yield return new WaitForSeconds(delayBeforeFade);
+    }
+
+    private bool HeadTracked()
+    {
+        Transform head = GetHead();
+        if (head == null || head.position.y <= 0.1f || !OVRManager.isHmdPresent) return false;
+        return OVRPlugin.userPresent
+            && OVRPlugin.GetNodePositionTracked(OVRPlugin.Node.Head)
+            && OVRPlugin.GetNodeOrientationTracked(OVRPlugin.Node.Head);
     }
 
     private Transform GetHead()

@@ -17,8 +17,7 @@ using TMPro;
 using UnityEngine;
 using D = ODDesign;
 
-/// <summary>The two sizes every telemetry widget comes in.</summary>
-public enum WidgetFormat { Small, Large }
+// The two formats (WidgetFormat: Small / Large) are declared once, in Data (WidgetCatalog.cs).
 
 public static class ODTelemetryStyle
 {

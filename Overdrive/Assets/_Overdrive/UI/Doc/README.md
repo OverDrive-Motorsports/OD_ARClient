@@ -58,30 +58,35 @@ navigation bar follow the Canva design "OverDrive VR – v2" (pages
   Only the profile and settings pages still show placeholder content.
 - Widget catalogue: the "Telemetry" button of the championship page (live
   and replay states) opens `Organisms/ODWidgetCatalogView` in a window of
-  its own (`Logic/Menu/ODWidgetCatalogPage`), like the race TV: at 2/3
-  of the race window's size, it opens on the left of the race window (or of
-  the TV when it is open), at the same height and facing the user, and its
-  grab bar moves it; the race keeps running.
+  its own (`Logic/Menu/ODWidgetCatalogPage`): it opens right in front of the
+  user, closer than the other windows (0.9 m), centred on where they look,
+  without moving the windows behind it, with no window bar; the race
+  keeps running.
   Side bar (title, search, categories with counts, widgets in the user's
-  space), the selected category in the centre, the selected widget on the
-  right (preview, format Small / Large, "Add to my space"). The close button
-  returns to the race in one action. No telemetry widget exists yet, so every
-  category shows the "No widgets available yet" state.
+  space), the selected category in the centre as widget cards (still
+  previews in the Small format: one sample of raw data, not animated), the
+  picked widget on the right (still preview in the picked format, format
+  Small / Large, "Add to my space"). The close button returns to the race in
+  one action. "Add to my space" puts the widget, live, in front of the user
+  (`Logic/Telemetry/ODWidgetSpace`), beside the catalogue rather than behind
+  it: a window of its own with the window bar under it to move it and a ×
+  button to remove it.
 
 ## Telemetry widgets
 
 Design "Widgets télémétrie". Every widget derives from
 `Telemetry/Core/ODTelemetryWidget`, which owns what they share:
 
-- two formats (`WidgetFormat`): Small 440 x 440, Large 920 x 440 design px, so
+- two formats (`WidgetFormat`, declared in Data `WidgetCatalog.cs`): Small 440 x 440, Large 920 x 440 design px, so
   they line up in a grid (`ODTelemetryStyle.SizeOf`);
 - the frame: frosted glass card like the other windows
   (`ODChampionshipTheme.ApplyBackground`, radius 52), translucent recessed
   boxes inside (`Panel`);
 - the header: caps title and followed-driver pill ("VER", or "VER / HAM");
-- the data path: Logic (`Logic/Telemetry/ODTelemetryWindow`) pushes each
+- the data path: Logic (`Logic/Telemetry/ODWidgetSpace`) pushes each
   `TelemetryFrame` with `Show()`; the base hands its parts to the widget
   (`OnCar`, `OnTrace`, `OnTiming`) and calls `Tick` every frame for easing;
+  `ShowStill()` paints one frame and stops ticking (catalogue previews);
 - the live parts (`ODTelemetryWidget.Parts.cs`): `LiveText` (rewritten only
   when the value changes), `Eased`, `Bar`, `Trace` — monospaced digits and
   fixed boxes, so values move without flicker or layout shift.
@@ -89,7 +94,9 @@ Design "Widgets télémétrie". Every widget derives from
 To add a widget: create `Telemetry/Widgets/ODXxxWidget.cs` deriving from
 `ODTelemetryWidget`, give it a `Title`, build `BuildSmall` / `BuildLarge` in
 design px on the card (header included, `Pad` margins), override the data
-hooks it needs, then add its type to `ODTelemetryWindow.Widgets`.
+hooks it needs, then list it in `Logic/Menu/ODWidgetCatalogPage` (its type
+in `Widgets`, its definition — category, name, description — in
+`DefaultCatalog`).
 
 ## Allowed dependencies
 

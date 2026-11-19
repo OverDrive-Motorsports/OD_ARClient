@@ -33,6 +33,12 @@ public class WindowHandle : MonoBehaviour
     static readonly Color BarHover = new Color(1f, 1f, 1f, .90f);
     static readonly Color BarGrab = new Color(1f, 1f, 1f, 1f);
 
+    /// <summary>
+    /// Bar width (m) for windows much smaller than the 1920-px ones (telemetry widgets placed in
+    /// the space); 0 keeps the design bar. Set from code before Start, never serialized.
+    /// </summary>
+    [System.NonSerialized] public float barWidth;
+
     public Color idleColor = new Color(1f, 1f, 1f, 0.85f);
     public Color hoverColor = new Color(0.85f, 0.70f, 0.20f, 1f);
     public Color grabColor = new Color(1f, 0.85f, 0.35f, 1f);
@@ -106,13 +112,14 @@ public class WindowHandle : MonoBehaviour
         rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(.5f, .5f);
 
         float inv = 1f / Mathf.Max(transform.lossyScale.x, 0.0001f);
-        rect.sizeDelta = BarSize * inv;   // same bar on every window
+        var bar = barWidth > 0f ? new Vector2(barWidth, BarSize.y) : BarSize;
+        rect.sizeDelta = bar * inv;   // same bar on every window
 
         float halfH = GetComponent<RectTransform>().rect.height * 0.5f;
         rect.localPosition = customPillPosition ? pillLocalPosition : new Vector3(0f, -halfH - followGap * inv, 0f);
 
         _pillImage = go.AddComponent<RoundedImage>();
-        _pillImage.cornerRadius = BarSize.y * inv * .5f;
+        _pillImage.cornerRadius = bar.y * inv * .5f;
         _pillImage.cornerSegments = 12;
         _pillImage.raycastTarget = false;
         _pill = go.transform;

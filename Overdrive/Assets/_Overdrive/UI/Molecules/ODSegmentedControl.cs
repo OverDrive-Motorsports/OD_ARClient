@@ -97,6 +97,14 @@ public class ODSegmentedControl : MonoBehaviour
         Changed?.Invoke(index);
     }
 
+    /// <summary>Selects <paramref name="index"/> without raising Changed (the caller sets the state itself).</summary>
+    public void SetWithoutNotify(int index)
+    {
+        if (_labels == null || index < 0 || index >= _labels.Length || index == Selected) return;
+        Selected = index;
+        _dirty = true;
+    }
+
     void Update()
     {
         if (_pill == null) return;

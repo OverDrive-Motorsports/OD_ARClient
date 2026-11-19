@@ -15,7 +15,7 @@ Logic/
 ├── Menu/          Navigation and main menu (AppLauncher, OverdriveMainMenu)
 ├── Ranking/       Live race ranking (RaceRankingManager)
 ├── Replay/        Replay catalogue, podium, download to the headset (ODReplayService) and playback clock (ODReplayPlayer)
-├── Telemetry/     ODTelemetryWindow (opened by the race page's Telemetry button, pushes each frame to the widgets) and ODMockTelemetry (simulated feed until the backend exists)
+├── Telemetry/     ODWidgetSpace (widgets added from the catalogue: one movable window each, pushes each frame to them) and ODMockTelemetry (simulated feed until the backend exists)
 └── Video/         Video playback (VideoPlayerController)
 ```
 

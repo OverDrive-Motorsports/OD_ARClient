@@ -18,7 +18,8 @@
  ##
  ## A new widget: derive from it, give a Title, build BuildSmall / BuildLarge
  ## in design px on the card (header included, Pad = 36 margins), override the
- ## data hooks it needs, then add its type to ODTelemetryWindow.Widgets.
+ ## data hooks it needs, then list it in the catalogue (ODWidgetCatalogPage.Widgets).
+ ## ShowStill paints one frame and freezes the widget (catalogue previews).
  ##
  */
 
@@ -77,6 +78,18 @@ public abstract partial class ODTelemetryWidget : MonoBehaviour
         OnTiming(frame.timing, frame.rival);
         OnCar(frame.car, !_hasData);
         _hasData = true;
+    }
+
+    /// <summary>
+    /// Still picture of <paramref name="frame"/> (catalogue previews): the values are painted
+    /// once, as they are, and the widget stops ticking — nothing eases or runs afterwards.
+    /// </summary>
+    public void ShowStill(TelemetryFrame frame)
+    {
+        if (frame == null) return;
+        Show(frame);
+        Tick(0f);          // widgets that paint on the tick (lap clock) draw the sample once
+        enabled = false;   // no Update: the picture stays still
     }
 
     void Update()

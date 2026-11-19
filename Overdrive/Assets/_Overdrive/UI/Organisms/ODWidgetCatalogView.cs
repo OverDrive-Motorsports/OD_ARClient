@@ -8,10 +8,15 @@
  ## (ODDesign, 1920 x 1200 window):
  ##   • side bar: "Widgets" title, search field, categories with their count,
  ##     and how many widgets are in the user's space;
- ##   • centre: the selected category, then its widgets — for now always the
- ##     "No widgets available yet" state, no telemetry widget exists yet;
- ##   • right: the selected widget — preview, name, description, format
- ##     (Small / Large) and "Add to my space" (disabled while nothing is picked).
+ ##   • centre: the selected category, then its widgets as cards, two per
+ ##     row — each a still preview of the widget in its Small format (one
+ ##     sample of raw data, not animated) and its name; an empty state when
+ ##     the category (or the search) has none;
+ ##   • right: the picked widget — still preview in the picked format, name,
+ ##     description, format (Small / Large) and "Add to my space" (disabled
+ ##     while nothing is picked).
+ ## Previews are built once per widget and format (BuildPreview, given by
+ ## the page) and reused, so they keep the same values while browsing.
  ## The close button (top right) returns to the race in one action.
  ## Display only: it emits events, ODWidgetCatalogPage decides.
  ##
@@ -31,6 +36,10 @@ public class ODWidgetCatalogView : MonoBehaviour
     public event Action<string> SearchChanged;
     public event Action<WidgetFormat> FormatChanged;
     public event Action AddClicked;
+    public event Action<string> WidgetSelected;
+
+    /// <summary>Builds the still preview of a widget in a format on a parent (set by ODWidgetCatalogPage).</summary>
+    public Func<WidgetDefinition, WidgetFormat, Transform, ODTelemetryWidget> BuildPreview;
 
     // ── Layout (design px) ──────────────────────────────────────────────────
 
@@ -40,7 +49,10 @@ public class ODWidgetCatalogView : MonoBehaviour
     const float DetailW = 548f * 5f / 6f, DetailX = 1920f - 56f - DetailW, DetailTop = 128f;
     const float SplitX = DetailX - 26f, MainX = SideX + SideW + 48f, MainW = SplitX - 48f - MainX;
     const float ContentTop = 200f, ContentBottom = 1200f - D.WindowPadBottom;
-    const float PreviewH = 300f, AddH = 80f, AddY = 1200f - 56f - 44f - AddH;
+    const float PreviewH = 300f, PreviewPad = 20f, AddH = 80f, AddY = 1200f - 56f - 44f - AddH;
+    // Widget cards: two per row, the Small preview (440 px square) scaled to the card.
+    const float CardGap = 32f, CardW = (MainW - CardGap) * .5f, CardPad = 16f, CardPreview = CardW - CardPad * 2f;
+    const float CardNameH = 44f, CardH = CardPad + CardPreview + 10f + CardNameH + 12f;
 
     /// <summary>Plain grey glass: no blue / gold corner glow behind the catalogue.</summary>
     static readonly ODChampionshipTheme.Palette PlainGlass = new ODChampionshipTheme.Palette
@@ -58,8 +70,12 @@ public class ODWidgetCatalogView : MonoBehaviour
     TextMeshProUGUI _heading, _subtitle, _spaceCount;
     RectTransform _empty, _grid;
     TextMeshProUGUI _emptyTitle, _emptyBody;
-    TextMeshProUGUI _detailName, _detailDescription;
+    TextMeshProUGUI _detailName, _detailDescription, _footnote;
+    RectTransform _previewBox, _previewEmpty;
+    ODSegmentedControl _formatControl;
     CanvasGroup _format;
+    readonly Dictionary<string, Card> _cards = new();
+    readonly Dictionary<string, RectTransform> _detailPreviews = new();
     Button _add;
     TextMeshProUGUI _addLabel;
     ODNavigationIcon _addIcon;
@@ -68,6 +84,12 @@ public class ODWidgetCatalogView : MonoBehaviour
     {
         public Button button;
         public TextMeshProUGUI name, count;
+    }
+
+    struct Card
+    {
+        public Button button;
+        public TextMeshProUGUI badge;
     }
 
     public void Build()
@@ -164,7 +186,7 @@ public class ODWidgetCatalogView : MonoBehaviour
         _heading = D.Text(_main, "Heading", "", 0f, 52f, MainW, 72f, D.TitleXL, D.Weight.Bold);
         _subtitle = D.Text(_main, "Subtitle", "", 0f, 128f, MainW, 32f, D.Body, D.Weight.Regular, D.Secondary);
 
-        // Widget cards go here once telemetry widgets exist.
+        // Widget cards (built on first show, CardFor).
         _grid = D.Rect(_main, "Grid", 0f, ContentTop, MainW, ContentBottom - ContentTop);
 
         const float h = ContentBottom - ContentTop, disc = 112f;
@@ -189,11 +211,13 @@ public class ODWidgetCatalogView : MonoBehaviour
         _detail = D.Rect(root, "Detail", DetailX, 0f, DetailW, 1200f);
 
         var preview = D.Fill(_detail, "Preview", 0f, DetailTop, DetailW, PreviewH, D.Recessed, D.PlateauRadius);
-        var icon = D.Rect(preview.transform, "Icon", (DetailW - 44f) * .5f, PreviewH * .5f - 44f, 44f, 44f).gameObject.AddComponent<ODNavigationIcon>();
+        _previewBox = preview.rectTransform;
+        _previewEmpty = D.Rect(preview.transform, "Empty", 0f, 0f, DetailW, PreviewH);
+        var icon = D.Rect(_previewEmpty, "Icon", (DetailW - 44f) * .5f, PreviewH * .5f - 44f, 44f, 44f).gameObject.AddComponent<ODNavigationIcon>();
         icon.symbol = ODNavigationIcon.Symbol.Categories;
         icon.color = D.Tertiary;
         icon.raycastTarget = false;
-        D.Text(preview.transform, "Label", "Widget preview", 0f, PreviewH * .5f + 14f, DetailW, 28f, 20f, D.Weight.Regular, D.Tertiary,
+        D.Text(_previewEmpty, "Label", "Widget preview", 0f, PreviewH * .5f + 14f, DetailW, 28f, 20f, D.Weight.Regular, D.Tertiary,
             TextAlignmentOptions.Center);
 
         float y = DetailTop + PreviewH + 36f;
@@ -203,7 +227,8 @@ public class ODWidgetCatalogView : MonoBehaviour
         y += 66f + 96f + 36f;
         D.Caps(_detail, "FormatCaps", "Format", 0f, y, DetailW);
         var format = ODSegmentedControl.Create(_detail, 0f, D.Px(y + 40f), D.Px(DetailW), D.Px(72f),
-            new[] { "Small", "Large" }, 1, D.Px(23f));
+            new[] { "Small", "Large" }, 0, D.Px(23f));
+        _formatControl = format;
         format.Changed += index => FormatChanged?.Invoke(index == 0 ? WidgetFormat.Small : WidgetFormat.Large);
         _format = format.gameObject.AddComponent<CanvasGroup>();
 
@@ -215,7 +240,7 @@ public class ODWidgetCatalogView : MonoBehaviour
         _addIcon.raycastTarget = false;
         _addLabel = D.Text(_add.transform, "Label", "Add to my space", start + iconSize + gap, 0f, labelW, AddH, 25f, D.Weight.SemiBold, D.Ink);
 
-        D.Text(_detail, "Footnote", "You can move, resize or remove it at any time.", 0f, AddY + AddH + 20f, DetailW, 28f, 19f,
+        _footnote = D.Text(_detail, "Footnote", "", 0f, AddY + AddH + 20f, DetailW, 28f, 19f,
             D.Weight.Regular, D.Tertiary, TextAlignmentOptions.Center);
     }
 
@@ -224,11 +249,12 @@ public class ODWidgetCatalogView : MonoBehaviour
     // ═══════════════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Paints the catalogue for <paramref name="selected"/> (index in the categories) and the
-    /// widgets it lists after the search. No widget is picked yet, so the right column shows its
-    /// empty state and "Add to my space" stays disabled.
+    /// Paints the catalogue for <paramref name="selected"/> (index in the categories), the widgets
+    /// it lists after the search as cards, and on the right <paramref name="picked"/> in
+    /// <paramref name="format"/> (or the empty state while nothing is picked).
     /// </summary>
-    public void Show(WidgetCatalog catalog, int selected, List<WidgetDefinition> widgets, string search)
+    public void Show(WidgetCatalog catalog, int selected, List<WidgetDefinition> widgets, string search,
+        WidgetDefinition picked, WidgetFormat format, bool justAdded)
     {
         Build();
         if (_rows.Count != catalog.categories.Count) BuildRows(catalog.categories);
@@ -241,24 +267,120 @@ public class ODWidgetCatalogView : MonoBehaviour
         }
 
         var category = selected >= 0 && selected < catalog.categories.Count ? catalog.categories[selected] : null;
+        bool searching = !string.IsNullOrWhiteSpace(search);
         int count = widgets.Count;
-        _heading.text = category != null ? category.name : "Widgets";
-        _subtitle.text = $"{count} widget{(count == 1 ? "" : "s")}" + (category != null && !string.IsNullOrEmpty(category.description) ? " · " + category.description : "");
+        _heading.text = searching ? "Search" : category != null ? category.name : "Widgets";
+        _subtitle.text = $"{count} widget{(count == 1 ? "" : "s")}" +
+            (!searching && category != null && !string.IsNullOrEmpty(category.description) ? " · " + category.description : "");
         _spaceCount.text = $"In your space: {catalog.AddedCount} widget{(catalog.AddedCount == 1 ? "" : "s")}";
 
-        bool searching = !string.IsNullOrWhiteSpace(search);
         _empty.gameObject.SetActive(count == 0);
         _grid.gameObject.SetActive(count > 0);
-        _emptyTitle.text = searching ? "No widget found" : "No widgets available yet";
+        _emptyTitle.text = searching ? "No widget found" : "No widgets here yet";
         _emptyBody.text = searching
             ? $"No widget matches “{search.Trim()}”. Try another name."
-            : "Telemetry widgets are on their way. They will show up here as soon as they are ready.";
+            : "More telemetry widgets are on their way. They will show up here as soon as they are ready.";
 
-        ShowNoSelection();
+        ShowCards(widgets, picked);
+        if (picked != null) ShowPicked(picked, format, justAdded);
+        else ShowNoSelection();
+    }
+
+    // ── Cards ───────────────────────────────────────────────────────────────
+
+    /// <summary>The listed widgets two per row, the picked one highlighted; the others hidden.</summary>
+    void ShowCards(List<WidgetDefinition> widgets, WidgetDefinition picked)
+    {
+        foreach (var card in _cards.Values) card.button.gameObject.SetActive(false);
+        for (int i = 0; i < widgets.Count; i++)
+        {
+            var widget = widgets[i];
+            var card = CardFor(widget);
+            var rect = (RectTransform)card.button.transform;
+            rect.anchoredPosition = new Vector2(D.Px(i % 2 * (CardW + CardGap)), -D.Px(i / 2 * (CardH + CardGap)));
+            card.button.gameObject.SetActive(true);
+
+            bool isPicked = picked != null && picked.id == widget.id;
+            D.ApplyButton(card.button, isPicked ? D.ButtonKind.Secondary : D.ButtonKind.Ghost);
+            ((RoundedImage)card.button.targetGraphic).cornerRadius = D.Px(CardRadius);
+            card.badge.text = widget.inSpace == 0 ? "" : widget.inSpace == 1 ? "In your space" : $"{widget.inSpace} in your space";
+        }
+    }
+
+    /// <summary>Corner radius of a card: the widget's, scaled, plus the card padding.</summary>
+    const float CardRadius = ODTelemetryStyle.Radius * (CardPreview / ODTelemetryStyle.Square) + CardPad;
+
+    /// <summary>The card of <paramref name="widget"/>: its Small preview, still, over its name. Built once.</summary>
+    Card CardFor(WidgetDefinition widget)
+    {
+        if (_cards.TryGetValue(widget.id, out var card)) return card;
+
+        var button = D.Button(_grid, "Card " + widget.id, "", 0f, 0f, CardW, CardH, D.ButtonKind.Ghost);
+        string id = widget.id;
+        button.onClick.AddListener(() => WidgetSelected?.Invoke(id));
+
+        var holder = D.Rect(button.transform, "Preview", CardPad, CardPad, ODTelemetryStyle.Square, ODTelemetryStyle.Square);
+        holder.localScale = Vector3.one * (CardPreview / ODTelemetryStyle.Square);
+        BuildPreview?.Invoke(widget, WidgetFormat.Small, holder);
+        Inert(holder);   // the card takes the ray, not the widget's labels
+
+        float y = CardPad + CardPreview + 10f;
+        D.Text(button.transform, "Name", widget.name, CardPad + 8f, y, CardW - CardPad * 2f - 180f, CardNameH, D.RowTitle, D.Weight.SemiBold);
+        card = new Card
+        {
+            button = button,
+            badge = D.Text(button.transform, "InSpace", "", CardW - CardPad - 8f - 180f, y, 180f, CardNameH, 20f, D.Weight.Regular,
+                D.GreenText, TextAlignmentOptions.MidlineRight),
+        };
+        _cards[widget.id] = card;
+        return card;
+    }
+
+    // ── Picked widget ───────────────────────────────────────────────────────
+
+    void ShowPicked(WidgetDefinition widget, WidgetFormat format, bool justAdded)
+    {
+        ShowPreview(widget, format);
+        _detailName.text = widget.name;
+        _detailDescription.text = widget.description;
+
+        _formatControl.SetWithoutNotify(format == WidgetFormat.Small ? 0 : 1);
+        _format.alpha = 1f;
+        _format.interactable = true;
+        _format.blocksRaycasts = true;
+
+        _add.interactable = true;
+        _addLabel.color = D.Ink;
+        _addIcon.color = D.Ink;
+        _footnote.text = justAdded
+            ? "Added in front of you. Grab the bar under it to move it."
+            : "Grab the bar under a widget to move it, × to remove it.";
+    }
+
+    /// <summary>Still preview of <paramref name="widget"/> in <paramref name="format"/>, centred in the preview box. Built once.</summary>
+    void ShowPreview(WidgetDefinition widget, WidgetFormat format)
+    {
+        _previewEmpty.gameObject.SetActive(false);
+        foreach (var preview in _detailPreviews.Values) preview.gameObject.SetActive(false);
+
+        string key = widget.id + "/" + format;
+        if (!_detailPreviews.TryGetValue(key, out var holder))
+        {
+            Vector2 size = ODTelemetryStyle.SizeOf(format);
+            float scale = Mathf.Min((DetailW - PreviewPad * 2f) / size.x, (PreviewH - PreviewPad * 2f) / size.y);
+            holder = D.Rect(_previewBox, "Preview " + key, (DetailW - size.x * scale) * .5f, (PreviewH - size.y * scale) * .5f, size.x, size.y);
+            holder.localScale = Vector3.one * scale;
+            BuildPreview?.Invoke(widget, format, holder);
+            Inert(holder);
+            _detailPreviews[key] = holder;
+        }
+        holder.gameObject.SetActive(true);
     }
 
     void ShowNoSelection()
     {
+        _previewEmpty.gameObject.SetActive(true);
+        foreach (var preview in _detailPreviews.Values) preview.gameObject.SetActive(false);
         _detailName.text = "No widget selected";
         _detailDescription.text = "Pick a widget in the catalogue to see its preview and formats, then add it to your view.";
         _format.alpha = .38f;
@@ -267,6 +389,13 @@ public class ODWidgetCatalogView : MonoBehaviour
         _add.interactable = false;
         _addLabel.color = D.Tertiary;
         _addIcon.color = D.Tertiary;
+        _footnote.text = "You can move or remove it at any time.";
+    }
+
+    /// <summary>No graphic under <paramref name="root"/> catches the ray.</summary>
+    static void Inert(Transform root)
+    {
+        foreach (var graphic in root.GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
     }
 
     /// <summary>Clears the search field (the catalogue reopens on a fresh list).</summary>
