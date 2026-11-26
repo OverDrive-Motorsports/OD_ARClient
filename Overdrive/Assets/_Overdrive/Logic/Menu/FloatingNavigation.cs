@@ -69,9 +69,9 @@ public class FloatingNavigation : MonoBehaviour
         if (settingsButton) settingsButton.onClick.RemoveListener(OpenProfile);
     }
 
-    public void Show() => gameObject.SetActive(true);
+    public void Show() => gameObject.SetActive(ODAuthService.IsAuthenticated);
     public void Hide() => gameObject.SetActive(false);
-    public void Toggle() => gameObject.SetActive(!gameObject.activeSelf);
+    public void Toggle() => gameObject.SetActive(ODAuthService.IsAuthenticated && !gameObject.activeSelf);
 
     public void OpenHomepage()
     {
@@ -99,6 +99,7 @@ public class FloatingNavigation : MonoBehaviour
 
     private bool OpenWindow()
     {
+        if (!ODAuthService.IsAuthenticated) return false;
         if (menu == null || contentWindow == null) return false;
         contentWindow.gameObject.SetActive(true);
         var group = contentWindow.GetComponent<CanvasGroup>();

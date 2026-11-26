@@ -61,6 +61,7 @@ public class OverdriveMainMenu : MonoBehaviour
 
     private void Initialize()
     {
+        if (!ODAuthService.IsAuthenticated) return;
         if (_navButtons != null) return;
         AutoFindReferences();
 
@@ -113,6 +114,7 @@ public class OverdriveMainMenu : MonoBehaviour
 
     public void ShowHomepage()
     {
+        if (!ODAuthService.IsAuthenticated) return;
         Initialize();
         if (homepagePanel == null) { SelectNav(0); return; }
         ActiveTab = 0;
@@ -167,6 +169,7 @@ public class OverdriveMainMenu : MonoBehaviour
 
     public void ShowCalendar()
     {
+        if (!ODAuthService.IsAuthenticated) return;
         Initialize();
         if (calendarPanel == null && sportPanel != null)
             calendarPanel = ODCalendarPage.Create((RectTransform)sportPanel.transform).gameObject;
@@ -177,6 +180,7 @@ public class OverdriveMainMenu : MonoBehaviour
 
     public void ShowProfile()
     {
+        if (!ODAuthService.IsAuthenticated) return;
         Initialize();
         if (profilePanel == null && sportPanel != null)
             profilePanel = ODProfilePage.Create((RectTransform)sportPanel.transform).gameObject;
@@ -187,6 +191,7 @@ public class OverdriveMainMenu : MonoBehaviour
 
     public void ShowSport()
     {
+        if (!ODAuthService.IsAuthenticated) return;
         if (sportPanel == null) return;
         SelectNav(1);
         ShowCustomPage(sportPanel);
@@ -194,6 +199,7 @@ public class OverdriveMainMenu : MonoBehaviour
 
     public void ShowReplayCatalog()
     {
+        if (!ODAuthService.IsAuthenticated) return;
         if (replayCatalogPanel == null) return;
         SelectNav(1);
         ShowCustomPage(replayCatalogPanel);
@@ -220,6 +226,7 @@ public class OverdriveMainMenu : MonoBehaviour
     // ── Nav ───────────────────────────────────────────────────────────────────
     public void SelectNav(int index)
     {
+        if (!ODAuthService.IsAuthenticated) return;
         Initialize();
         if (index < 0 || index >= _navButtons.Length) return;
         ActiveTab = index == 0 ? 0 : index == 1 ? 1 : index == 2 ? 3 : -1;

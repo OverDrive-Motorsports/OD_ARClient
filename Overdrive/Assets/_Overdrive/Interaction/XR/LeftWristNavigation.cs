@@ -73,6 +73,7 @@ public class LeftWristNavigation : MonoBehaviour
     private void LateUpdate()
     {
         if (navigation == null) return;
+        if (!ODAuthService.IsAuthenticated) { _gate.Reset(); navigation.Hide(); return; }
         if (cameraRig == null) cameraRig = FindFirstObjectByType<OVRCameraRig>();
         if (!TryGetWrist(out Vector3 position, out Vector3 palm))
         {

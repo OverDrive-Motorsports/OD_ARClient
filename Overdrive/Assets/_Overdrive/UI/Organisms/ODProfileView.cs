@@ -22,6 +22,7 @@ using D = ODDesign;
 
 public class ODProfileView : MonoBehaviour
 {
+    public event Action LogoutRequested;
     const float X0 = D.WindowPadSide, W = 1920f - D.WindowPadSide * 2f, Top = D.WindowPadTop;
     const float HeaderBottom = 162f, Bottom = 1200f - D.WindowPadBottom;
 
@@ -151,8 +152,21 @@ public class ODProfileView : MonoBehaviour
         float bw = (rightW - 32f) / 3f;
         string[] actions = { "Edit profile", "Sign out", "Delete account" };
         for (int i = 0; i < 3; i++)
-            D.Button(tab, "Action" + i, actions[i], rightX + i * (bw + 16f), Bottom - 72f, bw, 72f,
+        {
+            var button = D.Button(tab, "Action" + i, actions[i], rightX + i * (bw + 16f), Bottom - 72f, bw, 72f,
                 i == 2 ? D.ButtonKind.Destructive : D.ButtonKind.Secondary, 22f);
+            if (i == 1) button.onClick.AddListener(() => LogoutRequested?.Invoke());
+        }
+    }
+
+    public void SetIdentity(string email)
+    {
+        var name = transform.Find("ProfileTab/Identity/Name")?.GetComponent<TextMeshProUGUI>();
+        var since = transform.Find("ProfileTab/Identity/Since")?.GetComponent<TextMeshProUGUI>();
+        var initials = transform.Find("ProfileTab/Identity/Avatar/Initials")?.GetComponent<TextMeshProUGUI>();
+        if (name != null) name.text = email ?? "Overdrive account";
+        if (since != null) since.text = "Signed in to Overdrive";
+        if (initials != null) initials.text = string.IsNullOrEmpty(email) ? "OD" : email.Substring(0, 1).ToUpperInvariant();
     }
 
     // ═══════════════════════════════════════════════════════════════════════

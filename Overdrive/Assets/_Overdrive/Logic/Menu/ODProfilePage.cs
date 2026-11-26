@@ -4,7 +4,7 @@
  ## All Technical rights reserved
  ##
  ## ODProfilePage - Profile page of the main menu (nav tab "Profile"), with its
- ## Settings tab. Mock-up only (ODProfileView): connected to nothing.
+ ## Settings tab. Signed-in identity and logout are connected; other profile tiles remain placeholders.
  ##
  */
 
@@ -39,7 +39,13 @@ public sealed class ODProfilePage : MonoBehaviour
         ODPassthroughBlur.Acquire(this);   // frosted room behind the glass (Quest 3, camera permission)
         if (_view == null) _view = GetComponent<ODProfileView>();
         _view.Build();
+        _view.SetIdentity(ODAuthService.Email);
+        _view.LogoutRequested += ODAuthService.Logout;
     }
 
-    void OnDisable() => ODPassthroughBlur.Release(this);
+    void OnDisable()
+    {
+        ODPassthroughBlur.Release(this);
+        if (_view != null) _view.LogoutRequested -= ODAuthService.Logout;
+    }
 }

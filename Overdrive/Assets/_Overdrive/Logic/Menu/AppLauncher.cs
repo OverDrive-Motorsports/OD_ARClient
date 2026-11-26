@@ -45,12 +45,13 @@ public class AppLauncher : MonoBehaviour
         if (_cg == null) _cg = menuCanvas.gameObject.AddComponent<CanvasGroup>();
 
         _cg.alpha = 0f;
-        menuCanvas.gameObject.SetActive(true);
+        menuCanvas.gameObject.SetActive(ODAuthService.IsAuthenticated);
     }
 
     // ── Start ────────────────────────────────────────────────────────────────
     private IEnumerator Start()
     {
+        while (!ODAuthService.IsAuthenticated) yield return null;
         if (centerEyeAnchor == null)
             centerEyeAnchor = FindCenterEye();
 

@@ -25,8 +25,15 @@ public class ODApiConfig : ScriptableObject
     [Tooltip("Gateway URL used on the headset — the LAN IP of the machine running the backend.")]
     public string deviceBaseUrl = "http://192.168.1.10:3000";
 
-    [Tooltip("GATEWAY_AUTH_TOKEN from the backend's gateway/.env. Mandatory on every /v1 route.")]
+    [HideInInspector, System.Obsolete("Protected requests now use the signed-in user's JWT, never this shared token.")]
     public string authToken = "";
+
+    [Header("User authentication")]
+    [Tooltip("Auth service URL in the Editor. /login and /refresh are appended to this URL.")]
+    public string editorAuthBaseUrl = "http://127.0.0.1:3001";
+
+    [Tooltip("Auth service URL on Quest. Empty uses the gateway's host on port 3001. May include a proxy prefix.")]
+    public string deviceAuthBaseUrl = "";
 
     [Tooltip("Championship code exposed by championship-service (OpenF1 ingestion uses \"f1\").")]
     public string championshipCode = "f1";
@@ -45,6 +52,17 @@ public class ODApiConfig : ScriptableObject
     public float livePollSeconds = 5f;
 
     public string BaseUrl => (Application.isEditor ? editorBaseUrl : deviceBaseUrl).TrimEnd('/');
+
+    public string AuthBaseUrl
+    {
+        get
+        {
+            string value = Application.isEditor ? editorAuthBaseUrl : deviceAuthBaseUrl;
+            if (!string.IsNullOrWhiteSpace(value)) return value.Trim().TrimEnd('/');
+            var uri = new System.UriBuilder(BaseUrl) { Port = 3001, Path = "", Query = "", Fragment = "" };
+            return uri.Uri.AbsoluteUri.TrimEnd('/');
+        }
+    }
 
     /// <summary>Backend id of <see cref="sessionKey"/> (ingestion ids are "provider:session:key"), null when unset.</summary>
     public string PinnedSessionId
