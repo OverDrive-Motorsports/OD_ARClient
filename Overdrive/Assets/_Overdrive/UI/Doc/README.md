@@ -66,8 +66,10 @@ navigation bar follow the Canva design "OverDrive VR – v2" (pages
   space), the selected category in the centre as widget cards (still
   previews in the Small format: one sample of raw data, not animated), the
   picked widget on the right (still preview in the picked format, format
-  Small / Large, "Add to my space"). The close button returns to the race in
-  one action. "Add to my space" puts the widget, live, in front of the user
+  Small / Large, "Add to my space"). Previews use made-up data; placed
+  widgets show the backend telemetry of the session (see Logic/Doc). The
+  close button returns to the race in one action. "Add to my space" puts the
+  widget, live, in front of the user
   (`Logic/Telemetry/ODWidgetSpace`), beside the catalogue rather than behind
   it: a window of its own with the window bar under it to move it and a ×
   button to remove it.
@@ -87,6 +89,9 @@ Design "Widgets télémétrie". Every widget derives from
   `TelemetryFrame` with `Show()`; the base hands its parts to the widget
   (`OnCar`, `OnTrace`, `OnTiming`) and calls `Tick` every frame for easing;
   `ShowStill()` paints one frame and stops ticking (catalogue previews);
+  `ShowStatus()` hides the content under a message while the feed is
+  loading, has no data or lost the connection (the header stays), and the
+  next frame is shown without easing;
 - the live parts (`ODTelemetryWidget.Parts.cs`): `LiveText` (rewritten only
   when the value changes), `Eased`, `Bar`, `Trace` — monospaced digits and
   fixed boxes, so values move without flicker or layout shift.

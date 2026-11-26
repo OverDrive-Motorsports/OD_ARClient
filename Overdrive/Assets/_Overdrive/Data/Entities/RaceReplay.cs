@@ -70,6 +70,15 @@ public sealed class ReplayCar
     /// </summary>
     public float[] odometerTime = Array.Empty<float>();
     public float[] odometer = Array.Empty<float>();
+    /// <summary>
+    /// Telemetry at each odometerTime, for the telemetry widgets: speed (km/h), throttle and
+    /// brake (%, 0 – 100), engine speed and gear.
+    /// </summary>
+    public float[] speed = Array.Empty<float>();
+    public float[] throttle = Array.Empty<float>();
+    public float[] brake = Array.Empty<float>();
+    public float[] rpm = Array.Empty<float>();
+    public int[] gear = Array.Empty<int>();
     /// <summary>Typical lap length driven by the car, in metres (NaN when unknown).</summary>
     public float lapDistance = float.NaN;
     /// <summary>Laps the car completed.</summary>

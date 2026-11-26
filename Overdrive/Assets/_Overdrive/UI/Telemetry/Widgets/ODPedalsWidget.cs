@@ -4,14 +4,16 @@
  ## All Technical rights reserved
  ##
  ## ODPedalsWidget - Throttle and brake of the followed car (design "Pédales").
+ ## Throttle is blue, brake red, everywhere in the widget.
  ##   • Small: two vertical bars with their percentage.
  ##   • Large: legend with the live percentages and a note summing up the lap
  ##     ("Full throttle for 64 % of the lap · 7 braking zones") on the left;
- ##     on the right the throttle line and the braking zones over the lap.
+ ##     on the right one chart with both lines over the lap, throttle and
+ ##     brake (0 – 100 %). It draws the running lap up to the car and starts
+ ##     again empty at each line crossing.
  ##
  */
 
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using static ODTelemetryStyle;
@@ -21,27 +23,25 @@ public sealed class ODPedalsWidget : ODTelemetryWidget
 {
     const float PedalEase = .05f;   // pedals move fast: little easing, just no steps
     const float FullThrottle = .98f, Braking = .08f;
-    // Large traces, design px on the card.
-    const float StripX = 344f, StripRight = 58f, GasY = 128f, GasH = 100f, BrakeY = 252f, BrakeH = 66f, StripPad = 12f;
+    // Large chart, design px on the card.
+    const float ChartX = 344f, ChartRight = 58f, ChartY = 128f, ChartH = 190f, ChartPad = 14f;
 
     protected override string Title => "Pedals";
 
     LiveText _throttleText, _brakeText, _note;
     Bar _throttleBar, _brakeBar;
     Eased _throttle, _brake;
-    Trace _gas;
-    RectTransform _brakeStrip;
+    Trace _gas, _brakeLine;
     TextMeshProUGUI _lapLength;
-    readonly List<RoundedImage> _zones = new();
-    float _stripW;
+    LapTrace _trace;
 
     // ── Small: two vertical bars ────────────────────────────────────────────
 
     protected override void BuildSmall(RectTransform card, float w, float h)
     {
         const float barW = 84f, gap = 60f;
-        _throttleBar = Column(card, "Throttle", w * .5f - gap * .5f - barW, barW, Ink, out _throttleText);
-        _brakeBar = Column(card, "Brake", w * .5f + gap * .5f, barW, InkSoft, out _brakeText);
+        _throttleBar = Column(card, "Throttle", w * .5f - gap * .5f - barW, barW, ThrottleColour, out _throttleText);
+        _brakeBar = Column(card, "Brake", w * .5f + gap * .5f, barW, BrakeColour, out _brakeText);
     }
 
     static Bar Column(Transform card, string name, float x, float barW, Color fill, out LiveText percent)
@@ -49,16 +49,16 @@ public sealed class ODPedalsWidget : ODTelemetryWidget
         float mid = x + barW * .5f;
         percent = Live(D.Text(card, name + "Percent", "", mid - 80f, 326f, 160f, 36f, 28f, D.Weight.SemiBold, Ink,
             TextAlignmentOptions.Center));
-        D.Text(card, name + "Name", name, mid - 80f, 372f, 160f, 28f, 19f, D.Weight.Regular, Label, TextAlignmentOptions.Center);
+        D.Text(card, name + "Name", name, mid - 80f, 372f, 160f, 28f, 19f, D.Weight.Regular, fill, TextAlignmentOptions.Center);
         return new Bar(card, name, x, 94f, barW, 222f, 30f, fill, vertical: true, minPx: 8f);
     }
 
-    // ── Large: legend, lap note, traces ─────────────────────────────────────
+    // ── Large: legend, lap note, chart ──────────────────────────────────────
 
     protected override void BuildLarge(RectTransform card, float w, float h)
     {
-        D.Fill(card, "ThrottleMark", Pad, 170f - 2.5f, 24f, 5f, Ink, 2.5f);
-        D.Fill(card, "BrakeMark", Pad, 224f - 5f, 24f, 10f, InkSoft, 5f);
+        D.Fill(card, "ThrottleMark", Pad, 170f - 2.5f, 24f, 5f, ThrottleColour, 2.5f);
+        D.Fill(card, "BrakeMark", Pad, 224f - 2.5f, 24f, 5f, BrakeColour, 2.5f);
         _throttleText = Pair(card, "Throttle", 74f, 170f, 206f, 26f);
         _brakeText = Pair(card, "Brake", 74f, 224f, 206f, 26f);
 
@@ -69,42 +69,37 @@ public sealed class ODPedalsWidget : ODTelemetryWidget
         noteText.lineSpacing = 6f;
         _note = Live(noteText);
 
-        _stripW = w - StripRight - StripX;
-        StripLabel(card, "Gas", GasY + GasH * .5f);
-        StripLabel(card, "Brake", BrakeY + BrakeH * .5f);
-        _gas = new Trace(Panel(card, "GasTrace", StripX, GasY, _stripW, GasH, 16f).transform, "Line", 0f, 0f, _stripW, GasH, StripPad);
-        _brakeStrip = (RectTransform)Panel(card, "BrakeTrace", StripX, BrakeY, _stripW, BrakeH, 16f).transform;
+        // One chart, both pedals on the same 0 – 100 % scale; the brake drawn last, over the throttle.
+        float chartW = w - ChartRight - ChartX;
+        var chart = Panel(card, "Chart", ChartX, ChartY, chartW, ChartH, 16f).transform;
+        float inner = ChartH - ChartPad * 2f;
+        for (int p = 0; p <= 100; p += 50)
+        {
+            float y = ChartY + ChartPad + (1f - p / 100f) * inner;
+            if (p == 50) D.Fill(card, "Grid50", ChartX + ChartPad, y - .75f, chartW - ChartPad * 2f, 1.5f, GridLine, 0f);
+            D.Text(card, "Axis" + p, p + " %", ChartX - 76f, y - 12f, 64f, 24f, 15f, D.Weight.Regular, Faint,
+                TextAlignmentOptions.MidlineRight);
+        }
+        _gas = new Trace(chart, "Throttle", 0f, 0f, chartW, ChartH, ChartPad, ThrottleColour);
+        _brakeLine = new Trace(chart, "Brake", 0f, 0f, chartW, ChartH, ChartPad, BrakeColour);
 
-        D.Text(card, "LapStart", "Lap start", StripX, 334f, 200f, 24f, 16f, D.Weight.Regular, Faint);
-        _lapLength = D.Text(card, "LapLength", "", w - StripRight - 200f, 334f, 200f, 24f, 16f, D.Weight.Regular, Faint,
+        D.Text(card, "LapStart", "Lap start", ChartX, 334f, 200f, 24f, 16f, D.Weight.Regular, Faint);
+        _lapLength = D.Text(card, "LapLength", "", w - ChartRight - 200f, 334f, 200f, 24f, 16f, D.Weight.Regular, Faint,
             TextAlignmentOptions.MidlineRight);
     }
-
-    static void StripLabel(Transform card, string name, float y) =>
-        D.Text(card, name + "Label", name, StripX - 70f, y - 12f, 60f, 24f, 15f, D.Weight.Regular, Faint, TextAlignmentOptions.MidlineRight);
 
     protected override void OnTrace(LapTrace trace)
     {
         int bins = trace.Bins;
         if (_gas == null || bins == 0) return;
+        _trace = trace;   // plotted in OnCar, once the car's place on the lap is known
         if (_lapLength.text.Length == 0) _lapLength.text = Km(trace.lapLengthKm);
 
-        _gas.Plot(trace.throttle, 0f, 1f);
-
-        // Braking zones as pills, as wide as the stretch of track spent on the brake.
-        int zones = 0, start = -1;
-        for (int i = 0; i <= bins; i++)
-        {
-            bool on = i < bins && trace.brake[i] > Braking;
-            if (on && start < 0) start = i;
-            if (!on && start >= 0)
-            {
-                Zone(zones++, start, i, bins);
-                start = -1;
-            }
-        }
-        for (int i = zones; i < _zones.Count; i++) _zones[i].gameObject.SetActive(false);
-        if (zones > 1 && trace.brake[0] > Braking && trace.brake[bins - 1] > Braking) zones--;   // one zone across the line
+        // Braking zones: stretches of track on the brake (one across the line counts once).
+        int zones = 0;
+        for (int i = 0; i < bins; i++)
+            if (trace.brake[i] > Braking && trace.brake[(i + bins - 1) % bins] <= Braking) zones++;
+        if (zones == 0 && trace.brake[0] > Braking) zones = 1;
 
         int full = 0;
         foreach (float t in trace.throttle) if (t >= FullThrottle) full++;
@@ -113,28 +108,27 @@ public sealed class ODPedalsWidget : ODTelemetryWidget
             _note.Text = $"Full throttle for {share} % of the lap · {zones} braking zone{(zones == 1 ? "" : "s")}";
     }
 
-    void Zone(int index, int from, int to, int bins)
-    {
-        const float pad = 10f, minW = 14f;
-        while (_zones.Count <= index)
-            _zones.Add(D.Fill(_brakeStrip, "Zone", 0f, 0f, minW, BrakeH - pad * 2f, InkSoft, 7f));
-        var zone = _zones[index];
-        zone.gameObject.SetActive(true);
-        float inner = _stripW - StripPad * 2f;
-        float x = StripPad + (float)from / bins * inner, width = Mathf.Max(minW, (float)(to - from) / bins * inner);
-        D.Place(zone.transform, Mathf.Min(x, _stripW - StripPad - width), pad, width, BrakeH - pad * 2f);
-    }
-
     // ── Live values ─────────────────────────────────────────────────────────
 
     protected override void OnCar(in CarTelemetry car, bool first)
     {
         _throttle.target = car.throttle;
         _brake.target = car.brake;
+        PlotLap(car.lapDistance);
         if (!first) return;
         _throttle.Snap();
         _brake.Snap();
         Paint();
+    }
+
+    /// <summary>Both lines from the line to the car: empty again once it crosses the line.</summary>
+    void PlotLap(float lapShare)
+    {
+        if (_gas == null || _trace == null || _trace.Bins == 0) return;
+        int bins = _trace.Bins;
+        int driven = Mathf.Clamp(Mathf.FloorToInt(lapShare * bins + .5f), 0, bins);
+        _gas.Plot(_trace.throttle, 0f, 1f, driven);
+        _brakeLine.Plot(_trace.brake, 0f, 1f, driven);
     }
 
     protected override void Tick(float dt)

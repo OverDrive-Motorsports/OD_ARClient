@@ -78,6 +78,28 @@ public class RacePitStopDto
     public float pitDuration;
 }
 
+/// <summary>
+/// GET /sessions/{id}/drivers/{n}/telemetry/speed?lapNumber= — every sample of the lap, oldest first.
+/// Source: services/race-data-service/src/core/domain/telemetry.entity.go
+/// </summary>
+public class TelemetrySpeedDto
+{
+    public int speed;          // km/h
+    public int gear;
+    public DateTime timestamp;
+}
+
+/// <summary>GET /sessions/{id}/drivers/{n}/telemetry/engine?lapNumber= — every sample of the lap, oldest first.</summary>
+public class TelemetryEngineDto
+{
+    public int rpm;
+    public int gear;
+    public float throttlePercent;   // 0 – 100 (OpenF1 can send a little over 100)
+    public float brakePercent;      // 0 or 100 (OpenF1 brake is on / off)
+    public bool drsActive;
+    public DateTime timestamp;
+}
+
 /// <summary>GET /sessions/{id}/race/weather — every sample of the session.</summary>
 public class RaceWeatherSampleDto
 {

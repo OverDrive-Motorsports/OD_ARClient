@@ -11,6 +11,8 @@ using UnityEngine.UI;
 /// the gallery (header "Replays" button); its back button returns to the gallery. A backend replay is downloaded if needed and
 /// read when the page opens; it starts from lights out when "Watch replay" is
 /// pressed and stops when the page is left.
+/// The telemetry widgets placed in the space follow the active session (SyncTelemetry):
+/// the loaded replay at its clock, or the live session through the gateway.
 /// </summary>
 public sealed class ODSportPage : MonoBehaviour
 {
@@ -84,8 +86,34 @@ public sealed class ODSportPage : MonoBehaviour
             var raceWindow = menu != null ? (RectTransform)menu.transform : (RectTransform)transform;
             if (_widgetSpace == null) _widgetSpace = ODWidgetSpace.Create(raceWindow);
             _widgetCatalog = ODWidgetCatalogPage.Create(raceWindow, _widgetSpace);
+            SyncTelemetry();
         }
         _widgetCatalog.Toggle();
+    }
+
+    /// <summary>
+    /// Points the widgets' telemetry at the active session: the loaded replay at its clock (so
+    /// they move with the playback), the live session through the gateway, nothing elsewhere.
+    /// </summary>
+    private void SyncTelemetry()
+    {
+        var feed = _widgetSpace != null ? _widgetSpace.Feed : null;
+        if (feed == null) return;
+        switch (currentMode)
+        {
+            case Mode.Replay:
+                if (_player != null && _player.Replay != null) feed.PlayReplay(_player.Replay, () => _player.RaceTime);
+                else feed.Wait("Loading the replay…");
+                break;
+            case Mode.LiveSession:
+                string session = _snapshot?.liveSession?.sessionId;
+                if (session != null) feed.FollowLive(session);
+                else feed.Wait("Loading the live session…");
+                break;
+            default:
+                feed.Wait("No session in progress");
+                break;
+        }
     }
 
     /// <summary>Placed widgets are shown on the live and replay states only (the telemetry feed), where they were left.</summary>
@@ -184,6 +212,7 @@ public sealed class ODSportPage : MonoBehaviour
         // The replay page has no "Replays" button: its back arrow returns to the gallery.
         if (replayButton != null) replayButton.gameObject.SetActive(!replay);
         ShowModeContent();
+        SyncTelemetry();
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -319,6 +348,7 @@ public sealed class ODSportPage : MonoBehaviour
             var race = await ODReplayService.LoadRaceAsync(summary);
             if (!IsCurrentReplay(version)) return;
             _player.Load(race, summary, ODReplayTrackMap.For(championshipPanel.ReplayScreen));
+            SyncTelemetry();   // the widgets follow the replay clock from now on
             if (_watchRequested) BeginReplay();
             else championshipPanel.SetReplayProgress("Ready · press \"Watch replay\"");
         }
@@ -326,6 +356,7 @@ public sealed class ODSportPage : MonoBehaviour
         {
             if (this == null || version != _replayVersion) return;
             Debug.LogWarning("[ODSportPage] Replay load failed: " + error);
+            if (_widgetSpace != null) _widgetSpace.Feed.Unavailable("The replay could not be loaded");
             ShowBackendError(ODChampionshipDataService.Title(error), ODChampionshipDataService.Describe(error));
         }
     }
@@ -358,6 +389,7 @@ public sealed class ODSportPage : MonoBehaviour
         _replayVersion++;
         _watchRequested = false;
         if (_player != null) _player.Stop();
+        SyncTelemetry();   // never left reading a replay that is gone
     }
 
     /// <summary>Playback: the running order at the replay time, in the table and on the podium.</summary>

@@ -9,8 +9,8 @@
  ## sectors, the best lap and the last laps.
  ## Colour code (F1): purple = best of the session, green = personal best,
  ## yellow = slower, grey = not driven yet.
- ## Simulated for now (ODMockTelemetry), the backend feed will fill the same
- ## types. Pure data: no MonoBehaviour, no logic.
+ ## Filled from the backend telemetry by ODTelemetryMapper (made up by
+ ## ODMockTelemetry for the catalogue previews). Pure data: no MonoBehaviour, no logic.
  ##
  */
 

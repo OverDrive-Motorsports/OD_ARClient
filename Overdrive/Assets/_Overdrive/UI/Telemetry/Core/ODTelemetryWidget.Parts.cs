@@ -105,11 +105,11 @@ public abstract partial class ODTelemetryWidget
         float _min, _max = 1f;
         Vector2[] _points;
 
-        public Trace(Transform parent, string name, float x, float y, float w, float h, float pad = 0f)
+        public Trace(Transform parent, string name, float x, float y, float w, float h, float pad = 0f, Color? colour = null)
         {
             rect = D.Rect(parent, name, x, y, w, h);
             _line = rect.gameObject.AddComponent<ODPolyline>();
-            _line.color = Ink;
+            _line.color = colour ?? Ink;
             _line.thickness = D.Px(3.4f);
             _line.raycastTarget = false;
             _pad = D.Px(pad);
@@ -124,15 +124,19 @@ public abstract partial class ODTelemetryWidget
         public float Y(float value) => -(_pad + (1f - Mathf.Clamp01((value - _min) / (_max - _min))) * _h);
 
         /// <summary>One point per bin, centred in its slice of the lap; <paramref name="min"/> at the bottom.</summary>
-        public void Plot(float[] values, float min, float max)
+        public void Plot(float[] values, float min, float max) => Plot(values, min, max, values.Length);
+
+        /// <summary>The first <paramref name="count"/> bins only (the lap so far): the rest of the box stays empty.</summary>
+        public void Plot(float[] values, float min, float max, int count)
         {
             _min = min;
             _max = Mathf.Max(min + .0001f, max);
             int bins = values.Length;
             if (bins == 0) return;
             if (_points == null || _points.Length != bins) _points = new Vector2[bins];
-            for (int i = 0; i < bins; i++) _points[i] = new Vector2(X((i + .5f) / bins), Y(values[i]));
-            _line.SetPoints(_points, bins);
+            count = Mathf.Clamp(count, 0, bins);
+            for (int i = 0; i < count; i++) _points[i] = new Vector2(X((i + .5f) / bins), Y(values[i]));
+            _line.SetPoints(_points, count);
         }
     }
 }
