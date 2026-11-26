@@ -13,7 +13,9 @@
  ## on the spot of that row nearest the gaze (straight ahead, else right
  ## against what is there) that, seen from the head, covers neither another
  ## widget nor the open catalogue. Widgets are live: each new frame of
- ## the feed (ODMockTelemetry for now) is pushed to all of them.
+ ## the backend feed (Feed, an ODTelemetryFeed the race page points at the
+ ## replay or the live session) is pushed to all of them, and its status
+ ## too: loading, no data and connection lost hide their values.
  ## The race page hides the space when it is left, and shows it again on
  ## the live and replay states (SetVisible); widgets keep their place.
  ##
@@ -51,18 +53,28 @@ public sealed class ODWidgetSpace : MonoBehaviour
 
     readonly List<Placed> _placed = new();
     RectTransform _raceWindow;
+    ODTelemetryFeed _feed;
     int _version = -1;
+    TelemetryStatus _status;
+    string _message;
     bool _blurHeld;
 
     public int Count => _placed.Count;
 
+    /// <summary>Backend telemetry shown by every placed widget; the race page picks its source.</summary>
+    public ODTelemetryFeed Feed => _feed;
+
     public int CountOf(string id) => _placed.FindAll(p => p.id == id).Count;
 
-    /// <summary>The (empty) space; widgets are sized from <paramref name="raceWindow"/>'s scale.</summary>
+    /// <summary>The (empty) space and its feed; widgets are sized from <paramref name="raceWindow"/>'s scale.</summary>
     public static ODWidgetSpace Create(RectTransform raceWindow)
     {
-        var space = new GameObject("WidgetSpace").AddComponent<ODWidgetSpace>();
+        var go = new GameObject("WidgetSpace");
+        var space = go.AddComponent<ODWidgetSpace>();
         space._raceWindow = raceWindow;
+        space._feed = go.AddComponent<ODTelemetryFeed>();
+        space._status = space._feed.Status;
+        space._message = space._feed.Message;
         return space;
     }
 
@@ -103,7 +115,9 @@ public sealed class ODWidgetSpace : MonoBehaviour
 
         Place(placed, Mathf.Abs(D.Px(size.y + StripPx) * scale) * .5f, avoid);
         _placed.Add(placed);
-        widget.Show(ODMockTelemetry.Shared.Frame);   // right away, not at the next sample
+        // Right away, not at the next sample: the current values, or why there are none.
+        widget.ShowStatus(_feed.Status, _feed.Message, _feed.Frame);
+        if (_feed.Status == TelemetryStatus.Ready) widget.Show(_feed.Frame);
         UpdateBlur();
         Changed?.Invoke();
         return widget;
@@ -146,10 +160,16 @@ public sealed class ODWidgetSpace : MonoBehaviour
             placed.group.alpha = ODRuntimeUI.EaseOutCubic(placed.fade);
         }
 
-        var feed = ODMockTelemetry.Shared;
-        if (feed.Version == _version) return;
-        _version = feed.Version;
-        foreach (var placed in _placed) placed.widget.Show(feed.Frame);
+        if (_feed.Status != _status || _feed.Message != _message)
+        {
+            _status = _feed.Status;
+            _message = _feed.Message;
+            _version = -1;   // back to Ready: the next frame is shown at once
+            foreach (var placed in _placed) placed.widget.ShowStatus(_status, _message, _feed.Frame);
+        }
+        if (_status != TelemetryStatus.Ready || _feed.Version == _version) return;
+        _version = _feed.Version;
+        foreach (var placed in _placed) placed.widget.Show(_feed.Frame);
     }
 
     // ── Placement ───────────────────────────────────────────────────────────

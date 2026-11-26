@@ -111,11 +111,15 @@ public static class ODRaceReplayReader
 
     static void ForEachRow(JsonReader reader, Action<JObject> read) => ForEachObject(reader, () => read(JObject.Load(reader)));
 
-    /// <summary>Telemetry rows, by hand: they are 95 % of the file. Only time, x/y and speed are kept.</summary>
+    /// <summary>
+    /// Telemetry rows, by hand: they are 95 % of the file. Time, x/y, speed, pedals, engine speed
+    /// and gear are kept (DRS and z are not shown).
+    /// </summary>
     static void ReadSamples(JsonReader reader, CarRows car) => ForEachObject(reader, () =>
     {
         string timestamp = null;
-        float x = 0f, y = 0f, speed = float.NaN;
+        float x = 0f, y = 0f, speed = float.NaN, throttle = 0f, brake = 0f, rpm = 0f;
+        int gear = 0;
         while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
         {
             string name = (string)reader.Value;
@@ -123,9 +127,13 @@ public static class ODRaceReplayReader
             switch (name)
             {
                 case "timestamp": timestamp = reader.Value as string; break;
-                case "x": x = Convert.ToSingle(reader.Value, CultureInfo.InvariantCulture); break;
-                case "y": y = Convert.ToSingle(reader.Value, CultureInfo.InvariantCulture); break;
-                case "speed": if (reader.Value != null) speed = Convert.ToSingle(reader.Value, CultureInfo.InvariantCulture); break;
+                case "x": x = Number(reader); break;
+                case "y": y = Number(reader); break;
+                case "speed": if (reader.Value != null) speed = Number(reader); break;
+                case "throttlePercent": throttle = Number(reader); break;
+                case "brakePercent": brake = Number(reader); break;
+                case "rpm": rpm = Number(reader); break;
+                case "gear": gear = (int)Number(reader); break;
                 default: reader.Skip(); break;
             }
         }
@@ -134,6 +142,10 @@ public static class ODRaceReplayReader
         {
             car.speedTime.Add(t);
             car.speed.Add(speed);
+            car.throttle.Add(throttle);
+            car.brake.Add(brake);
+            car.rpm.Add(rpm);
+            car.gear.Add(gear);
         }
         // (0, 0) is "no position" (car in the garage before the session).
         if (x != 0f || y != 0f)
@@ -143,6 +155,10 @@ public static class ODRaceReplayReader
             car.y.Add(y);
         }
     });
+
+    /// <summary>The number the reader stands on (0 for null).</summary>
+    static float Number(JsonReader reader) =>
+        reader.Value == null ? 0f : Convert.ToSingle(reader.Value, CultureInfo.InvariantCulture);
 
     /// <summary>"2025-03-23T06:09:12.528Z", the backend's format, parsed by hand; anything else by DateTime.Parse.</summary>
     public static DateTime ParseUtc(string s)
@@ -178,6 +194,8 @@ public static class ODRaceReplayReader
         public Parsed file;
         public readonly List<float> time = new List<float>(), x = new List<float>(), y = new List<float>();
         public readonly List<float> speedTime = new List<float>(), speed = new List<float>();   // km/h
+        public readonly List<float> throttle = new List<float>(), brake = new List<float>(), rpm = new List<float>();
+        public readonly List<int> gear = new List<int>();
         public readonly List<(float time, int position)> positions = new List<(float, int)>();
         public readonly List<(int lap, float duration, float sector1, float sector2)> laps = new List<(int, float, float, float)>();
         public readonly List<ReplayStint> stints = new List<ReplayStint>();
@@ -349,7 +367,6 @@ public static class ODRaceReplayReader
                 lapStart[n + 1] = lapStart[n] + Nearest(lapTime, n);
 
             var positions = rows.positions.OrderBy(p => p.time).ToList();
-            var (odometerTime, odometer) = Odometer(rows);
             var car = new ReplayCar
             {
                 number = number,
@@ -365,9 +382,8 @@ public static class ODRaceReplayReader
                 position = positions.Select(p => p.position).ToArray(),
                 stints = rows.stints.OrderBy(s => s.lapStart).ToArray(),
                 pitLaps = rows.pits.OrderBy(l => l).ToArray(),
-                odometerTime = odometerTime,
-                odometer = odometer,
             };
+            Telemetry(rows, car);
 
             // Typical lap length: the median of the laps after the first (lap 1 starts on the grid).
             var laps = new List<float>();
@@ -381,20 +397,40 @@ public static class ODRaceReplayReader
             return car;
         }
 
-        /// <summary>Metres driven at each speed sample (trapezoids), sorted by time.</summary>
-        static (float[] time, float[] metres) Odometer(CarRows rows)
+        /// <summary>
+        /// The car's telemetry sorted by time, and the metres driven at each sample (trapezoids
+        /// on the speed): ReplayCar.odometerTime / odometer / speed / throttle / brake / rpm / gear.
+        /// </summary>
+        static void Telemetry(CarRows rows, ReplayCar car)
         {
             int n = rows.speedTime.Count;
             var order = Enumerable.Range(0, n).OrderBy(i => rows.speedTime[i]).ToArray();
             var time = new float[n];
             var metres = new float[n];
+            var speed = new float[n];
+            var throttle = new float[n];
+            var brake = new float[n];
+            var rpm = new float[n];
+            var gear = new int[n];
             for (int k = 0; k < n; k++)
             {
-                time[k] = rows.speedTime[order[k]];
+                int i = order[k];
+                time[k] = rows.speedTime[i];
+                speed[k] = rows.speed[i];
+                throttle[k] = rows.throttle[i];
+                brake[k] = rows.brake[i];
+                rpm[k] = rows.rpm[i];
+                gear[k] = rows.gear[i];
                 if (k > 0)
-                    metres[k] = metres[k - 1] + (rows.speed[order[k]] + rows.speed[order[k - 1]]) * .5f / 3.6f * (time[k] - time[k - 1]);
+                    metres[k] = metres[k - 1] + (speed[k] + speed[k - 1]) * .5f / 3.6f * (time[k] - time[k - 1]);
             }
-            return (time, metres);
+            car.odometerTime = time;
+            car.odometer = metres;
+            car.speed = speed;
+            car.throttle = throttle;
+            car.brake = brake;
+            car.rpm = rpm;
+            car.gear = gear;
         }
 
         static bool IsSorted(float[] values)

@@ -15,10 +15,11 @@
  ## Holds the catalogue (categories, the telemetry widgets of Widgets), the
  ## selected category, the search, the picked widget and its format, and
  ## hands them to ODWidgetCatalogView.
- ## Previews are still pictures in the Small format: one sample of the feed,
- ## taken when the catalogue is first opened, painted once (ShowStill).
- ## "Add to my space" puts the picked widget, in the picked format, in the
- ## user's space (ODWidgetSpace), where it is live and can be moved.
+ ## Previews are still pictures in the Small format, on made-up data
+ ## (ODMockTelemetry.Sample, made when the catalogue is first opened), painted
+ ## once (ShowStill). "Add to my space" puts the picked widget, in the picked
+ ## format, in the user's space (ODWidgetSpace), where it shows the backend
+ ## telemetry of the session and can be moved.
  ##
  */
 
@@ -200,13 +201,9 @@ public sealed class ODWidgetCatalogPage : MonoBehaviour
     {
         if (widget == null || !Widgets.TryGetValue(widget.id, out var type)) return null;
         var preview = ODTelemetryWidget.Create(type, parent, 0f, 0f, format);
-        preview.ShowStill(_sample ??= Snapshot());
+        preview.ShowStill(_sample ??= ODMockTelemetry.Sample());
         return preview;
     }
-
-    /// <summary>A copy of the feed's current frame: the feed keeps changing it in place, the previews must not.</summary>
-    static TelemetryFrame Snapshot() =>
-        JsonUtility.FromJson<TelemetryFrame>(JsonUtility.ToJson(ODMockTelemetry.Shared.Frame));
 
     void Update()
     {

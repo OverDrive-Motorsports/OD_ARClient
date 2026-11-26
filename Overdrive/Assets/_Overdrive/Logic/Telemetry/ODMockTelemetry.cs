@@ -3,30 +3,29 @@
  ## OverDrive 2026
  ## All Technical rights reserved
  ##
- ## ODMockTelemetry - Simulated telemetry and timing of the followed car
- ## until the backend feed exists. A 5.4 km lap with 8 braking zones and 3
+ ## ODMockTelemetry - Made-up telemetry for the catalogue previews only
+ ## (ODWidgetCatalogPage): a still sample, so a widget can be seen before it
+ ## is added. Widgets placed in the space never read it: they show the
+ ## backend telemetry (ODTelemetryFeed). A 5.4 km lap with 8 braking zones and 3
  ## sectors (8 mini-sectors each): the car is flat out on the straights,
  ## brakes when the next corner gets within its braking distance, takes the
  ## corner on part throttle. Every lap gets its own pace (and every corner a
  ## little more or less speed), so lap, sector and mini-sector times vary and
- ## the purple / green / yellow colour code moves.
- ## Integrated every frame, published 10 times a second, like a real feed
- ## (the widgets smooth between samples), as one TelemetryFrame (Frame):
+ ## the purple / green / yellow colour code varies.
+ ## Sample() simulates six laps and a bit, then returns one TelemetryFrame:
  ##   • car — CarTelemetry sample (speed, pedals, position on the lap);
  ##   • trace — the last lap along the distance (speed and pedals);
  ##   • timing — lap, sectors, mini-sectors, delta, last laps of the car;
  ##   • rival — mini-sectors of a second car, a little behind, to compare.
- ## Six laps are simulated at start-up, so traces, bests and the last laps
- ## are filled from the first frame. One shared instance (Shared), created on
- ## first use and kept across scenes.
+ ## Nothing runs afterwards: no component, no update.
  ##
  */
 
 using UnityEngine;
 
-public sealed class ODMockTelemetry : MonoBehaviour
+public sealed class ODMockTelemetry
 {
-    const float SampleRate = 10f;          // samples per second, as a live feed
+    const int PreviewSeconds = 41;         // seconds into the seventh lap the preview shows (sector 2)
     const float LapLength = 5400f;         // m
     const float TopSpeed = 322f;           // km/h (the long straight peaks around 315)
     const float BrakeDecel = 135f;         // km/h per second at full pedal (~3.8 g)
@@ -83,28 +82,10 @@ public sealed class ODMockTelemetry : MonoBehaviour
         return ends;
     }
 
-    static ODMockTelemetry _shared;
+    /// <summary>A made-up frame for the catalogue previews: six laps simulated, then the car somewhere on the seventh.</summary>
+    public static TelemetryFrame Sample() => new ODMockTelemetry().Frame;
 
-    /// <summary>The simulated feed, created (hidden, kept across scenes) the first time it is asked for.</summary>
-    public static ODMockTelemetry Shared
-    {
-        get
-        {
-            if (_shared == null)
-            {
-                var go = new GameObject("ODMockTelemetry") { hideFlags = HideFlags.HideInHierarchy };
-                DontDestroyOnLoad(go);
-                _shared = go.AddComponent<ODMockTelemetry>();
-            }
-            return _shared;
-        }
-    }
-
-    /// <summary>Goes up by one at every published sample: read <see cref="Frame"/> again when it changes.</summary>
-    public int Version { get; private set; }
-
-    /// <summary>The feed; updated in place at every published sample.</summary>
-    public TelemetryFrame Frame { get; } = new TelemetryFrame
+    TelemetryFrame Frame { get; } = new TelemetryFrame
     {
         trace = new LapTrace
         {
@@ -141,7 +122,7 @@ public sealed class ODMockTelemetry : MonoBehaviour
     }
 
     // Car
-    float _distance, _speed = 290f, _throttle = 1f, _brake, _sampleClock;
+    float _distance, _speed = 290f, _throttle = 1f, _brake;
     string _location = "Straight";
     float _pace = 1f;
     readonly float[] _cornerFactor = { 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f };
@@ -162,26 +143,16 @@ public sealed class ODMockTelemetry : MonoBehaviour
     int _rivalDone;
     bool _rivalOnPreviousLap;
 
-    void Awake()
+    ODMockTelemetry()
     {
         NewLapPace();
-        // A few silent laps so the traces, the bests and the last laps are full from the start.
+        // Silent laps so the traces, the bests and the last laps are full, then part of a lap.
         const float step = 1f / 60f;
         int laps = 0;
         for (int i = 0; i < 60 * 900 && laps < WarmUpLaps; i++)
             if (Simulate(step)) laps++;
+        for (int i = 0; i < 60 * PreviewSeconds; i++) Simulate(step);
         Publish();
-    }
-
-    void Update()
-    {
-        Simulate(Time.deltaTime);
-        _sampleClock += Time.deltaTime;
-        if (_sampleClock >= 1f / SampleRate)
-        {
-            _sampleClock %= 1f / SampleRate;
-            Publish();
-        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -388,7 +359,6 @@ public sealed class ODMockTelemetry : MonoBehaviour
         Timing.lapTime = _lapTime;
         Timing.lapShare = share;
         Timing.delta = Delta(share);
-        Version++;
     }
 
     /// <summary>Time now minus the best lap's time at the same distance (interpolated inside the slice).</summary>

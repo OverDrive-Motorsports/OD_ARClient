@@ -49,6 +49,8 @@ public static class ODTelemetryStyle
     public static readonly Color Well = new Color(0f, 0f, 0f, .26f);       // recessed: bar tracks, strips, boxes
     public static readonly Color Ahead = new Color(1f, 1f, 1f, .14f);      // not driven yet
     public static readonly Color Yellow = D.Hex("F5C84C");
+    public static readonly Color ThrottleColour = D.Hex("3D9DFF");   // Pedals: throttle bar and line
+    public static readonly Color BrakeColour = D.Hex("FF453A");      // Pedals: brake bar and line
 
     /// <summary>F1 colour code: purple session best, green personal best, yellow slower, grey ahead.</summary>
     public static Color Of(SplitStatus status) => status switch

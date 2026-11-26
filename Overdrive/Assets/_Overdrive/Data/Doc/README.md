@@ -10,8 +10,8 @@ dependency on UI or Interaction.
 Data/
 ├── DTO/       Mirrors of the backend JSON (ChampionshipDtos, RaceDataDtos) and of the files saved on the headset (ReplayStoreDtos)
 ├── Entities/  What the screens display (OffSeasonData, WeekendData, LiveSessionData, ReplayData, SeasonStandings, WidgetCatalog...) and RaceReplay (a replay ready to play)
-│   └── Telemetry/  What the telemetry widgets show: TelemetryFrame (CarTelemetry, LapTrace), LapTiming
-├── Mappers/   ODChampionshipMapper — pure DTO -> Entity functions; ODReplayMapper — a RaceReplay at a given time
+│   └── Telemetry/  What the telemetry widgets show: TelemetryFrame (CarTelemetry, LapTrace), LapTiming; TelemetryTimeline (a session's telemetry of the followed cars) and TelemetryStatus
+├── Mappers/   ODChampionshipMapper — pure DTO -> Entity functions; ODReplayMapper — a RaceReplay at a given time; ODTelemetryMapper — replay or live rows -> TelemetryTimeline, and the TelemetryFrame at a given time
 └── Storage/   ODReplayStore — replays downloaded on the headset; ODRaceReplayReader — replay.json -> RaceReplay
 ```
 

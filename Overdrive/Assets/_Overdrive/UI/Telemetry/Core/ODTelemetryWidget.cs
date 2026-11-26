@@ -13,6 +13,9 @@
  ##   • data: Logic pushes each TelemetryFrame with Show(); the base hands its
  ##     parts to the widget (OnCar, OnTrace, OnTiming) and ticks it every
  ##     frame (Tick) so values ease between samples;
+ ##   • status: ShowStatus() — loading, no data or connection lost hide the
+ ##     whole content under a short message (the header stays), so no stale
+ ##     value is ever shown; the first frame after it is shown without easing;
  ##   • builders for the recurring pieces (Readout, Stat, Pair, Panel) and
  ##     the parts in ODTelemetryWidget.Parts.cs (LiveText, Eased, Bar, Trace).
  ##
@@ -54,8 +57,9 @@ public abstract partial class ODTelemetryWidget : MonoBehaviour
     /// <summary>Every frame once data came: ease the shown values toward the last sample.</summary>
     protected virtual void Tick(float dt) { }
 
-    TextMeshProUGUI _driver, _rival;
+    TextMeshProUGUI _driver, _rival, _statusText;
     RoundedImage _driverColour, _rivalColour;
+    RectTransform _content;
     bool _hasData;
 
     /// <summary>Widget of <paramref name="type"/> (an ODTelemetryWidget) in <paramref name="format"/>, top-left at (x, y) design px.</summary>
@@ -78,6 +82,25 @@ public abstract partial class ODTelemetryWidget : MonoBehaviour
         OnTiming(frame.timing, frame.rival);
         OnCar(frame.car, !_hasData);
         _hasData = true;
+    }
+
+    /// <summary>
+    /// What the feed can give: Ready shows the content, anything else hides it under
+    /// <paramref name="message"/> ("Loading telemetry…"). The header keeps the drivers of <paramref name="header"/>.
+    /// </summary>
+    public void ShowStatus(TelemetryStatus status, string message, TelemetryFrame header)
+    {
+        if (header != null)
+        {
+            ShowDriver(_driver, _driverColour, header.timing);
+            if (_rival != null) ShowDriver(_rival, _rivalColour, header.rival);
+        }
+        bool ready = status == TelemetryStatus.Ready;
+        if (!ready) _hasData = false;   // the next frame is placed at once, not eased from old values
+        _content.gameObject.SetActive(ready);
+        _statusText.gameObject.SetActive(!ready);
+        _statusText.text = message ?? "";
+        _statusText.color = status == TelemetryStatus.ConnectionLost ? D.Destructive : Label;
     }
 
     /// <summary>
@@ -117,9 +140,19 @@ public abstract partial class ODTelemetryWidget : MonoBehaviour
         float pillW = ComparesRival ? 184f : 98f;
         BuildPill(card, size.x - Pad - pillW, 32f, pillW);
 
-        if (format == WidgetFormat.Small) BuildSmall(card, size.x, size.y);
-        else BuildLarge(card, size.x, size.y);
+        // The widget's own content, over the whole card (same coordinates): hidden as one piece by ShowStatus.
+        _content = ODRuntimeUI.Stretch(card, "Content");
+        if (format == WidgetFormat.Small) BuildSmall(_content, size.x, size.y);
+        else BuildLarge(_content, size.x, size.y);
+
+        _statusText = D.Text(card, "Status", "", Pad, HeaderH, size.x - Pad * 2f, size.y - HeaderH - Pad, 22f,
+            D.Weight.Regular, Label, TextAlignmentOptions.Center);
+        _statusText.textWrappingMode = TextWrappingModes.Normal;
+        _statusText.gameObject.SetActive(false);
     }
+
+    /// <summary>Height of the header (title and driver pill), design px.</summary>
+    const float HeaderH = 92f;
 
     /// <summary>Capsule with team colour and code of each driver, and a chevron.</summary>
     void BuildPill(Transform card, float x, float y, float w)

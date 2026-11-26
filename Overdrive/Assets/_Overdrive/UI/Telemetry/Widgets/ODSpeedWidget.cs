@@ -6,7 +6,7 @@
  ## ODSpeedWidget - Speed of the followed car (design "Vitesse").
  ##   • Small: the speed in big light digits, "km/h", and a bar placing it
  ##     between the lowest and the top speed of the lap ("Min. 96 · Top 312").
- ##   • Large: the speed, "km/h · Turn 13", top and average of the lap on the
+ ##   • Large: the speed, "km/h · Sector 2", top and average of the lap on the
  ##     left; on the right the speed trace of the lap (100 / 200 / 300 grid,
  ##     dashed sector ends, S1 S2 S3) with a cursor and a dot on the car.
  ##
@@ -78,7 +78,7 @@ public sealed class ODSpeedWidget : ODTelemetryWidget
             if (i < ends.Length)
                 for (float y = 0f; y < PlotH; y += 14f)
                     D.Fill(_trace.rect, "Dash", end * plotW - 1f, y, 2f, Mathf.Min(8f, PlotH - y), dash, 0f);
-            D.Text(transform, "S" + (i + 1), "S" + (i + 1), PlotX + (start + end) * .5f * plotW - 40f, 336f, 80f, 28f, 16f,
+            D.Text(_trace.rect.parent, "S" + (i + 1), "S" + (i + 1), PlotX + (start + end) * .5f * plotW - 40f, 336f, 80f, 28f, 16f,
                 D.Weight.SemiBold, Faint, TextAlignmentOptions.Center);
             start = end;
         }

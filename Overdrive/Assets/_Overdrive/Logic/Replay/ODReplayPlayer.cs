@@ -30,6 +30,8 @@ public sealed class ODReplayPlayer : MonoBehaviour
 
     /// <summary>A replay is loaded (on the grid, or playing).</summary>
     public bool IsLoaded => _replay != null;
+    /// <summary>The loaded replay (null when none): the telemetry widgets read it at RaceTime.</summary>
+    public RaceReplay Replay => _replay;
     /// <summary>The clock runs: Begin() was called.</summary>
     public bool IsPlaying => _replay != null && _running;
     /// <summary>Current time, in RaceReplay seconds.</summary>

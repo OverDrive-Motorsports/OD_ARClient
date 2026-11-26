@@ -9,8 +9,8 @@
  ##     pedals, where it is on the lap);
  ##   • trace — LapTrace, its last lap sampled along the distance;
  ##   • timing / rival — LapTiming of the followed car and of the compared one.
- ## Simulated for now (ODMockTelemetry), the backend feed will fill the same
- ## types. Pure data: no MonoBehaviour, no logic.
+ ## Filled from the backend telemetry by ODTelemetryMapper (made up by
+ ## ODMockTelemetry for the catalogue previews). Pure data: no MonoBehaviour, no logic.
  ##
  */
 

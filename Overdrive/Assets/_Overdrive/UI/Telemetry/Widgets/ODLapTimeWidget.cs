@@ -70,10 +70,10 @@ public sealed class ODLapTimeWidget : ODTelemetryWidget
 
     protected override void OnTiming(LapTiming timing, LapTiming rival)
     {
-        if (timing.lap != _lap)
+        if (timing.lap != _lap || timing.lapTime < _base - .5f)
         {
             _lap = timing.lap;
-            _shown = 0f;   // new lap: the clock starts again from the line
+            _shown = 0f;   // new lap, or playback moved back: the clock starts again from the sample
         }
         _base = timing.lapTime;
         _since = 0f;
@@ -118,7 +118,7 @@ public sealed class ODLapTimeWidget : ODTelemetryWidget
 
     protected override void Tick(float dt)
     {
-        // Runs on from the last sample; never backwards within a lap.
+        // Runs on from the last sample; never backwards within a lap unless playback moved back (OnTiming).
         _since += dt;
         _shown = Mathf.Max(_shown, _base + _since);
         if (_clock.Changed(Mathf.FloorToInt(_shown * 1000f))) _clock.Text = Digits(LapClock(_shown, alwaysMinutes: true));
