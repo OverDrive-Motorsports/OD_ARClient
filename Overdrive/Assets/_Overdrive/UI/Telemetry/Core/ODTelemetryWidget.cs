@@ -8,8 +8,13 @@
  ##   • sizing: the two formats of ODTelemetryStyle, always the same frame;
  ##   • frame: frosted glass card like the other windows (blurred room
  ##     behind, ODChampionshipTheme.ApplyBackground), radius 52;
- ##   • header: caps title, followed-driver pill ("VER", or "VER / HAM" when
- ##     the widget compares two cars — ComparesRival);
+ ##   • header: caps title, followed-driver pill with its team colour, code
+ ##     and number ("▌VER 1 ⌄", or "▌VER 1 / ▌HAM" when the widget compares
+ ##     two cars — ComparesRival —, the compared one in gold). In the space the pill is a button
+ ##     (EnablePicker) that opens the driver picker; while it is open the
+ ##     pill and the card get a gold rim and a gold line runs from the pill
+ ##     to the picker (SetPickerOpen). ShowTarget writes the target in it;
+ ##     Restart forgets the shown values when the target changes;
  ##   • data: Logic pushes each TelemetryFrame with Show(); the base hands its
  ##     parts to the widget (OnCar, OnTrace, OnTiming) and ticks it every
  ##     frame (Tick) so values ease between samples;
@@ -29,6 +34,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using static ODTelemetryStyle;
 using D = ODDesign;
 
@@ -57,9 +63,29 @@ public abstract partial class ODTelemetryWidget : MonoBehaviour
     /// <summary>Every frame once data came: ease the shown values toward the last sample.</summary>
     protected virtual void Tick(float dt) { }
 
-    TextMeshProUGUI _driver, _rival, _statusText;
+    /// <summary>The widget follows another car: drop what was kept of the previous one.</summary>
+    protected virtual void OnRestart() { }
+
+    /// <summary>Caps title, also the picker's subtitle ("Speed · this widget").</summary>
+    public string Name => Title;
+
+    /// <summary>Shows a second car (its frames carry the rival).</summary>
+    public bool Compares => ComparesRival;
+
+    /// <summary>Design px from the card's top to the middle of the driver pill (the picker's gold line starts there).</summary>
+    public const float PillMiddle = PillY + PillH * .5f;
+
+    /// <summary>The driver pill was pressed (EnablePicker).</summary>
+    public event Action DriverPillClicked;
+
+    TextMeshProUGUI _driver, _rival, _number, _statusText;
     RoundedImage _driverColour, _rivalColour;
     RectTransform _content;
+    ODHomepageSurface _glass, _pillRing;
+    RoundedImage _pill, _link;
+    Button _pillButton;
+    Color _rimTop, _rimBottom;
+    float _rimWidth;
     bool _hasData;
 
     /// <summary>Widget of <paramref name="type"/> (an ODTelemetryWidget) in <paramref name="format"/>, top-left at (x, y) design px.</summary>
@@ -103,6 +129,61 @@ public abstract partial class ODTelemetryWidget : MonoBehaviour
         _statusText.color = status == TelemetryStatus.ConnectionLost ? D.Destructive : Label;
     }
 
+    /// <summary>Header pill: team colour, code and number of the followed car, and the compared one ("—" while unknown).</summary>
+    public void ShowTarget(DriverChoice target, DriverChoice rival = null)
+    {
+        _driver.text = target != null ? target.code : "—";
+        _driverColour.color = target != null ? target.teamColor : Faint;
+        _number.text = target != null && target.number > 0 ? target.number.ToString() : "";
+        if (_rival == null) return;
+        _rival.text = rival != null ? rival.code : "—";
+        _rivalColour.color = rival != null ? rival.teamColor : Faint;
+    }
+
+    /// <summary>The followed car changed: the next frame is shown at once, nothing kept from the previous car.</summary>
+    public void Restart()
+    {
+        _hasData = false;
+        OnRestart();
+    }
+
+    /// <summary>Makes the driver pill a button raising DriverPillClicked (live widgets, not catalogue previews).</summary>
+    public void EnablePicker()
+    {
+        if (_pillButton != null) return;
+        _pill.raycastTarget = true;
+        _pillButton = _pill.gameObject.AddComponent<Button>();
+        _pillButton.targetGraphic = _pill;
+        D.ApplyButton(_pillButton, D.ButtonKind.Ghost);
+        PaintPill(false);
+        _pillButton.onClick.AddListener(() => DriverPillClicked?.Invoke());
+    }
+
+    /// <summary>Gold pill rim, card rim and line toward the picker while it is open for this widget.</summary>
+    public void SetPickerOpen(bool open)
+    {
+        PaintPill(open);
+        _pillRing.gameObject.SetActive(open);
+        _link.gameObject.SetActive(open);
+        _glass.rimTop = open ? D.Gold : _rimTop;
+        _glass.rimBottom = open ? D.Gold : _rimBottom;
+        _glass.rimWidth = open ? D.Px(3f) : _rimWidth;
+        _glass.SetVerticesDirty();
+    }
+
+    void PaintPill(bool open)
+    {
+        if (_pillButton == null) return;
+        var colours = _pillButton.colors;
+        Color tint = open ? D.Gold : Color.white;
+        colours.normalColor = colours.selectedColor = D.WithAlpha(tint, open ? .26f : .12f);
+        colours.highlightedColor = D.WithAlpha(tint, open ? .36f : .20f);
+        colours.pressedColor = D.WithAlpha(tint, open ? .44f : .28f);
+        _pillButton.colors = colours;
+        _pill.color = Color.white;
+        _pill.CrossFadeColor(colours.normalColor, 0f, true, true);
+    }
+
     /// <summary>
     /// Still picture of <paramref name="frame"/> (catalogue previews): the values are painted
     /// once, as they are, and the widget stops ticking — nothing eases or runs afterwards.
@@ -135,10 +216,21 @@ public abstract partial class ODTelemetryWidget : MonoBehaviour
         ODChampionshipTheme.ApplyBackground(glass, Glass);
         glass.cornerRadius = D.Px(Radius);
         glass.shadowSize = 20f;
+        _glass = glass;
+        _rimTop = glass.rimTop;
+        _rimBottom = glass.rimBottom;
+        _rimWidth = glass.rimWidth;
 
         D.Caps(card, "Title", Title, Pad, 37f, size.x * .5f, 18f, Label);
-        float pillW = ComparesRival ? 184f : 98f;
-        BuildPill(card, size.x - Pad - pillW, 32f, pillW);
+        float pillW = ComparesRival ? 214f : 128f, pillX = size.x - Pad - pillW;
+        // Gold line from the pill to the card's edge, carried on by the open picker.
+        _link = D.Fill(card, "PickerLink", pillX + pillW, PillMiddle - 1.5f, Pad, 3f, D.Gold, 0f);
+        _link.gameObject.SetActive(false);
+        _pillRing = Panel(card, "PillRing", pillX - 3f, PillY - 3f, pillW + 6f, PillH + 6f, PillH * .5f + 3f);
+        Tint(_pillRing, Color.clear, D.Gold);
+        _pillRing.rimWidth = D.Px(2.5f);
+        _pillRing.gameObject.SetActive(false);
+        BuildPill(card, pillX, PillY, pillW);
 
         // The widget's own content, over the whole card (same coordinates): hidden as one piece by ShowStatus.
         _content = ODRuntimeUI.Stretch(card, "Content");
@@ -153,17 +245,21 @@ public abstract partial class ODTelemetryWidget : MonoBehaviour
 
     /// <summary>Height of the header (title and driver pill), design px.</summary>
     const float HeaderH = 92f;
+    const float PillY = 32f, PillH = 36f;
 
-    /// <summary>Capsule with team colour and code of each driver, and a chevron.</summary>
+    /// <summary>Capsule with team colour, code and number of the followed driver (and the compared one), and a chevron.</summary>
     void BuildPill(Transform card, float x, float y, float w)
     {
-        const float h = 36f;
-        var pill = D.Fill(card, "Driver", x, y, w, h, new Color(1f, 1f, 1f, .12f), h * .5f).transform;
+        const float h = PillH;
+        _pill = D.Fill(card, "Driver", x, y, w, h, new Color(1f, 1f, 1f, .12f), h * .5f);
+        var pill = _pill.transform;
         _driver = PillDriver(pill, 14f, out _driverColour);
+        _number = D.Text(pill, "Number", "", 72f, 0f, 28f, h, 15f, D.Weight.SemiBold, Faint);
         if (ComparesRival)
         {
-            D.Text(pill, "Slash", "/", 74f, 0f, 16f, h, 18f, D.Weight.Regular, Faint, TextAlignmentOptions.Center);
-            _rival = PillDriver(pill, 98f, out _rivalColour);
+            D.Text(pill, "Slash", "/", 100f, 0f, 16f, h, 18f, D.Weight.Regular, Faint, TextAlignmentOptions.Center);
+            _rival = PillDriver(pill, 124f, out _rivalColour);
+            _rival.color = D.GoldText;   // design: the followed car in white, the compared one in gold
         }
 
         // Downward chevron: two short strokes, left one "\", right one "/".

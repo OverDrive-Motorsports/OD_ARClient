@@ -32,23 +32,41 @@ for how a replay goes from the backend to the headset, then plays.
 ## Telemetry widgets
 
 Widgets placed in the space show the backend telemetry of the active session
-(`ODTelemetryFeed`, one per `ODWidgetSpace`). Every widget follows
-Verstappen (`DriverCode` "VER"); the ones comparing two cars put Hamilton
-beside him (`RivalCode` "HAM"). `ODSportPage.SyncTelemetry` picks the source:
+(`ODTelemetryFeed`, one per `ODWidgetSpace`). Each widget follows its own car,
+its `WidgetTarget` (Data):
+
+- `Position` — whoever runs at that place, changing on its own with the
+  running order. The default: P1 (the leader), and P1 and P2 for a widget
+  comparing two cars;
+- `Driver` — one car by number, picked in the running order.
+
+The widget's driver pill opens the driver picker
+(`UI/Organisms/ODDriverPickerView`) on the widget's right, tops aligned and
+in the widget's plane; it never opens on its own. A widget comparing two
+cars has two slots, "Followed" and "Compared": picking the followed car
+moves on to the compared one, and a car already in the other slot swaps
+places with it. One picker is open at a time; a choice closes it. The
+widget's × removes it. Saved layouts and presets are not done yet.
+
+The feed resolves each target (`Resolve`), keeps the running order at the
+current time (`Order`: replay positions, or `/race/position` live) and fills
+each widget's own frame (`Fill`). `ODSportPage.SyncTelemetry` picks the source:
 
 - replay state: the downloaded replay (`ODReplayPlayer.Replay`), read at the
   replay clock (`RaceTime`). Each frame is computed from the time alone
   (`ODTelemetryMapper.Fill`), so the widgets follow the playback, and follow
   it back when it is rewound or moved;
-- live state: the gateway routes of the live session — `/race/laps` (every
-  car), then `/telemetry/speed` and `/telemetry/engine` of the running,
-  previous and best lap of each followed car — polled every
-  `livePollSeconds`, played `livePollSeconds + 2 s` behind the newest sample;
+- live state: the gateway routes of the live session — `/race/laps` and
+  `/race/position` (every car), then `/telemetry/speed` and
+  `/telemetry/engine` of the running, previous and best lap of each car a
+  widget follows — polled every `livePollSeconds` (at once when a widget
+  starts following a car not fetched yet), played `livePollSeconds + 2 s`
+  behind the newest sample;
 - elsewhere: nothing (the space is hidden).
 
-States: loading, no data (the session has none for the car, or not at this
-time) and connection lost (2 failed polls in a row) hide every value under a
-message; nothing stale stays on screen. The catalogue previews keep made-up
+States, per widget: loading, no data (the session has none for its car, or
+not at this time) and connection lost (2 failed polls in a row) hide its
+values under a message; nothing stale stays on screen. The catalogue previews keep made-up
 data (`ODMockTelemetry.Sample`).
 
 ## Allowed dependencies

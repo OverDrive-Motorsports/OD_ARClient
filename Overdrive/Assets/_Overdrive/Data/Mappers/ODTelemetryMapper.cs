@@ -59,17 +59,37 @@ public static class ODTelemetryMapper
         if (replay == null) return timeline;
         timeline.driver = FromReplayCar(replay, Number(replay.drivers?.Values, driverCode, driverFallback), driverCode);
         timeline.rival = FromReplayCar(replay, Number(replay.drivers?.Values, rivalCode, rivalFallback), rivalCode);
+        SetReplaySectorBests(timeline, replay);
+        return timeline;
+    }
 
+    /// <summary>Sector bests of a replay: every lap of every car, at the time it was set.</summary>
+    public static void SetReplaySectorBests(TelemetryTimeline timeline, RaceReplay replay)
+    {
         var marks = new List<(int sector, float time, float value)>();
-        foreach (var car in replay.cars.Values)
+        foreach (var car in replay?.cars.Values ?? Enumerable.Empty<ReplayCar>())
             for (int n = 1; n <= car.lapCount && n < car.lapStart.Length; n++)
             {
                 float start = float.IsNaN(car.lapStart[n]) ? float.NegativeInfinity : car.lapStart[n];
                 AddSectorMarks(marks, start, car.lapTime[n], car.sector1[n], car.sector2[n], float.NaN);
             }
         SetSectorBests(timeline, marks);
-        return timeline;
     }
+
+    /// <summary>
+    /// Timeline of <paramref name="driver"/> (compared to <paramref name="rival"/>, may be null) reading the
+    /// sector bests of <paramref name="bests"/>: one per widget target, all sharing the same arrays.
+    /// </summary>
+    public static TelemetryTimeline Pair(TelemetryTimeline bests, DriverTelemetry driver, DriverTelemetry rival) =>
+        new TelemetryTimeline
+        {
+            driverCode = driver?.code,
+            rivalCode = rival?.code,
+            driver = driver,
+            rival = rival,
+            sectorBestTime = bests.sectorBestTime,
+            sectorBest = bests.sectorBest,
+        };
 
     /// <summary>Car number of <paramref name="code"/> in <paramref name="drivers"/>, else <paramref name="fallback"/>.</summary>
     public static int Number(IEnumerable<DriverSummaryDto> drivers, string code, int fallback)
@@ -78,8 +98,10 @@ public static class ODTelemetryMapper
         return driver != null ? driver.driverNumber : fallback;
     }
 
-    static DriverTelemetry FromReplayCar(RaceReplay replay, int number, string code)
+    /// <summary>Car <paramref name="number"/> of a replay (its code from the driver list, else <paramref name="code"/>); null without samples.</summary>
+    public static DriverTelemetry FromReplayCar(RaceReplay replay, int number, string code = null)
     {
+        if (replay == null) return null;
         if (!replay.cars.TryGetValue(number, out var car) || car.odometerTime.Length == 0) return null;
         replay.drivers.TryGetValue(number, out var info);
 
@@ -91,7 +113,7 @@ public static class ODTelemetryMapper
         var driver = new DriverTelemetry
         {
             number = number,
-            code = string.IsNullOrEmpty(info?.code) ? code : info.code,
+            code = !string.IsNullOrEmpty(info?.code) ? info.code : code ?? number.ToString(),
             teamColor = Colour(info?.teamColor),
             time = car.odometerTime,
             odometer = car.odometer,
@@ -188,7 +210,7 @@ public static class ODTelemetryMapper
         var driver = new DriverTelemetry
         {
             number = number,
-            code = string.IsNullOrEmpty(info?.code) ? code : info.code,
+            code = !string.IsNullOrEmpty(info?.code) ? info.code : code ?? number.ToString(),
             teamColor = Colour(info?.teamColor),
             time = time.ToArray(),
             speed = speed.ToArray(),
@@ -673,7 +695,7 @@ public static class ODTelemetryMapper
         return values;
     }
 
-    static Color Colour(string hex)
+    public static Color Colour(string hex)
     {
         if (string.IsNullOrEmpty(hex)) return Color.white;
         return ColorUtility.TryParseHtmlString(hex.StartsWith("#") ? hex : "#" + hex, out var colour) ? colour : Color.white;

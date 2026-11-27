@@ -4,9 +4,9 @@
  ## All Technical rights reserved
  ##
  ## TelemetryTimeline - The backend telemetry of a session, as the widgets
- ## placed in the space read it: the followed car (Verstappen for now), the
- ## compared car (Hamilton), and the best time of each sector over every car,
- ## all on one clock in seconds. Built by ODTelemetryMapper from a downloaded
+ ## placed in the space read it: the followed car (the widget's target), the
+ ## compared car (Hamilton, for the widgets that compare two cars), and the
+ ## best time of each sector over every car, all on one clock in seconds. Built by ODTelemetryMapper from a downloaded
  ## replay or from the live routes, read at a given time by the same mapper
  ## (ODTelemetryMapper.Fill → TelemetryFrame).
  ## Pure data: no MonoBehaviour, no logic.
