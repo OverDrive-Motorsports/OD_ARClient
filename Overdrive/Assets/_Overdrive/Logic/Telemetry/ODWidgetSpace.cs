@@ -12,10 +12,17 @@
  ## A new widget appears in front of the headset, a little below the eyes,
  ## on the spot of that row nearest the gaze (straight ahead, else right
  ## against what is there) that, seen from the head, covers neither another
- ## widget nor the open catalogue. Widgets are live: each new frame of
- ## the backend feed (Feed, an ODTelemetryFeed the race page points at the
- ## replay or the live session) is pushed to all of them, and its status
- ## too: loading, no data and connection lost hide their values.
+ ## widget nor the open catalogue.
+ ## Each widget follows its own car (WidgetTarget), the race leader until
+ ## the user picks another; a widget comparing two cars follows P1 and P2.
+ ## Its driver pill opens the driver picker (ODDriverPickerView): it hangs
+ ## on the widget's right edge, tops aligned, in the widget's plane, and
+ ## moves with it; one is open at a time and a choice closes it (for two
+ ## cars, picking the followed one moves on to the compared one). Widgets
+ ## are live: at each publish of the backend feed (Feed, an
+ ## ODTelemetryFeed the race page points at the replay or the live session)
+ ## every widget gets the frame of its car, or why there is none: loading,
+ ## no data and connection lost hide its values.
  ## The race page hides the space when it is left, and shows it again on
  ## the live and replay states (SetVisible); widgets keep their place.
  ##
@@ -38,6 +45,11 @@ public sealed class ODWidgetSpace : MonoBehaviour
     /// <summary>Window bar width (m): the 1920-px windows' bar would be wider than a small widget.</summary>
     const float BarWidth = .09f;
     const float FadeSeconds = .18f;
+    /// <summary>
+    /// Metres the driver picker sits in front of its widget's plane: none to the eye, but the ray
+    /// meets the picker first where it overlaps a neighbouring widget.
+    /// </summary>
+    const float PickerLift = .002f;
 
     /// <summary>A widget was added or removed: the catalogue updates its counts.</summary>
     public event Action Changed;
@@ -49,15 +61,26 @@ public sealed class ODWidgetSpace : MonoBehaviour
         public Transform window;
         public CanvasGroup group;
         public float halfWidth, fade;
+        /// <summary>
+        /// What the widget follows: the followed car, then the compared one for a widget comparing two
+        /// (P1, P2 until the user picks); the cars they give now (-1: not resolved yet); its own frame.
+        /// </summary>
+        public WidgetTarget[] targets;
+        public readonly int[] numbers = { -1, -1 };
+        public readonly TelemetryFrame frame = new();
+        public TelemetryStatus status = (TelemetryStatus)(-1);
+        public string message;
     }
 
     readonly List<Placed> _placed = new();
     RectTransform _raceWindow;
     ODTelemetryFeed _feed;
-    int _version = -1;
+    int _version = -1, _orderVersion = -1;
     TelemetryStatus _status;
     string _message;
-    bool _blurHeld;
+    bool _blurHeld, _dirty;
+    ODDriverPickerView _picker;
+    Placed _pickerFor;
 
     public int Count => _placed.Count;
 
@@ -65,6 +88,7 @@ public sealed class ODWidgetSpace : MonoBehaviour
     public ODTelemetryFeed Feed => _feed;
 
     public int CountOf(string id) => _placed.FindAll(p => p.id == id).Count;
+
 
     /// <summary>The (empty) space and its feed; widgets are sized from <paramref name="raceWindow"/>'s scale.</summary>
     public static ODWidgetSpace Create(RectTransform raceWindow)
@@ -113,24 +137,131 @@ public sealed class ODWidgetSpace : MonoBehaviour
             ODNavigationIcon.Symbol.Close, iconPx: 24f);
         remove.onClick.AddListener(() => Remove(placed));
 
+        widget.EnablePicker();
+        widget.DriverPillClicked += () => TogglePicker(placed);
+        placed.targets = widget.Compares
+            ? new[] { WidgetTarget.Position(1), WidgetTarget.Position(2) }
+            : new[] { WidgetTarget.Leader };
+
         Place(placed, Mathf.Abs(D.Px(size.y + StripPx) * scale) * .5f, avoid);
         _placed.Add(placed);
-        // Right away, not at the next sample: the current values, or why there are none.
-        widget.ShowStatus(_feed.Status, _feed.Message, _feed.Frame);
-        if (_feed.Status == TelemetryStatus.Ready) widget.Show(_feed.Frame);
+        Refresh(placed);   // right away, not at the next publish: the current values, or why there are none
         UpdateBlur();
         Changed?.Invoke();
         return widget;
     }
 
+    /// <summary>What <paramref name="widget"/> follows in <paramref name="slot"/> (0 followed, 1 compared).</summary>
+    public WidgetTarget TargetOf(ODTelemetryWidget widget, int slot = 0)
+    {
+        var targets = _placed.Find(p => p.widget == widget)?.targets;
+        return targets != null && slot < targets.Length ? targets[slot] : WidgetTarget.Position(slot + 1);
+    }
+
+    /// <summary>Makes <paramref name="widget"/> follow <paramref name="target"/> in <paramref name="slot"/> (0 followed, 1 compared).</summary>
+    public void Assign(ODTelemetryWidget widget, WidgetTarget target, int slot = 0)
+    {
+        var placed = _placed.Find(p => p.widget == widget);
+        if (placed != null) Assign(placed, slot, target);
+    }
+
+    /// <summary>One slot; a car already in the other slot swaps places with it rather than being shown twice.</summary>
+    void Assign(Placed placed, int slot, WidgetTarget target)
+    {
+        var targets = placed.targets;
+        if (slot < 0 || slot >= targets.Length) return;
+        int other = 1 - slot;
+        int car = _feed.Resolve(target);
+        if (targets.Length > 1 && car > 0 && _feed.Resolve(targets[other]) == car) targets[other] = targets[slot];
+        targets[slot] = target;
+        _dirty = true;
+    }
+
+    // ── Driver picker ───────────────────────────────────────────────────────
+
+    void TogglePicker(Placed placed)
+    {
+        if (_pickerFor == placed) ClosePicker();
+        else OpenPicker(placed);
+    }
+
+    void OpenPicker(Placed placed)
+    {
+        ClosePicker();
+        _pickerFor = placed;
+        placed.widget.SetPickerOpen(true);
+        _picker = ODDriverPickerView.Create(transform, placed.widget.Name, placed.targets.Length, ODTelemetryWidget.PillMiddle);
+        _picker.Picked += (slot, target) =>
+        {
+            if (_pickerFor == null) return;
+            Assign(_pickerFor, slot, target);
+            // Two cars: the followed one picked, the compared one is next; otherwise done.
+            if (slot == 0 && _pickerFor.targets.Length > 1) _picker.SetActiveSlot(1);
+            else ClosePicker();
+        };
+        _picker.LeadersPicked += () =>
+        {
+            if (_pickerFor == null) return;
+            for (int i = 0; i < _pickerFor.targets.Length; i++) _pickerFor.targets[i] = WidgetTarget.Position(i + 1);
+            _dirty = true;
+            ClosePicker();
+        };
+        _picker.Closed += ClosePicker;
+        _orderVersion = -1;
+        FollowWidget();
+        UpdatePicker();
+    }
+
+    void ClosePicker()
+    {
+        if (_pickerFor != null && _pickerFor.widget != null) _pickerFor.widget.SetPickerOpen(false);
+        _pickerFor = null;
+        if (_picker != null) Destroy(_picker.gameObject);
+        _picker = null;
+    }
+
+    /// <summary>The picker hangs on the widget's right edge, tops aligned, in its plane, and moves with it.</summary>
+    void FollowWidget()
+    {
+        var window = (RectTransform)_pickerFor.window;
+        var picker = (RectTransform)_picker.transform;
+        Vector2 widget = window.sizeDelta, size = picker.sizeDelta;
+        // Window coordinates from its centre: right of its right edge, top on its top (the card's top).
+        var local = new Vector3((widget.x + size.x) * .5f, (widget.y - size.y) * .5f, 0f);
+        picker.SetPositionAndRotation(window.TransformPoint(local) - window.forward * PickerLift, window.rotation);
+        picker.localScale = window.localScale;
+    }
+
+    void UpdatePicker()
+    {
+        var placed = _pickerFor;
+        if (_orderVersion != _feed.OrderVersion)
+        {
+            _orderVersion = _feed.OrderVersion;
+            _picker.SetOrder(_feed.Order);
+        }
+        var followed = new DriverChoice[placed.targets.Length];
+        for (int i = 0; i < followed.Length; i++) followed[i] = _feed.Choice(placed.numbers[i]);
+        _picker.SetSelection(placed.targets, followed);
+    }
+
     /// <summary>Hides (race page left) or shows again (live / replay) every placed widget, where it was.</summary>
     public void SetVisible(bool visible)
     {
+        if (!visible) ClosePicker();
         if (gameObject.activeSelf != visible) gameObject.SetActive(visible);
+    }
+
+    /// <summary>Takes <paramref name="widget"/> out of the space (its × button does it too).</summary>
+    public void Remove(ODTelemetryWidget widget)
+    {
+        var placed = _placed.Find(p => p.widget == widget);
+        if (placed != null) Remove(placed);
     }
 
     void Remove(Placed placed)
     {
+        if (_pickerFor == placed) ClosePicker();
         if (!_placed.Remove(placed)) return;
         if (placed.window != null) Destroy(placed.window.gameObject);
         UpdateBlur();
@@ -160,16 +291,47 @@ public sealed class ODWidgetSpace : MonoBehaviour
             placed.group.alpha = ODRuntimeUI.EaseOutCubic(placed.fade);
         }
 
-        if (_feed.Status != _status || _feed.Message != _message)
+        // Every widget again at each publish, when the source's status changes, or when a target changed.
+        if (_dirty || _feed.Version != _version || _feed.Status != _status || _feed.Message != _message)
         {
+            _dirty = false;
+            _version = _feed.Version;
             _status = _feed.Status;
             _message = _feed.Message;
-            _version = -1;   // back to Ready: the next frame is shown at once
-            foreach (var placed in _placed) placed.widget.ShowStatus(_status, _message, _feed.Frame);
+            foreach (var placed in _placed) Refresh(placed);
         }
-        if (_status != TelemetryStatus.Ready || _feed.Version == _version) return;
-        _version = _feed.Version;
-        foreach (var placed in _placed) placed.widget.Show(_feed.Frame);
+
+        if (_pickerFor != null)
+        {
+            FollowWidget();
+            UpdatePicker();
+        }
+    }
+
+    /// <summary>The widget's car (and compared car) now, its frame, or why there is none.</summary>
+    void Refresh(Placed placed)
+    {
+        int number = _feed.Resolve(placed.targets[0]), rival = 0;
+        if (placed.targets.Length > 1)
+        {
+            rival = _feed.Resolve(placed.targets[1]);
+            if (rival == number) rival = _feed.Other(number);   // never the same car twice
+        }
+        var status = _feed.Fill(number, rival, placed.frame, out string message);
+        if (number != placed.numbers[0] || rival != placed.numbers[1])
+        {
+            placed.numbers[0] = number;
+            placed.numbers[1] = rival;
+            placed.widget.ShowTarget(_feed.Choice(number), _feed.Choice(rival));
+            placed.widget.Restart();   // another car: shown at once, nothing eased from the previous one
+        }
+        if (status != placed.status || message != placed.message)
+        {
+            placed.status = status;
+            placed.message = message;
+            placed.widget.ShowStatus(status, message, null);
+        }
+        if (status == TelemetryStatus.Ready) placed.widget.Show(placed.frame);
     }
 
     // ── Placement ───────────────────────────────────────────────────────────

@@ -116,6 +116,13 @@ public sealed class ODLapTimeWidget : ODTelemetryWidget
         }
     }
 
+    protected override void OnRestart()
+    {
+        // Another car: its clock, laps and table, not the previous car's.
+        _lap = _tableKey = int.MinValue;
+        _base = _since = _shown = 0f;
+    }
+
     protected override void Tick(float dt)
     {
         // Runs on from the last sample; never backwards within a lap unless playback moved back (OnTiming).

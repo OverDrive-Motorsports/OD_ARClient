@@ -11,7 +11,7 @@ decisions and never access the backend directly.
 UI/
 ├── Atoms/       Small runtime graphics (RoundedImage, ODHomepageSurface, ODNavigationIcon, ODTrackLine, ODToggleSwitch, ODFadeIn)
 ├── Molecules/   ODSegmentedControl, ContentGridItem
-├── Organisms/   Page sections (ODChampionshipPanel, tiles, profile, calendar, tab bar, replay track map, error popup...)
+├── Organisms/   Page sections (ODChampionshipPanel, tiles, profile, calendar, tab bar, replay track map, error popup, driver picker...)
 ├── Telemetry/   Telemetry widgets (see below)
 │   ├── Core/      ODTelemetryWidget (shared base + Parts), ODTelemetryStyle (formats, colours, number formats)
 │   └── Widgets/   One file per widget: ODSpeedWidget, ODPedalsWidget, ODSectorsWidget, ODLapTimeWidget
@@ -74,6 +74,22 @@ navigation bar follow the Canva design "OverDrive VR – v2" (pages
   it: a window of its own with the window bar under it to move it and a ×
   button to remove it.
 
+## Driver picker
+
+`Organisms/ODDriverPickerView` — design "Pilote associé": the car a widget
+follows. Its own window (520 px wide) on the widget's right, tops aligned,
+in the widget's plane (2 mm in front, so the ray meets it first over a
+neighbour), joined to the driver pill by a gold line: title and "<Widget> ·
+this widget", close button, for two cars the "Followed" (white) / "Compared"
+(gold) chips, search (code, name, number or "P3"), AUTOMATIC ("Follow the
+leader", or "the leaders" for P1 and P2), FIXED DRIVER · RUNNING ORDER
+(scrolling rows "P1 ▌VER Max Verstappen", P1 in gold, rows moved rather than
+rebuilt when the order changes), the current choice on a lighter row with a
+check (white followed, gold compared). Built at each opening, destroyed when
+closed. View only: `Logic/Telemetry/ODWidgetSpace` fills it and listens to
+`Picked`, `LeadersPicked` and `Closed`. There is no
+crown symbol in `ODNavigationIcon`, so the leader row uses the trophy.
+
 ## Telemetry widgets
 
 Design "Widgets télémétrie". Every widget derives from
@@ -84,7 +100,11 @@ Design "Widgets télémétrie". Every widget derives from
 - the frame: frosted glass card like the other windows
   (`ODChampionshipTheme.ApplyBackground`, radius 52), translucent recessed
   boxes inside (`Panel`);
-- the header: caps title and followed-driver pill ("VER", or "VER / HAM");
+- the header: caps title and followed-driver pill with team colour, code and
+  number ("VER 1", or "VER 1 / HAM" with the compared car in gold); in the space the pill opens the driver
+  picker (`EnablePicker`, `DriverPillClicked`), and while it is open the pill
+  and card get a gold rim with a gold line to the picker (`SetPickerOpen`);
+  `ShowTarget` writes the target, `Restart` forgets the previous car's values;
 - the data path: Logic (`Logic/Telemetry/ODWidgetSpace`) pushes each
   `TelemetryFrame` with `Show()`; the base hands its parts to the widget
   (`OnCar`, `OnTrace`, `OnTiming`) and calls `Tick` every frame for easing;
